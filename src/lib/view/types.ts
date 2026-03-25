@@ -7,7 +7,7 @@ export type Menu = {
 }
 
 export type MenuResponse = { type: 'menu', menu: Menu }
-export type InputResponse = { type: 'input', path: string }
+export type InputResponse = { type: 'input', path: string, formAction?: string }
 export type EndResponse = { type: 'end', message: string }
 
 export type ScreenResponse = MenuResponse | InputResponse | EndResponse

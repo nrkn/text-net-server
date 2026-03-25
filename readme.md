@@ -12,9 +12,11 @@ clients that are closer to text-over-tcp than proper telnet
 
 ## sessions
 
-basic session support; first screen welcomes user, gives them a new unique 
-token (so they can continue this session later) or the option to resume a 
-session
+basic session support; first screen welcomes user, gives them the option to 
+start a new session or resume an existing one
+
+when starting a new session, a unique token is generated and can be viewed 
+from the main menu - the user can use this token to resume later
 
 session id is 16 chars, base32 (reduce char ambiguity) eg:
 
@@ -34,9 +36,8 @@ any non-trivial user data - not in scope for this iteration
 
 allow entering in lowercase, with or without spaces, with hyphens etc
 
-sessions are initially persisted to memory only - users should have the option
-to issue a SAVE command to persist their session to disk - this will avoid
-storage churn from brief curiosity visits, bots etc
+sessions are held in memory and auto-saved to disk when modified - this avoids
+the need for an explicit save command while keeping persistence simple
 
 ## terminal capability
 
@@ -213,9 +214,10 @@ swallow iac etc
 
 ### output pacing
 
-do not overwhelm clients on archaic hardware
-
-write line by line, do not buffer large outputs before sending
+not part of the level 0 contract, but keep in mind for slow clients (eg 
+WiModem232 bridging TCP to serial at low baud rates) - TCP backpressure 
+should handle most cases, and screens are small enough to fit typical buffers,
+but a per-line delay may be needed if real hardware testing reveals issues
 
 write one line and if socket.write returns false wait for drain
 

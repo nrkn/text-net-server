@@ -44,11 +44,19 @@ export const createHttpRequestHandler = (
       path = match[2] || onTokenPath
     }
 
-    // append form input to path (for inputPath forms like /resume/:token)
-    if (form.input) {
+    // append form input to path
+    if (req.method === 'POST' && form.input) {
       const input = sanitizeInput(form.input).trim().replace(/\s+/g, '')
 
-      if (input) path = path + '/' + encodeURIComponent(input)
+      if (input) {
+        // read the input route from the hidden field, fill in the param
+        const inputPath = form._inputPath
+        if (inputPath) {
+          path = inputPath.replace(/:(\w+)/, encodeURIComponent(input))
+        } else {
+          path = path + '/' + encodeURIComponent(input)
+        }
+      }
     }
 
     // default route
@@ -82,7 +90,14 @@ export const createHttpRequestHandler = (
 
     if (!captured) return errorPage(500, 'ERROR')
 
-    return { status: 200, body: renderHtml(captured, tokenPrefix) }
+    const result = captured as TextScreen
+
+    // set form action to current page so empty submissions re-render
+    if (result.response.type === 'input') {
+      result.response.formAction = path
+    }
+
+    return { status: 200, body: renderHtml(result, tokenPrefix) }
   }
 
   return handleRequest

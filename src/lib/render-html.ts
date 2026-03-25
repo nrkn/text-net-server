@@ -39,11 +39,12 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
   html.push('</pre>')
 
   if (screen.response.type === 'input') {
-    const basePath = screen.response.path.replace(/\/:(\w+)$/, '')
-    const action = escapeHtml(tokenPrefix + basePath)
+    const action = escapeHtml(tokenPrefix + (screen.response.formAction ?? ''))
+    const inputPath = escapeHtml(screen.response.path)
 
     html.push(
       `<form method="POST" action="${action}">` +
+      `<input type="hidden" name="_inputPath" value="${inputPath}">` +
       '<input type="text" name="input"> ' +
       '<input type="submit" value="GO">' +
       '</form>'
