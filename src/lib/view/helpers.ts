@@ -5,38 +5,96 @@ export const br = blank()
 
 export const p = (line: string) => [line, ...br]
 
-export const table = (...rows: string[][]): string[] => {
-  const lines: string[] = []
+const allocateWidths = (
+  naturalWidths: number[], maxCols: number
+): number[] => {
+  const n = naturalWidths.length
+  const total = naturalWidths.reduce((a, b) => a + b, 0)
 
-  const colCount = Math.max(...rows.map(r => r.length))
+  if (total <= maxCols) return [...naturalWidths]
 
-  const colWidths: number[] = []
+  const widths = new Array(n).fill(0)
+  const flexible = new Array(n).fill(true)
 
-  for (let c = 0; c < colCount - 1; c++) {
-    colWidths.push(Math.max(...rows.map(r => (r[c] ?? '').length)))
+  let available = maxCols
+  let numFlex = n
+
+  // lock columns that fit within their fair share
+  let changed = true
+
+  while (changed) {
+    changed = false
+    const share = Math.floor(available / numFlex)
+
+    for (let c = 0; c < n; c++) {
+      if (!flexible[c]) continue
+      if (naturalWidths[c] <= share) {
+        widths[c] = naturalWidths[c]
+        flexible[c] = false
+        available -= naturalWidths[c]
+        numFlex--
+        changed = true
+      }
+    }
   }
 
-  for (const row of rows) {
-    const parts: string[] = []
+  // distribute remaining space among overflowing columns
+  if (numFlex > 0) {
+    const share = Math.floor(available / numFlex)
 
+    let remainder = available - share * numFlex
+
+    for (let c = 0; c < n; c++) {
+      if (!flexible[c]) continue
+      widths[c] = share + (remainder > 0 ? 1 : 0)
+      if (remainder > 0) remainder--
+    }
+  }
+
+  // floor of 1 per column so wrap() never gets 0
+  for (let c = 0; c < n; c++) {
+    if (widths[c] < 1) widths[c] = 1
+  }
+
+  return widths
+}
+
+export const table = (...rows: string[][]): string[] => {
+  if (rows.length === 0) return [...br]
+
+  const lines: string[] = []
+  const colCount = Math.max(...rows.map(r => r.length))
+
+  if (colCount === 0) return [...br]
+
+  // natural (unwrapped) width of each column
+  const naturalWidths: number[] = []
+  for (let c = 0; c < colCount; c++) {
+    naturalWidths.push(Math.max(...rows.map(r => (r[c] ?? '').length)))
+  }
+
+  const colWidths = allocateWidths(naturalWidths, MAX_COLS)
+
+  for (const row of rows) {
+    // wrap every cell within its allocated width
+    const wrappedCells: string[][] = []
     for (let c = 0; c < colCount; c++) {
       const cell = row[c] ?? ''
+      wrappedCells.push(wrap(cell, colWidths[c]))
+    }
 
-      if (c < colCount - 1) {
-        parts.push(cell.padEnd(colWidths[c]))
-      } else {
-        const prefix = parts.join('')
-        const remaining = MAX_COLS - prefix.length
-        const wrapped = wrap(cell, remaining)
+    // zip wrapped lines across columns
+    const maxLines = Math.max(...wrappedCells.map(w => w.length))
 
-        lines.push(prefix + wrapped[0])
-
-        const indent = ' '.repeat(prefix.length)
-
-        for (let i = 1; i < wrapped.length; i++) {
-          lines.push(indent + wrapped[i])
-        }
+    for (let l = 0; l < maxLines; l++) {
+      let line = ''
+      for (let c = 0; c < colCount; c++) {
+        const cellLine = wrappedCells[c][l] ?? ''
+        line += c < colCount - 1
+          ? cellLine.padEnd(colWidths[c])
+          : cellLine
       }
+      lines.push(line)
     }
   }
 
