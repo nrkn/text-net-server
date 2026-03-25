@@ -1,31 +1,16 @@
 import { Session } from '../lib/types.js'
 import { formatToken } from '../lib/token.js'
-import { blank } from '../lib/output.js'
-import { input, menu, screen } from '../lib/screen.js'
-
-const br = blank()
-
-const p = (line: string) => [line, ...br]
+import { screen } from '../lib/view/screen.js'
+import { input } from '../lib/view/input-path.js'
+import { menu } from '../lib/view/menu.js'
+import { p, table } from '../lib/view/helpers.js'
 
 export const welcomeScreen = () => screen(
   p('Welcome'),
-  p('You will receive a token to resume your session later.'),
   menu(
     'Commands',
     ['N', 'New Session', '/new'],
     ['R', 'Resume Session', '/resume'],
-  )
-)
-
-export const newSessionScreen = (session: Session) => screen(
-  p('New Session'),
-  p('Your token is:'),
-  p(formatToken(session.token)),
-  p('Write this down. You will need it to resume your session.'),
-  menu(
-    'Commands',
-    ['S', 'Start', '/main'],
-    ['Q', 'Quit', '/quit'],
   )
 )
 
@@ -51,11 +36,21 @@ export const namePromptScreen = () => screen(
   input('/name/:name')
 )
 
+export const tokenScreen = (session: Session) => screen(
+  p('Your Token'),
+  p(formatToken(session.token)),
+  p('Use this token to resume your session.'),
+  menu(
+    'Commands',
+    ['M', 'Main Menu', '/main'],
+  )
+)
+
 const mainMenu = menu(
   'Commands',
   ['N', 'Set Name', '/setname'],
+  ['T', 'Show Token', '/token'],
   ['H', 'Help', '/help'],
-  ['S', 'Save', '/save'],
   ['Q', 'Quit', '/quit'],
 )
 
@@ -66,19 +61,14 @@ export const mainScreen = (session: Session) => screen(
 
 export const helpScreen = () => screen(
   p('Help'),
-  '',
   p('Type a command letter and press Enter.'),
-  p('N - Set or change your display name.'),
-  p('H - Show this help screen.'),
-  p('S - Save your session to disk so you can resume it later.'),
-  p('Q - Quit and disconnect.'),
-  '',
-  p('Your session token was given when you started. You can use it to resume where you left off.'),
-  mainMenu
-)
-
-export const savedScreen = () => screen(
-  p('Session saved.'),
+  table(
+    ['N - ', 'Set or change your display name.'],
+    ['T - ', 'Show your session token for resuming later.'],
+    ['H - ', 'Show this help screen.'],
+    ['Q - ', 'Quit and disconnect.'],
+  ),
+  p('Your session is saved automatically.'),
   mainMenu
 )
 

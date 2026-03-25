@@ -6,6 +6,7 @@ import { SessionStore } from '../session.js'
 import { createRouter } from '../routing/index.js'
 import { createConnectionState } from './connection-state.js'
 import { SetupRoutes } from './types.js'
+import { maybe } from '../util.js'
 
 export const createStreamHandler = (
   setupRoutes: SetupRoutes,
@@ -25,12 +26,19 @@ export const createStreamHandler = (
     app.dispatch(path)
   }
 
+  const autoSave = () => {
+    if (maybe(state.session) && state.session.dirty) {
+      sessions.save(state.session)
+    }
+  }
+
   const app = createRouter<TextScreen>(sendScreen, redirect)
 
   setupRoutes(app, state, sessions)
 
   // initial navigation
   app.dispatch(startPath)
+  autoSave()
 
   const handleLine = (line: string) => {
     const input = sanitizeInput(line)
@@ -50,6 +58,7 @@ export const createStreamHandler = (
 
       if (item) {
         app.dispatch(item[2])
+        autoSave()
         if (state.quit) close()
         return
       }
@@ -57,8 +66,9 @@ export const createStreamHandler = (
 
     // freeform input
     if (currentScreen.inputPath) {
-      const path = currentScreen.inputPath.replace(/:(\w+)/, input.trim())
+      const path = currentScreen.inputPath.replace(/:(\.+)/, input.trim())
       app.dispatch(path)
+      autoSave()
       if (state.quit) close()
       return
     }

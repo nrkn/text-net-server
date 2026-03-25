@@ -1,6 +1,8 @@
-import { InputPath, Menu, MenuItem, TextScreen } from './types.js'
-import { menuToLines, sanitizeOutput, wrap } from './output.js'
-import { isRecord, maybe } from './util.js'
+import { InputPath, Menu, TextScreen } from '../types.js'
+import { menuToLines, sanitizeOutput, wrap } from '../output.js'
+import { maybe } from '../util.js'
+import { isMenu } from './menu.js'
+import { isInputPath } from './input-path.js'
 
 type ScreenArg = string | string[] | Menu | InputPath
 
@@ -35,7 +37,11 @@ export const screen = (...args: ScreenArg[]): TextScreen => {
     }
   }
 
-  if (maybe(screenMenu) && maybe(inputPath)) {
+  const hasMenu = maybe(screenMenu)
+  const hasInput = maybe(inputPath)
+
+  // can't have both
+  if (hasMenu && hasInput) {
     throw Error('A screen should have either a menu or input, but saw both')
   }
 
@@ -46,31 +52,3 @@ export const screen = (...args: ScreenArg[]): TextScreen => {
   }
 }
 
-export const menu = (
-  title: string, ...items: MenuItem[]
-): Menu => ({ title, items })
-
-const isMenuItem = (value: unknown): value is MenuItem =>
-  Array.isArray(value) &&
-  value.length === 3 &&
-  typeof value[0] === 'string' &&
-  typeof value[1] === 'string' &&
-  typeof value[2] === 'string'
-
-export const isMenu = (value: unknown): value is Menu => {
-  if (!isRecord(value)) return false
-  if (typeof value.title !== 'string') return false
-  if (!Array.isArray(value.items)) return false
-  if (!value.items.every(isMenuItem)) return false
-
-  return true
-}
-
-export const input = (inputPath: string): InputPath => ({ inputPath })
-
-export const isInputPath = (value: unknown): value is InputPath => {
-  if (!isRecord(value)) return false
-  if (typeof value.inputPath !== 'string') return false
-
-  return true
-}

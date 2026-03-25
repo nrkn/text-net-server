@@ -4,7 +4,7 @@ import { SessionStore } from '../session.js'
 import { isValidToken } from '../token.js'
 import { HttpRequest, HttpResponse, parseFormBody } from '../transport/http.js'
 import { TextScreen } from '../types.js'
-import { sanitizeInput } from '../util.js'
+import { sanitizeInput, maybe } from '../util.js'
 import { createConnectionState } from './connection-state.js'
 import { SetupRoutes } from './types.js'
 
@@ -68,6 +68,11 @@ export const createHttpRequestHandler = (
       app.dispatch(path)
     } catch {
       return errorPage(404, 'NOT FOUND')
+    }
+
+    // auto-save on dirty
+    if (maybe(state.session) && state.session.dirty) {
+      sessions.save(state.session)
     }
 
     // set tokenPrefix from newly created session (e.g. /new)

@@ -4,9 +4,9 @@ import { SessionStore } from '../lib/session.js'
 import { RtrApp } from '../lib/routing/types.js'
 
 import {
-  welcomeScreen, newSessionScreen, resumePromptScreen,
-  resumeFailScreen, namePromptScreen, mainScreen, helpScreen,
-  savedScreen, quitScreen
+  welcomeScreen, resumePromptScreen,
+  resumeFailScreen, namePromptScreen, tokenScreen,
+  mainScreen, helpScreen, quitScreen
 } from './views.js'
 
 import { ConnectionState } from '../lib/app/types.js'
@@ -22,7 +22,7 @@ export const setupRoutes = (
 
   app.on('/new', (_req, res) => {
     state.session = sessions.create()
-    res.send(newSessionScreen(state.session))
+    res.redirect('/main')
   })
 
   app.on('/resume', (_req, res) => {
@@ -59,16 +59,16 @@ export const setupRoutes = (
   app.on('/name/:name', (req, res) => {
     state.session!.name = req.params.name.trim()
     state.session!.dirty = true
+    
     res.redirect('/main')
+  })
+
+  app.on('/token', (_req, res) => {
+    res.send(tokenScreen(state.session!))
   })
 
   app.on('/help', (_req, res) => {
     res.send(helpScreen())
-  })
-
-  app.on('/save', (_req, res) => {
-    sessions.save(state.session!)
-    res.send(savedScreen())
   })
 
   app.on('/quit', (_req, res) => {
