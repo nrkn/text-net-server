@@ -2,6 +2,7 @@ import { Writable } from 'node:stream'
 import { TextScreen } from '../view/types.js'
 import { sanitizeInput, splitCommand } from '../util.js'
 import { screenToLines, send, sendScreenLines } from '../output.js'
+import { CRLF } from '../const.js'
 import { SessionStore } from '../session.js'
 import { createRouter } from '../routing/index.js'
 import { createConnectionState } from './connection-state.js'
@@ -57,6 +58,10 @@ export const createStreamHandler = (
 
   const handleResponse = (line: string) => {
     const input = sanitizeInput(line)
+
+    // echo input back for clients without local echo
+    stream.write(input + CRLF + CRLF)
+
     const cmd = splitCommand(input)
 
     // blank → re-render

@@ -10,6 +10,13 @@ etc
 by being extremely conservative at level 0, we can ensure operability even with 
 clients that are closer to text-over-tcp than proper telnet 
 
+### transport differences
+
+levels describe capability (charset, layout, formatting) not transport - the 
+same level 0 content is served over telnet/tcp, http, and cli, but there are 
+minor transport-specific differences (eg echo is stream-only, form inputs are
+http-only) - these are not level differences but still need to be considered
+
 ## sessions
 
 basic session support; first screen welcomes user, gives them the option to 
@@ -181,8 +188,6 @@ leading/trailing ws)
 
 ```
 INVALID COMMAND
-
-PRESS H FOR HELP
 ```
 
 No:
