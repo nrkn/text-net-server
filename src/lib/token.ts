@@ -4,7 +4,7 @@ import { normalizeToken } from './util.js'
 
 export const generateToken = () => {
   const bytes = randomBytes(TOKEN_LENGTH)
-  
+
   let token = ''
 
   for (let i = 0; i < TOKEN_LENGTH; i++)
