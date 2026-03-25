@@ -20,3 +20,5 @@ export type InputResponse = ['INPUT', inputPath: string]
 export type EndResponse = ['END', message: string]
 
 export type ScreenResponse = MenuResponse | InputResponse | EndResponse
+
+export type ScreenArg = string | string[] | Menu | InputPath | EndResponse

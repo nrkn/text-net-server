@@ -232,16 +232,17 @@ const parse = (str: string, options: ParseOptions = {}): TokenData => {
   return { tokens: consumeUntil('end'), originalPath: str }
 }
 
-
-
 const negate = (delimiter: string, backtrack: string): string => {
   if (backtrack.length < 2) {
     if (delimiter.length < 2) return `[^${escape(delimiter + backtrack)}]`
+
     return `(?:(?!${escape(delimiter)})[^${escape(backtrack)}])`
   }
+
   if (delimiter.length < 2) {
     return `(?:(?!${escape(backtrack)})[^${escape(delimiter)}])`
   }
+
   return `(?:(?!${escape(backtrack)}|${escape(delimiter)})[\\s\\S])`
 }
 
@@ -260,6 +261,7 @@ const toRegExpSource = (
       result += escape(token.value)
       backtrack += token.value
       isSafeSegmentParam ||= token.value.includes(delimiter)
+
       continue
     }
 
@@ -280,6 +282,7 @@ const toRegExpSource = (
       keys.push(token)
       backtrack = ''
       isSafeSegmentParam = false
+
       continue
     }
   }
@@ -327,21 +330,26 @@ export const pathToRegexp = (
     sensitive = false,
     trailing = true,
   } = options
+
   const keys: RouteKey[] = []
   const flags = sensitive ? '' : 'i'
   const sources: string[] = []
 
   for (const input of pathsToArray(path)) {
     const data = typeof input === 'object' ? input : parse(input, options)
+
     for (const tokens of flatten(data.tokens)) {
       sources.push(toRegExpSource(tokens, delimiter, keys, data.originalPath))
     }
   }
 
   let pattern = `^(?:${sources.join('|')})`
+
   if (trailing) pattern += `(?:${escape(delimiter)}$)?`
+
   pattern += end ? '$' : `(?=${escape(delimiter)}|$)`
 
   const regexp = new RegExp(pattern, flags)
+
   return { regexp, keys }
 }

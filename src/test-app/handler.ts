@@ -1,8 +1,6 @@
 import { createStreamHandler } from '../lib/app/create-stream-handler.js'
-import { createSessionStore } from '../lib/session.js'
 import { setupRoutes } from './routes.js'
-
-const sessions = createSessionStore('data/sessions')
+import { sessions } from './sessions.js'
 
 export const createAppStreamHandler = async () => {
   await sessions.load()

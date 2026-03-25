@@ -1,9 +1,6 @@
 import { MAX_COLS } from '../const.js'
-import { blank, wrap } from '../output.js'
-
-export const br = blank()
-
-export const p = (line: string) => [line, ...br]
+import { wrapText } from '../output.js'
+import { br } from './util.js'
 
 const allocateWidths = (
   naturalWidths: number[], maxCols: number
@@ -59,7 +56,7 @@ const allocateWidths = (
   return widths
 }
 
-export const table = (...rows: string[][]): string[] => {
+export const tab = (...rows: string[][]): string[] => {
   if (rows.length === 0) return [...br]
 
   const lines: string[] = []
@@ -69,6 +66,7 @@ export const table = (...rows: string[][]): string[] => {
 
   // natural (unwrapped) width of each column
   const naturalWidths: number[] = []
+
   for (let c = 0; c < colCount; c++) {
     naturalWidths.push(Math.max(...rows.map(r => (r[c] ?? '').length)))
   }
@@ -78,9 +76,11 @@ export const table = (...rows: string[][]): string[] => {
   for (const row of rows) {
     // wrap every cell within its allocated width
     const wrappedCells: string[][] = []
+
     for (let c = 0; c < colCount; c++) {
       const cell = row[c] ?? ''
-      wrappedCells.push(wrap(cell, colWidths[c]))
+
+      wrappedCells.push(wrapText(cell, colWidths[c]))
     }
 
     // zip wrapped lines across columns
@@ -88,12 +88,15 @@ export const table = (...rows: string[][]): string[] => {
 
     for (let l = 0; l < maxLines; l++) {
       let line = ''
+
       for (let c = 0; c < colCount; c++) {
         const cellLine = wrappedCells[c][l] ?? ''
+
         line += c < colCount - 1
           ? cellLine.padEnd(colWidths[c])
           : cellLine
       }
+
       lines.push(line)
     }
   }

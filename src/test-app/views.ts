@@ -3,8 +3,9 @@ import { formatToken } from '../lib/token.js'
 import { screen } from '../lib/view/screen.js'
 import { input } from '../lib/view/input-path.js'
 import { menu } from '../lib/view/menu.js'
-import { p, table } from '../lib/view/helpers.js'
+import { p } from '../lib/view/util.js'
 import { end } from '../lib/view/end.js'
+import { tab } from '../lib/view/table.js'
 
 export const welcomeScreen = () => screen(
   p('Welcome'),
@@ -63,7 +64,7 @@ export const mainScreen = (session: Session) => screen(
 export const helpScreen = () => screen(
   p('Help'),
   p('Type a command letter and press Enter.'),
-  table(
+  tab(
     ['N - ', 'Set or change your display name.'],
     ['T - ', 'Show your session token for resuming later.'],
     ['H - ', 'Show this help screen.'],
