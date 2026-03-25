@@ -4,6 +4,7 @@ import { screen } from '../lib/view/screen.js'
 import { input } from '../lib/view/input-path.js'
 import { menu } from '../lib/view/menu.js'
 import { p, table } from '../lib/view/helpers.js'
+import { end } from '../lib/view/end.js'
 
 export const welcomeScreen = () => screen(
   p('Welcome'),
@@ -73,5 +74,5 @@ export const helpScreen = () => screen(
 )
 
 export const quitScreen = () => screen(
-  'Goodbye.'
+  end('Goodbye.')
 )

@@ -1,4 +1,4 @@
-import { MenuItem, Menu } from '../types.js'
+import { MenuItem, Menu } from './types.js'
 import { isRecord } from '../util.js'
 
 export const menu = (

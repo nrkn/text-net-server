@@ -1,4 +1,4 @@
-import { TextScreen } from './types.js'
+import { TextScreen } from './view/types.js'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;')
@@ -20,8 +20,10 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
 
   parts.push('</pre>')
 
-  if (screen.menu) {
-    for (const [short, long, path] of screen.menu.items) {
+  const [kind, arg] = screen.response
+
+  if (kind === 'MENU') {
+    for (const [short, long, path] of arg.items) {
       const action = escapeHtml(tokenPrefix + path)
 
       parts.push(
@@ -32,8 +34,8 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
     }
   }
 
-  if (screen.inputPath) {
-    const basePath = screen.inputPath.replace(/\/:(\w+)$/, '')
+  if (kind === 'INPUT') {
+    const basePath = arg.replace(/\/:(\w+)$/, '')
     const action = escapeHtml(tokenPrefix + basePath)
 
     parts.push(

@@ -1,6 +1,7 @@
 import { RtrApp } from '../routing/types.js'
 import { SessionStore } from '../session.js'
-import { Maybe, Session, TextScreen } from '../types.js'
+import { Maybe, Session } from '../types.js'
+import { TextScreen } from '../view/types.js'
 
 export type SetupRoutes = (
   app: RtrApp<TextScreen>,
@@ -10,5 +11,4 @@ export type SetupRoutes = (
 
 export type ConnectionState = {
   session: Maybe<Session>
-  quit: boolean
 }

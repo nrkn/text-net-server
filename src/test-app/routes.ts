@@ -1,4 +1,4 @@
-import { TextScreen } from '../lib/types.js'
+import { TextScreen } from '../lib/view/types.js'
 import { parseToken, isValidToken } from '../lib/token.js'
 import { SessionStore } from '../lib/session.js'
 import { RtrApp } from '../lib/routing/types.js'
@@ -59,7 +59,7 @@ export const setupRoutes = (
   app.on('/name/:name', (req, res) => {
     state.session!.name = req.params.name.trim()
     state.session!.dirty = true
-    
+
     res.redirect('/main')
   })
 
@@ -72,7 +72,6 @@ export const setupRoutes = (
   })
 
   app.on('/quit', (_req, res) => {
-    state.quit = true
     res.send(quitScreen())
   })
 }

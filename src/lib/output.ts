@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream'
 import { CRLF, MAX_COLS, PROMPT } from './const.js'
-import { Menu } from './types.js'
+import { Menu } from './view/types.js'
 
 // # strings
 

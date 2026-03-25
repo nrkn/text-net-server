@@ -1,4 +1,4 @@
-import { InputPath } from '../types.js'
+import { InputPath } from './types.js'
 import { isRecord } from '../util.js'
 
 export const input = (inputPath: string): InputPath => ({ inputPath })
