@@ -12,11 +12,8 @@ const isMenuItem = (value: unknown): value is MenuItem =>
   typeof value[1] === 'string' &&
   typeof value[2] === 'string'
 
-export const isMenu = (value: unknown): value is Menu => {
-  if (!isRecord(value)) return false
-  if (typeof value.title !== 'string') return false
-  if (!Array.isArray(value.items)) return false
-  if (!value.items.every(isMenuItem)) return false
-
-  return true
-}
+export const isMenu = (value: unknown): value is Menu =>
+  isRecord(value) &&
+  typeof value.title === 'string' &&
+  Array.isArray(value.items) &&
+  value.items.every(isMenuItem)

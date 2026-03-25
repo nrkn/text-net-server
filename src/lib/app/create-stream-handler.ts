@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream'
 import { TextScreen } from '../view/types.js'
 import { sanitizeInput, splitCommand } from '../util.js'
-import { send, sendScreenLines } from '../output.js'
+import { screenToLines, send, sendScreenLines } from '../output.js'
 import { SessionStore } from '../session.js'
 import { createRouter } from '../routing/index.js'
 import { createConnectionState } from './connection-state.js'
@@ -20,10 +20,12 @@ export const createStreamHandler = (
   const sendScreen = (screen: TextScreen) => {
     currentScreen = screen
 
-    if (screen.response[0] === 'END') {
-      send(stream, screen.lines)
+    const lines = screenToLines(screen)
+
+    if (screen.response.type === 'end') {
+      send(stream, lines)
     } else {
-      sendScreenLines(stream, screen.lines)
+      sendScreenLines(stream, lines)
     }
   }
 
@@ -40,7 +42,7 @@ export const createStreamHandler = (
   const dispatchTo = (path: string) => {
     app.dispatch(path)
     autoSave()
-    return currentScreen.response[0] === 'END'
+    return currentScreen.response.type === 'end'
   }
 
   const app = createRouter<TextScreen>(sendScreen, redirect)
@@ -59,15 +61,15 @@ export const createStreamHandler = (
 
     // blank → re-render
     if (!cmd) {
-      sendScreenLines(stream, currentScreen.lines)
+      sendScreenLines(stream, screenToLines(currentScreen))
       return
     }
 
-    const [kind, arg] = currentScreen.response
+    const { response } = currentScreen
 
     // menu navigation
-    if (kind === 'MENU') {
-      const item = arg.items.find(
+    if (response.type === 'menu') {
+      const item = response.menu.items.find(
         ([short, long]) => cmd.name === short || cmd.name === long
       )
 
@@ -78,15 +80,15 @@ export const createStreamHandler = (
     }
 
     // freeform input
-    if (kind === 'INPUT') {
-      const path = arg.replace(/:(\w+)/, input.trim())
+    if (response.type === 'input') {
+      const path = response.path.replace(/:(\w+)/, input.trim())
       if (dispatchTo(path)) close()
       return
     }
 
     // no match
     send(stream, ['', 'INVALID COMMAND'])
-    sendScreenLines(stream, currentScreen.lines)
+    sendScreenLines(stream, screenToLines(currentScreen))
   }
 
   return handleResponse

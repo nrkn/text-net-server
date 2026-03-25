@@ -7,38 +7,45 @@ const escapeHtml = (s: string) =>
     .replace(/"/g, '&quot;')
 
 export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
-  const parts: string[] = [
+  const html: string[] = [
     '<html>',
     '<head><title>TELNET</title></head>',
     '<body>',
-    '<pre>',
   ]
 
-  for (const line of screen.lines) {
-    parts.push(escapeHtml(line))
-  }
+  for (const part of screen.parts) {
+    if (part.type === 'text') {
+      html.push('<pre>')
 
-  parts.push('</pre>')
+      for (const line of part.lines) {
+        html.push(escapeHtml(line))
+      }
 
-  const [kind, arg] = screen.response
+      html.push('</pre>')
+    } else {
+      const { menu } = part
 
-  if (kind === 'MENU') {
-    for (const [short, long, path] of arg.items) {
-      const action = escapeHtml(tokenPrefix + path)
+      html.push(`<pre>${escapeHtml(menu.title)}</pre>`)
+      html.push('<ul>')
 
-      parts.push(
-        `<form method="POST" action="${action}">` +
-        `<input type="submit" value="${escapeHtml(short)} ${escapeHtml(long)}">` +
-        '</form>'
-      )
+      for (const [short, long, path] of menu.items) {
+        const href = escapeHtml(tokenPrefix + path)
+
+        html.push(
+          `<li><a href="${href}" accesskey="${escapeHtml(short.toLowerCase())}"` +
+          `>${escapeHtml(short)} ${escapeHtml(long)}</a></li>`
+        )
+      }
+
+      html.push('</ul>')
     }
   }
 
-  if (kind === 'INPUT') {
-    const basePath = arg.replace(/\/:(\w+)$/, '')
+  if (screen.response.type === 'input') {
+    const basePath = screen.response.path.replace(/\/:(\w+)$/, '')
     const action = escapeHtml(tokenPrefix + basePath)
 
-    parts.push(
+    html.push(
       `<form method="POST" action="${action}">` +
       '<input type="text" name="input"> ' +
       '<input type="submit" value="GO">' +
@@ -46,7 +53,7 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
     )
   }
 
-  parts.push('</body>', '</html>')
+  html.push('</body>', '</html>')
 
-  return parts.join('\n')
+  return html.join('\n')
 }

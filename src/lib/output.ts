@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream'
 import { CRLF, MAX_COLS, PROMPT } from './const.js'
-import { Menu } from './view/types.js'
+import { Menu, TextScreen } from './view/types.js'
 
 // # strings
 
@@ -43,6 +43,21 @@ export const menuToLines = (
 
   for (const [short, long] of items)
     lines.push(`${short} ${long}`)
+
+  return lines
+}
+
+// flatten structured screen parts to plain lines
+export const screenToLines = (screen: TextScreen): string[] => {
+  const lines: string[] = []
+
+  for (const part of screen.parts) {
+    if (part.type === 'text') {
+      lines.push(...part.lines)
+    } else {
+      lines.push(...menuToLines(part.menu).flatMap(l => wrapText(l)))
+    }
+  }
 
   return lines
 }
