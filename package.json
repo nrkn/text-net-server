@@ -1,0 +1,13 @@
+{
+  "name": "text-net-server",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "telnet": "npx tsc && node dist/test-app/telnet.js",
+    "cli": "npx tsc && node dist/test-app/cli.js",
+    "http": "npx tsc && node dist/test-app/http.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0"
+  }
+}
