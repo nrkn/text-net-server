@@ -1,93 +1,87 @@
 import { Session } from '../lib/types.js'
 import { formatToken } from '../lib/token.js'
-import { blank, createMenu } from '../lib/output.js'
-import { createScreen } from '../lib/screen.js'
+import { blank } from '../lib/output.js'
+import { input, menu, screen } from '../lib/screen.js'
 
 const br = blank()
 
-export const welcomeMenu = createMenu(
-  'COMMANDS',
-  ['N', 'NEW SESSION', '/new'],
-  ['R', 'RESUME SESSION', '/resume'],
-)
+const p = (line: string) => [line, ...br]
 
-export const welcomeScreen = () => createScreen(
-  'WELCOME',
-  br,
-  'YOU WILL RECEIVE A TOKEN TO RESUME YOUR SESSION LATER',
-  br,
-  welcomeMenu
-)
-
-export const newSessionMenu = createMenu(
-  'COMMANDS',
-  ['S', 'START', '/main'],
-  ['Q', 'QUIT', '/quit'],
-)
-
-export const newSessionScreen = (session: Session) => createScreen(
-  'NEW SESSION',
-  br,
-  'YOUR TOKEN IS',
-  br,
-  formatToken(session.token),
-  br,
-  'WRITE THIS DOWN. YOU WILL NEED IT TO RESUME YOUR SESSION.',
-  br,
-  newSessionMenu
-)
-
-export const resumePromptScreen = () => {
-  const screen = createScreen(
-    'RESUME SESSION',
-    br,
-    'ENTER YOUR TOKEN'
+export const welcomeScreen = () => screen(
+  p('Welcome'),
+  p('You will receive a token to resume your session later.'),
+  menu(
+    'Commands',
+    ['N', 'New Session', '/new'],
+    ['R', 'Resume Session', '/resume'],
   )
-
-  screen.inputPath = '/resume/:token'
-
-  return screen
-}
-
-export const resumeFailMenu = createMenu(
-  'COMMANDS',
-  ['R', 'RESUME SESSION', '/resume'],
-  ['N', 'NEW SESSION', '/new'],
 )
 
-export const resumeFailScreen = () => createScreen(
-  'TOKEN NOT FOUND',
-  br,
-  'CHECK YOUR TOKEN AND TRY AGAIN',
-  br,
-  resumeFailMenu
+export const newSessionScreen = (session: Session) => screen(
+  p('New Session'),
+  p('Your token is:'),
+  p(formatToken(session.token)),
+  p('Write this down. You will need it to resume your session.'),
+  menu(
+    'Commands',
+    ['S', 'Start', '/main'],
+    ['Q', 'Quit', '/quit'],
+  )
 )
 
-export const mainMenu = createMenu(
-  'COMMANDS',
-  ['H', 'HELP', '/help'],
-  ['V', 'SAVE', '/save'],
-  ['Q', 'QUIT', '/quit'],
+export const resumePromptScreen = () => screen(
+  p('Resume Session'),
+  'Enter your token:',
+  input('/resume/:token')
 )
 
-export const mainScreen = (session: Session) => createScreen(
-  `HELLO ${session.name ? session.name.toUpperCase() : 'USER'}`,
-  br,
+export const resumeFailScreen = () => screen(
+  p('Token not found'),
+  p('Check your token and try again.'),
+  menu(
+    'Commands',
+    ['R', 'Resume Session', '/resume'],
+    ['N', 'New Session', '/new'],
+  )
+)
+
+export const namePromptScreen = () => screen(
+  p('Set Name'),
+  'Enter your name:',
+  input('/name/:name')
+)
+
+const mainMenu = menu(
+  'Commands',
+  ['N', 'Set Name', '/setname'],
+  ['H', 'Help', '/help'],
+  ['S', 'Save', '/save'],
+  ['Q', 'Quit', '/quit'],
+)
+
+export const mainScreen = (session: Session) => screen(
+  p(`Hello ${session.name || 'User'}`),
   mainMenu
 )
 
-export const helpScreen = () => createScreen(
-  'HELP',
-  br,
+export const helpScreen = () => screen(
+  p('Help'),
+  '',
+  p('Type a command letter and press Enter.'),
+  p('N - Set or change your display name.'),
+  p('H - Show this help screen.'),
+  p('S - Save your session to disk so you can resume it later.'),
+  p('Q - Quit and disconnect.'),
+  '',
+  p('Your session token was given when you started. You can use it to resume where you left off.'),
   mainMenu
 )
 
-export const savedScreen = () => createScreen(
-  'SESSION SAVED',
-  br,
+export const savedScreen = () => screen(
+  p('Session saved.'),
   mainMenu
 )
 
-export const quitScreen = () => createScreen(
-  'GOODBYE'
+export const quitScreen = () => screen(
+  'Goodbye.'
 )

@@ -1,4 +1,4 @@
-import { createServer as createTcpServer, Server } from 'node:net'
+import { createServer as createTcpServer } from 'node:net'
 import { CreateHandler } from './types.js'
 
 export const startTelnet = (port: number, createHandler: CreateHandler) => {

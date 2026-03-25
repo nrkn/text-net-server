@@ -5,7 +5,7 @@ import { RtrApp } from '../lib/routing/types.js'
 
 import {
   welcomeScreen, newSessionScreen, resumePromptScreen,
-  resumeFailScreen, mainScreen, helpScreen,
+  resumeFailScreen, namePromptScreen, mainScreen, helpScreen,
   savedScreen, quitScreen
 } from './views.js'
 
@@ -50,6 +50,16 @@ export const setupRoutes = (
 
   app.on('/main', (_req, res) => {
     res.send(mainScreen(state.session!))
+  })
+
+  app.on('/setname', (_req, res) => {
+    res.send(namePromptScreen())
+  })
+
+  app.on('/name/:name', (req, res) => {
+    state.session!.name = req.params.name.trim()
+    state.session!.dirty = true
+    res.redirect('/main')
   })
 
   app.on('/help', (_req, res) => {

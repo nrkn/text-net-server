@@ -25,3 +25,7 @@ export type TextScreen = {
   menu?: Menu
   inputPath?: string
 }
+
+export type InputPath = {
+  inputPath: string
+}
