@@ -11,35 +11,32 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
     '<html>',
     '<head><title>TELNET</title></head>',
     '<body>',
+    '<pre>',
   ]
 
   for (const part of screen.parts) {
     if (part.type === 'text') {
-      html.push('<pre>')
-
       for (const line of part.lines) {
         html.push(escapeHtml(line))
       }
-
-      html.push('</pre>')
     } else {
       const { menu } = part
 
-      html.push(`<pre>${escapeHtml(menu.title)}</pre>`)
-      html.push('<ul>')
+      html.push(escapeHtml(menu.title))
+      html.push('')
 
       for (const [short, long, path] of menu.items) {
         const href = escapeHtml(tokenPrefix + path)
 
         html.push(
-          `<li><a href="${href}" accesskey="${escapeHtml(short.toLowerCase())}"` +
-          `>${escapeHtml(short)} ${escapeHtml(long)}</a></li>`
+          `<a href="${href}" accesskey="${escapeHtml(short.toLowerCase())}"` +
+          `>${escapeHtml(short)} ${escapeHtml(long)}</a>`
         )
       }
-
-      html.push('</ul>')
     }
   }
+
+  html.push('</pre>')
 
   if (screen.response.type === 'input') {
     const basePath = screen.response.path.replace(/\/:(\w+)$/, '')
