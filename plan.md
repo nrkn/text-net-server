@@ -49,11 +49,12 @@ text format should be:
 - easy to write  
 
 extension is .txt
-filenames starting with _ should not be routed - they are reserved for eg
-wip views
 
-static/welcome.txt -> routes as /welcome
-static/cool-game/start.txt -> routes as /cool-game/start
+filenames starting with _ should not be routed - they are reserved for eg
+wip views, includes etc
+
+- static/welcome.txt -> routes as /welcome
+- static/cool-game/start.txt -> routes as /cool-game/start
 
 #### text formatting
 
@@ -103,7 +104,7 @@ eg:
 }
 ```
 
-table syntax (general block - columns are split on |, \| = literal "|"):
+table syntax (general block - columns are split on |, `\|` = literal `|`):
 
 ```
 --tab
