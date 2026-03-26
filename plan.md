@@ -3,7 +3,7 @@
 things that we're going to do next
 
 if we do them remember to remove from here and maybe add to the app framework
-section in readme
+section in readme, and maybe also to the `done` section below
 
 ## maybe
 
@@ -21,6 +21,36 @@ could be either explicit (you call manually from route handlers), or automatic,
 framework uses semantic meaning (eg is this a menu) to decide what to push and
 pop, or some combination of the two (have to be careful that they interact 
 gracefully)
+
+### flash middleware
+
+allow a route to send a message to the next screen, cleared after display
+
+shown at the top before the normal screen render
+
+## definitely
+
+things we definitely want, but maybe not just yet
+
+### text based screen format and static middleware
+
+like express:
+
+`app.use(static('data/test-app/static'))`
+
+text format should be:
+
+- able to do everything our screen helper can:
+  - text parts
+  - menu parts
+  - meta parts
+  - menu response | input response | end response
+- easy to parse
+- easy to write  
+
+## done
+
+things that were on one of the lists above, but we did 'em
 
 ### allow multiple menus
 
@@ -47,27 +77,3 @@ screen(
 
 the screen.response.menu remains; multiple menus get merged. throws if merging
 a menu causes ambiguity
-
-### flash middleware
-
-allow a route to send a message to the next screen, cleared after display
-
-shown at the top before the normal screen render
-
-## definitely
-
-### text based screen format and static middleware
-
-like express:
-
-`app.use(static('data/test-app/static'))`
-
-text format should be:
-
-- able to do everything our screen helper can:
-  - text parts
-  - menu parts
-  - meta parts
-  - menu response | input response | end response
-- easy to parse
-- easy to write  

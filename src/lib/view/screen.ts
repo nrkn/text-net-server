@@ -16,8 +16,24 @@ const sanitizeMenu = (menu: { title: string, items: MenuItem[] }) => ({
   items: menu.items.map(sanitizeMenuItem)
 })
 
-const multiResponseErr = Error('Only one response per screen is supported')
+const mixedResponseErr = Error('Cannot mix menu with input or end response')
+const multiResponseErr = Error('Only one input or end response per screen')
 const noResponseErr = Error('Screen did not contain a response')
+
+const verifyMenuCommands = (items: MenuItem[]) => {
+  const seen = new Set<string>()
+
+  for (const [short, long] of items) {
+    const s = short.toUpperCase()
+    const l = long.toUpperCase()
+
+    if (seen.has(s)) throw Error(`Duplicate menu command: ${s}`)
+    if (seen.has(l)) throw Error(`Duplicate menu command: ${l}`)
+
+    seen.add(s)
+    seen.add(l)
+  }
+}
 
 const pushText = (parts: ScreenPart[], lines: string[]) => {
   const last = parts[parts.length - 1]
@@ -31,6 +47,7 @@ const pushText = (parts: ScreenPart[], lines: string[]) => {
 
 export const screen = (...args: ScreenArg[]): TextScreen => {
   const parts: ScreenPart[] = []
+  const allMenuItems: MenuItem[] = []
 
   let response: ScreenResponse | undefined
 
@@ -46,20 +63,24 @@ export const screen = (...args: ScreenArg[]): TextScreen => {
     } else if (Array.isArray(arg)) {
       pushText(parts, arg)
     } else if (isMenu(arg)) {
-      if (maybe(response)) throw multiResponseErr
+      if (maybe(response)) throw mixedResponseErr
 
       const menu = sanitizeMenu(arg)
 
       parts.push({ type: 'menu', menu })
-
-      response = { type: 'menu', menu }
+      allMenuItems.push(...menu.items)
     } else if (isInputResponse(arg)) {
-      if (maybe(response)) throw multiResponseErr
+      if (maybe(response) || allMenuItems.length > 0) throw mixedResponseErr
 
       response = arg
     } else {
       throw Error(`Unexpected screen arg "${arg}"`)
     }
+  }
+
+  if (allMenuItems.length > 0) {
+    verifyMenuCommands(allMenuItems)
+    response = { type: 'menu', menu: { title: '', items: allMenuItems } }
   }
 
   if (!maybe(response)) throw noResponseErr

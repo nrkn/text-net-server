@@ -109,9 +109,12 @@ export const createStatelessHandler = (
       output.push('')
     }
 
-    // save session with current path
+    // save session with current path - reset on end response, to prevent 
+    // getting stuck on the end screen after disconnecting and reconnecting
+    // with the same token
     if (maybe(state.session)) {
-      state.session.data[SESSION_PATH_KEY] = lastPath
+      state.session.data[SESSION_PATH_KEY] =
+        captured.response.type === 'end' ? startPath : lastPath
       sessions.save(state.session)
     }
 

@@ -48,17 +48,23 @@ export const tokenScreen = (session: Session) => screen(
   )
 )
 
-const mainMenu = menu(
-  'Commands',
+const actionsMenu = menu(
+  'Actions',
   ['N', 'Set Name', '/setname'],
-  ['T', 'Show Token', '/token'],
   ['H', 'Help', '/help'],
+)
+
+const sessionMenu = menu(
+  'Session',
+  ['T', 'Show Token', '/token'],
   ['Q', 'Quit', '/quit'],
 )
 
 export const mainScreen = (session: Session) => screen(
   p(`Hello ${session.name || 'User'}`),
-  mainMenu
+  actionsMenu,
+  p('Session management:'),
+  sessionMenu,
 )
 
 export const helpScreen = () => screen(
@@ -71,7 +77,8 @@ export const helpScreen = () => screen(
     ['Q - ', 'Quit and disconnect.'],
   ),
   p('Your session is saved automatically.'),
-  mainMenu
+  actionsMenu,
+  sessionMenu,
 )
 
 export const quitScreen = () => screen(
