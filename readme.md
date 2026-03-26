@@ -249,8 +249,8 @@ parens as the default/minimum for each axis
 
 ### output - screen geometry
 
-- **width**: 20 | 40 | 64 | 80 (40)
-- **height**: 16 | 24 | 25 | unlimited/scrollback (unlimited)
+- **width**: 20 | 40 | 64 | 80 | custom (40)
+- **height**: 16 | 24 | 25 | custom | unlimited/scrollback (unlimited)
 - **scroll**: line (teletype, append-only) | screen (fixed page, clear/redraw) (line)
 
 ### output - text rendering
@@ -293,3 +293,22 @@ to fill - with scroll:line (level 0) it's irrelevant
 encoding vs charset are different axes - a PETSCII machine is 8bit encoding
 with a non-ASCII charset - a VT100 is 7bit ASCII - a modern terminal is utf8
 ASCII-superset
+
+## application framework
+
+some things we support beyond just implementing the telnet-style server and 
+level 0 contract:
+
+- router - express style path matching with params, redirect, middleware etc
+- screen dsl - structured screen assembly helpers
+- screen model - screens composed of screenparts, flattened at render time
+- response types - menu (choose from list), input (freeform input), 
+  end (goodbye)
+- transport abstractions - telnet/TCP, CLI/readline, HTTP and stateless 
+  - html transport, uses forms, links etc
+  - shell transport, stateless args based CLI with command chaining and users'
+    current path persisted between calls
+- connection state - per connection session binding (separate from session 
+  storage)    
+- session store; file backed, dirty-flag + auto-save
+

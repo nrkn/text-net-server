@@ -9,7 +9,7 @@ import { SetupRoutes } from './types.js'
 
 const SESSION_PATH_KEY = '_path'
 
-export const createShellHandler = (
+export const createStatelessHandler = (
   setupRoutes: SetupRoutes,
   sessions: SessionStore,
   startPath = '/'
