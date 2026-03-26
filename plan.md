@@ -198,5 +198,5 @@ screen(
 )
 ```
 
-the screen.response.menu remains; multiple menus get merged. throws if merging
-a menu causes ambiguity
+the screen.response.menu remains a single menu; multiple menus in the body get 
+merged. throws if merging a menu causes ambiguity
