@@ -14,8 +14,9 @@ export type ScreenResponse = MenuResponse | InputResponse | EndResponse
 
 export type TextPart = { type: 'text', lines: string[] }
 export type MenuPart = { type: 'menu', menu: Menu }
+export type MetaPart = { type: 'meta', meta: Record<string, unknown> }
 
-export type ScreenPart = TextPart | MenuPart
+export type ScreenPart = TextPart | MenuPart | MetaPart
 
 export type TextScreen = {
   parts: ScreenPart[]

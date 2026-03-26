@@ -19,7 +19,9 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
       for (const line of part.lines) {
         html.push(escapeHtml(line))
       }
-    } else {
+    } else if (part.type === 'meta') {
+      continue
+    } else if (part.type === 'menu') {
       const { menu } = part
 
       html.push(escapeHtml(menu.title))
@@ -33,6 +35,8 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
           `>${escapeHtml(short)} ${escapeHtml(long)}</a>`
         )
       }
+    } else {
+      throw Error(`Unknown screen part type: ${(part as any).type}`)
     }
   }
 

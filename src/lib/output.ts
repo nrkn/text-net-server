@@ -54,8 +54,12 @@ export const screenToLines = (screen: TextScreen): string[] => {
   for (const part of screen.parts) {
     if (part.type === 'text') {
       lines.push(...part.lines)
-    } else {
+    } else if (part.type === 'meta') {
+      continue
+    } else if (part.type === 'menu') {
       lines.push(...menuToLines(part.menu).flatMap(l => wrapText(l)))
+    } else {
+      throw Error(`Unknown screen part type: ${(part as any).type}`)
     }
   }
 

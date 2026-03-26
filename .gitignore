@@ -1,4 +1,4 @@
-data/test-app
+data/test-app/sessions/**
 
 # Logs
 logs
