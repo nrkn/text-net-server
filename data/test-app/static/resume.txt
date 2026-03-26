@@ -1,0 +1,4 @@
+Resume Session
+
+Enter your token:
+__input /resume/:token

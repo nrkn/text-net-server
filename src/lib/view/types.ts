@@ -23,4 +23,6 @@ export type TextScreen = {
   response: ScreenResponse
 }
 
-export type ScreenArg = string | string[] | Menu | InputResponse | EndResponse
+export type ScreenArg = (
+  string | string[] | Menu | InputResponse | EndResponse | MetaPart
+)

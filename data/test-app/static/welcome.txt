@@ -1,4 +1,7 @@
-
+// the welcome page, entry point for test-app
+--meta
+path /welcome
+--
 Welcome
 
 ==Commands

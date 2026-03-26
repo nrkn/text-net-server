@@ -6,8 +6,15 @@ import { menu } from '../lib/view/menu.js'
 import { p } from '../lib/view/util.js'
 import { end } from '../lib/view/end.js'
 import { tab } from '../lib/view/table.js'
+import { meta } from '../lib/view/meta.js'
 
+// the welcome page, entry point for test-app
 export const welcomeScreen = () => screen(
+  meta({
+    // we're not using this for anything, just a) testing meta and b) for 
+    // comparison to the new text format in data/text-app/static/welcome.txt
+    path: '/welcome', 
+  }),
   p('Welcome'),
   menu(
     'Commands',
