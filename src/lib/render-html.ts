@@ -1,3 +1,4 @@
+import { menuToLines } from './output.js'
 import { TextScreen } from './view/types.js'
 
 const escapeHtml = (s: string) =>
@@ -24,17 +25,17 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
     } else if (part.type === 'menu') {
       const { menu } = part
 
-      html.push(escapeHtml(menu.title))
-      html.push('')
-
-      for (const [short, long, path] of menu.items) {
-        const href = escapeHtml(tokenPrefix + path)
-
-        html.push(
-          `<a href="${href}" accesskey="${escapeHtml(short.toLowerCase())}"` +
-          `>${escapeHtml(short)} ${escapeHtml(long)}</a>`
+      html.push(
+        ...menuToLines(
+          menu,
+          escapeHtml,
+          escapeHtml,
+          (long, short, path) =>
+            `<a href="${escapeHtml(tokenPrefix + path)}" ` +
+            `accesskey="${escapeHtml(short.toLowerCase())}"` +
+            `>${escapeHtml(long)}</a>`
         )
-      }
+      )
     } else {
       throw Error(`Unknown screen part type: ${(part as any).type}`)
     }

@@ -1,6 +1,8 @@
 import { Writable } from 'node:stream'
 import { CRLF, MAX_COLS, PROMPT } from './const.js'
 import { Menu, TextScreen } from './view/types.js'
+import { MapMono } from './types.js'
+import { id } from './util.js'
 
 // # strings
 
@@ -35,14 +37,21 @@ export const blank = (n = 1) => Array<string>(n).fill('')
 
 export const join = (lines: string[]) => lines.join(CRLF)
 
+type MapCommand = (cmd: string, other: string, path: string) => string
+
 // format a menu block from [short, long] pairs
 export const menuToLines = (
-  { title, items }: Menu
+  { title, items }: Menu,
+  mapTitle: MapMono = id,
+  mapShort: MapCommand = id,
+  mapLong: MapCommand = id
 ) => {
-  const lines = [title, '']
+  const lines = [mapTitle(title)]
 
-  for (const [short, long] of items)
-    lines.push(`${short} ${long}`)
+  for (const [short, long, path] of items)
+    lines.push(`${mapShort(short, long, path)} ${mapLong(long, short, path)}`)
+
+  lines.push('')
 
   return lines
 }

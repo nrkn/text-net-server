@@ -13,3 +13,5 @@ export type Command = {
   args: string[]
 }
 
+export type MapTo<From = string, To = From> = (id: From) => To
+export type MapMono<T = string> = MapTo<T>
