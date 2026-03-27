@@ -1,7 +1,7 @@
 # telnet experiment
 
-define a level 0 support subset and serve some basic menus over telnet+tcp using
-as little code as possible and only node.js built ins
+define a level 0 support subset and serve some basic menus over telnet+tcp 
+using ~~as little code as possible and~~ only node.js built ins
 
 allows targeting an interface for eg text games etc at practically any hardware
 with TCP capability - eg retro machines with modern network adapter add-ons 
