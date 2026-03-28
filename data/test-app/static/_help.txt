@@ -1,6 +1,3 @@
-// we just put this here to show table syntax, that's why we called this
-// _help.txt instead of help.txt - so it doesn't override the view version of 
-// the help screen
 Help
 
 Type a command letter and press Enter.
@@ -12,5 +9,6 @@ H - |Show this help screen.
 Q - |Quit and disconnect.
 --
 Your session is saved automatically.
-// menus not implemented - they are reused between views and no include or etc
-// yet
+
+__inc _menu-actions
+__inc _menu-session

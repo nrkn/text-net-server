@@ -1,0 +1,8 @@
+Token not found
+
+Check your token and try again.
+
+==Commands
+R Resume Session /resume
+N New Session /new
+==

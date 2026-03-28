@@ -1,0 +1,4 @@
+==Actions
+N Set Name /setname
+H Help /help
+==

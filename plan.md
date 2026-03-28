@@ -171,6 +171,93 @@ all includes should be resolved first
 implemented as traditional basic parser; line scanners + state flags eg inMenu, 
 for loops, queue for includes etc - multi pass; includes, variables, blocks
 
+### frag
+
+```
+frag( ...screenParts )
+```
+
+### cap in dsl and text mode
+
+```
+cap({
+  charmode: 'press h',
+  pointer: 'click h',
+  default: 'type h and press enter'
+})
+```
+
+```
+--cap
+charmode press h
+pointer click h
+default type h and press enter
+--
+```
+
+Seems like inline cap text syntax could be awkward - maybe:
+
+```
+To see help <<charmode press h|pointer click h|default type h and press enter>>
+```
+
+### capability wizard and telnet negogiation
+
+*plan goes here*
+
+but at least start the cap wizard before doing the stack nav - it will be a good
+test of if we even need that
+
+## future
+
+when the server is relatively stable, we can start using it to make some things
+
+### pvz demake
+
+basic ui:
+
+```
+   0 1 2 3 4 5 6 7 8 9 
+
+A  L S . . . . . . Z .  
+B  L S . . . . . . . Z 
+C  L . . P . O . Z . . 
+D  L S . P . Z . Z . C  
+E  L S . . . . . . . . 
+```
+
+key:
+
+```
+L Lawnmower
+S Sunflower
+P Peashooter
+O Pea Projectile
+Z Zombie
+C Conehead Zombie
+```
+
+when multiple objects on one tile:
+
+```
+   0 1 2 3 4 5 6 7 8 9 
+
+A  L S . . . . . . Z .  
+B  L S . . . . . . . Z 
+C  L . . P . .:1:. . . 
+D  L S . P-Z . . Z . C  
+E  L S . . . . . .:2:Z 
+
+
+1 C6 Pea, Zombie
+2 E8 Buckethead, Zombie, Zombie
+```
+
+also note above where Peashooter being bitten by zombie `P-Z`
+
+real time sim but with always paused mechanic; player makes actions while 
+"paused", then chooses how many seconds to advance, eg `a 0.5` or `advance 10`
+
 ## done
 
 things that were on one of the lists above, but we did 'em
