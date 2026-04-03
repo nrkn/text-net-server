@@ -1,0 +1,9 @@
+Your Token
+
+{{/_formattedToken}}
+
+Use this token to resume your session.
+
+==Commands
+M Main Menu /main
+==

@@ -5,6 +5,7 @@ import { maybe } from '../util.js'
 import { isMenu } from './menu.js'
 import { isInputResponse } from './input-path.js'
 import { isEndResponse } from './end.js'
+import { isMeta } from './meta.js'
 
 const wrapAndSanitize = (line: string) => wrapText(sanitizeOutput(line))
 
@@ -73,6 +74,8 @@ export const screen = (...args: ScreenArg[]): TextScreen => {
       if (maybe(response) || allMenuItems.length > 0) throw mixedResponseErr
 
       response = arg
+    } else if (isMeta(arg)) {
+      parts.push(arg)
     } else {
       throw Error(`Unexpected screen arg "${arg}"`)
     }
