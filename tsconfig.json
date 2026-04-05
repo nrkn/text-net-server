@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "esnext",
+    "module": "nodenext",
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -15,8 +15,8 @@
     "strictNullChecks": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "nodenext",
+    "types": ["node"],
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
