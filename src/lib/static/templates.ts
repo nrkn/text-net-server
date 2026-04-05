@@ -23,7 +23,7 @@ export const resolveTemplates = (
   text.replace(TAG_RE, (_match, inner: string) => {
     const trimmed = inner.trim()
 
-    // {{/path}} or {{/path fallback}} — session.data deep path
+    // {{/path}} or {{/path fallback}} - session.data deep path
     if (trimmed.startsWith('/')) {
       const spaceIdx = trimmed.indexOf(' ')
       const path = spaceIdx === -1 ? trimmed.slice(1) : trimmed.slice(1, spaceIdx)
@@ -42,7 +42,7 @@ export const resolveTemplates = (
       return String(value)
     }
 
-    // {{key}} or {{key fallback}} — session top-level
+    // {{key}} or {{key fallback}} - session top-level
     const spaceIdx = trimmed.indexOf(' ')
     const key = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx)
     const fallback = spaceIdx === -1 ? undefined : trimmed.slice(spaceIdx + 1)

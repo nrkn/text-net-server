@@ -71,17 +71,17 @@ test of if we even need that
 
 ### subrouting / sub-apps
 
-`app.mount(prefix, setupFn, options)` — mount a sub-application at a path 
+`app.mount(prefix, setupFn, options)` - mount a sub-application at a path 
 prefix; the sub-app is a regular `setupRoutes` function that doesn't know its 
 mount point
 
 enables:
 
-- reusable modules — session/token management, common views etc as mountable 
+- reusable modules - session/token management, common views etc as mountable 
   route modules
-- composable apps — a bbs mounts games at `/chess`, `/forum` etc; each game 
+- composable apps - a bbs mounts games at `/chess`, `/forum` etc; each game 
   is also a standalone app
-- namespace isolation — routes, middleware, and session data are scoped to the 
+- namespace isolation - routes, middleware, and session data are scoped to the 
   mount prefix
 
 #### how mount works
@@ -97,18 +97,18 @@ mount creates a proxy app object that the sub-app's `setupRoutes` receives:
 - `res.redirect(path)` inside sub-app handlers prepends the prefix 
   (`/board` -> `/games/chess/board`)
 
-static middleware (`useStaticRoutes`) works unchanged — it calls `app.on()`, 
+static middleware (`useStaticRoutes`) works unchanged - it calls `app.on()`, 
 which the proxy prefixes automatically; templates and includes are unaffected
 
 #### session data scoping
 
 mount takes an optional data key:
 
-```
+```ts
 app.mount('/games/chess', chessSetupRoutes, { dataKey: 'chess' })
 ```
 
-sub-app sees `session.data` but it's transparently scoped — reads and writes 
+sub-app sees `session.data` but it's transparently scoped - reads and writes 
 go to `session.data.chess` on the real session; template tags using `{{/key}}` 
 resolve against the scoped data
 
@@ -126,7 +126,7 @@ redirect back to the parent app; the sub-app's goodbye text is discarded
 
 the return path is required in mount options:
 
-```
+```ts
 app.mount('/games/chess', chessSetupRoutes, { 
   dataKey: 'chess', returnPath: '/games' 
 })
@@ -136,8 +136,8 @@ app.mount('/games/chess', chessSetupRoutes, {
 
 a sub-app exports its core routes separately from session management:
 
-```
-// chess/routes.ts — core game routes (no session management)
+```ts
+// chess/routes.ts - core game routes (no session management)
 export const setupChessRoutes: SetupRoutes = (app, state, sessions) => {
   useStaticRoutes(app, 'data/chess/static', () => state.session)
   app.on('/move/:move', ...)
@@ -145,9 +145,9 @@ export const setupChessRoutes: SetupRoutes = (app, state, sessions) => {
 }
 ```
 
-standalone — wraps core routes with session management:
+standalone - wraps core routes with session management:
 
-```
+```ts
 // chess/standalone.ts
 createStreamHandler((app, state, sessions) => {
   useSessionRoutes(app, state, sessions)
@@ -157,7 +157,7 @@ createStreamHandler((app, state, sessions) => {
 
 embedded in a parent app:
 
-```
+```ts
 // bbs/routes.ts
 setupRoutes = (app, state, sessions) => {
   useSessionRoutes(app, state, sessions)
@@ -170,17 +170,98 @@ setupRoutes = (app, state, sessions) => {
 
 extract current session/token management from test-app/routes.ts into a shared
 module (`useSessionRoutes`) that any app can mount; provides `/welcome`, 
-`/new`, `/resume`, `/resume/:token`, `/token` — the test-app itself would use 
+`/new`, `/resume`, `/resume/:token`, `/token` - the test-app itself would use 
 it as the first consumer
 
 #### implementation notes
 
-- mount is implemented on the router, not the transport/handler layer — the 
+- mount is implemented on the router, not the transport/handler layer - the 
   proxy app is a thin wrapper over `app.on` and `app.use`
 - scoped middleware wraps each handler to check path prefix before executing
 - session data scoping passes a modified `state` to the sub-app where 
   `state.session.data` is proxied to `session.data[dataKey]`
 - no changes needed to transports, renderers, or the static text system
+
+### json http transport
+
+a new http transport that serves `TextScreen` as json rather than html
+
+the current html transport targets HTML 2 capability (forms, links, 
+accesskey as a progressive enhancement) - it's designed for the broadest 
+browser support, but the html rendering is opinionated and limited
+
+the json transport serves the screen model directly, allowing modern browser
+clients (or any http client) to interpret and render screens however they want
+
+#### how it works
+
+same request flow as the html transport:
+
+- token-in-url scheme (`/<TOKEN>/path`) for session binding
+- POST body for input submission (json body instead of form-encoded)
+- per-request router creation, dispatch, capture
+- auto-save on dirty session
+
+the response is the captured `TextScreen` serialized as json:
+
+```json
+{
+  "parts": [
+    { "type": "paragraph", "lines": ["HELLO USER"] },
+    { "type": "menu", "menu": { 
+        "title": "COMMANDS", 
+        "items": [["N", "NEW GAME", "/new"], ["Q", "QUIT", "/quit"]] 
+    }}
+  ],
+  "response": { 
+    "type": "menu", 
+    "menu": { 
+      "title": "", 
+      "items": [["N", "NEW GAME", "/new"], ["Q", "QUIT", "/quit"]] 
+    }
+  },
+  "token": "YPAEPYNKSK3JRX6X"
+}
+```
+
+`token` is included in the response body (created on `/new`, present when 
+session is active) so the client knows which token to use in subsequent 
+requests - no need to parse it from url redirects
+
+#### input submission
+
+POST json body rather than form-encoded:
+
+```json
+{ "input": "YPAEPYNKSK3JRX6X" }
+```
+
+the handler reads `input`, applies it to the input path from the current 
+screen's response, and dispatches - same as the html transport but without 
+the hidden `_inputPath` field (the server tracks it)
+
+#### error responses
+
+json errors instead of html error pages:
+
+```json
+{ "error": "NOT FOUND", "status": 404 }
+```
+
+#### implementation notes
+
+- new file: `src/lib/app/create-json-handler.ts` - largely parallel to 
+  `create-http-handler.ts` but returns json instead of calling `renderHtml`
+- no new renderer needed - `TextScreen` is already a plain object, just 
+  `JSON.stringify` it (possibly with a thin wrapper to add `token`)
+- shares the same `HttpRequest`/`HttpResponse` types and `startHttp` transport
+- the test-app gets a new entry point (eg `src/test-app/json.ts`) and npm 
+  script
+- content-type: `application/json`
+- text sanitization (uppercase, charset stripping) is a rendering concern - 
+  the json transport should serve the raw screen model as-is, leaving 
+  sanitization to the client; this means the json handler bypasses 
+  `renderText` entirely
 
 ## future
 
