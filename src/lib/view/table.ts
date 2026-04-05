@@ -7,4 +7,5 @@ export const tab = (...rows: string[][]): TablePart =>
 export const isTable = (value: unknown): value is TablePart =>
   isRecord(value) &&
   value.type === 'table' &&
-  Array.isArray(value.rows)
+  Array.isArray(value.rows) &&
+  value.rows.every(Array.isArray)

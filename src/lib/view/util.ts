@@ -1,4 +1,4 @@
 import { ParagraphPart } from './types.js'
 
-export const p = (line: string): ParagraphPart =>
-  ({ type: 'paragraph', lines: [line] })
+export const p = (...lines: string[]): ParagraphPart =>
+  ({ type: 'paragraph', lines })
