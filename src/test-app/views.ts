@@ -8,6 +8,9 @@ import { end } from '../lib/view/end.js'
 import { tab } from '../lib/view/table.js'
 import { meta } from '../lib/view/meta.js'
 
+// most of these views are overridden by the static middleware; they are left
+// here to help show how the text format/functional dsl complement each other
+
 // the welcome page, entry point for test-app
 export const welcomeScreen = () => screen(
   meta({
