@@ -1,6 +1,7 @@
 import { TextScreen } from '../view/types.js'
 import { sanitizeInput, splitCommand, maybe } from '../util.js'
-import { screenToLines, join } from '../output.js'
+import { renderText } from '../render/text.js'
+import { join } from '../output.js'
 import { SessionStore } from '../session.js'
 import { createRouter } from '../routing/index.js'
 import { createConnectionState } from './connection-state.js'
@@ -118,7 +119,7 @@ export const createStatelessHandler = (
       sessions.save(state.session)
     }
 
-    output.push(...screenToLines(captured))
+    output.push(...renderText(captured))
 
     return join(output)
   }

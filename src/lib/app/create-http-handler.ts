@@ -1,4 +1,4 @@
-import { renderHtml } from '../render-html.js'
+import { renderHtml } from '../render/html.js'
 import { createRouter } from '../routing/index.js'
 import { SessionStore } from '../session.js'
 import { isValidToken } from '../token.js'

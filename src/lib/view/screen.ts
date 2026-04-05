@@ -1,21 +1,11 @@
-import { MenuItem, ScreenArg, ScreenPart, ScreenResponse, TextScreen } from './types.js'
+import { MenuItem, ParagraphPart, ScreenArg, ScreenPart, ScreenResponse, TextScreen } from './types.js'
 
-import { sanitizeOutput, wrapText } from '../output.js'
 import { maybe } from '../util.js'
 import { isMenu } from './menu.js'
 import { isInputResponse } from './input-path.js'
 import { isEndResponse } from './end.js'
 import { isMeta } from './meta.js'
-
-const wrapAndSanitize = (line: string) => wrapText(sanitizeOutput(line))
-
-const sanitizeMenuItem = ([s, l, p]: MenuItem): MenuItem =>
-  [sanitizeOutput(s), sanitizeOutput(l), p]
-
-const sanitizeMenu = (menu: { title: string, items: MenuItem[] }) => ({
-  title: sanitizeOutput(menu.title),
-  items: menu.items.map(sanitizeMenuItem)
-})
+import { isTable } from './table.js'
 
 const mixedResponseErr = Error('Cannot mix menu with input or end response')
 const multiResponseErr = Error('Only one input or end response per screen')
@@ -36,14 +26,13 @@ const verifyMenuCommands = (items: MenuItem[]) => {
   }
 }
 
-const pushText = (parts: ScreenPart[], lines: string[]) => {
-  const last = parts[parts.length - 1]
+const isParagraph = (value: unknown): value is ParagraphPart =>
+  typeof value === 'object' && value !== null &&
+  (value as any).type === 'paragraph' &&
+  Array.isArray((value as any).lines)
 
-  if (last && last.type === 'text') {
-    last.lines.push(...lines.flatMap(wrapAndSanitize))
-  } else {
-    parts.push({ type: 'text', lines: lines.flatMap(wrapAndSanitize) })
-  }
+const pushParagraph = (parts: ScreenPart[], lines: string[]) => {
+  parts.push({ type: 'paragraph', lines: [...lines] })
 }
 
 export const screen = (...args: ScreenArg[]): TextScreen => {
@@ -54,22 +43,22 @@ export const screen = (...args: ScreenArg[]): TextScreen => {
 
   for (const arg of args) {
     if (typeof arg === 'string') {
-      pushText(parts, [arg])
+      pushParagraph(parts, [arg])
     } else if (isEndResponse(arg)) {
       if (maybe(response)) throw multiResponseErr
 
       response = arg
 
-      pushText(parts, [arg.message])
-    } else if (Array.isArray(arg)) {
-      pushText(parts, arg)
+      pushParagraph(parts, [arg.message])
+    } else if (isParagraph(arg)) {
+      pushParagraph(parts, arg.lines)
+    } else if (isTable(arg)) {
+      parts.push(arg)
     } else if (isMenu(arg)) {
       if (maybe(response)) throw mixedResponseErr
 
-      const menu = sanitizeMenu(arg)
-
-      parts.push({ type: 'menu', menu })
-      allMenuItems.push(...menu.items)
+      parts.push({ type: 'menu', menu: arg })
+      allMenuItems.push(...arg.items)
     } else if (isInputResponse(arg)) {
       if (maybe(response) || allMenuItems.length > 0) throw mixedResponseErr
 

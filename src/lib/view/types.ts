@@ -12,11 +12,12 @@ export type EndResponse = { type: 'end', message: string }
 
 export type ScreenResponse = MenuResponse | InputResponse | EndResponse
 
-export type TextPart = { type: 'text', lines: string[] }
+export type ParagraphPart = { type: 'paragraph', lines: string[] }
+export type TablePart = { type: 'table', rows: string[][] }
 export type MenuPart = { type: 'menu', menu: Menu }
 export type MetaPart = { type: 'meta', meta: Record<string, unknown> }
 
-export type ScreenPart = TextPart | MenuPart | MetaPart
+export type ScreenPart = ParagraphPart | TablePart | MenuPart | MetaPart
 
 export type TextScreen = {
   parts: ScreenPart[]
@@ -24,5 +25,6 @@ export type TextScreen = {
 }
 
 export type ScreenArg = (
-  string | string[] | Menu | InputResponse | EndResponse | MetaPart
+  string | ParagraphPart | TablePart | Menu | InputResponse | EndResponse |
+  MetaPart
 )

@@ -1,5 +1,5 @@
-import { menuToLines } from './output.js'
-import { TextScreen } from './view/types.js'
+import { menuToLines } from './text.js'
+import { TextScreen } from '../view/types.js'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;')
@@ -16,10 +16,18 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
   ]
 
   for (const part of screen.parts) {
-    if (part.type === 'text') {
+    if (part.type === 'paragraph') {
       for (const line of part.lines) {
         html.push(escapeHtml(line))
       }
+
+      html.push('')
+    } else if (part.type === 'table') {
+      for (const row of part.rows) {
+        html.push(row.map(cell => escapeHtml(cell)).join(' | '))
+      }
+
+      html.push('')
     } else if (part.type === 'meta') {
       continue
     } else if (part.type === 'menu') {

@@ -1,5 +1,4 @@
-import { blank } from '../output.js'
+import { ParagraphPart } from './types.js'
 
-export const br = blank()
-
-export const p = (line: string) => [line, ...br]
+export const p = (line: string): ParagraphPart =>
+  ({ type: 'paragraph', lines: [line] })

@@ -1,7 +1,8 @@
 import { Writable } from 'node:stream'
 import { TextScreen } from '../view/types.js'
 import { sanitizeInput, splitCommand } from '../util.js'
-import { screenToLines, send, sendScreenLines } from '../output.js'
+import { renderText } from '../render/text.js'
+import { send, sendScreenLines } from '../output.js'
 import { CRLF } from '../const.js'
 import { SessionStore } from '../session.js'
 import { createRouter } from '../routing/index.js'
@@ -21,7 +22,7 @@ export const createStreamHandler = (
   const sendScreen = (screen: TextScreen) => {
     currentScreen = screen
 
-    const lines = screenToLines(screen)
+    const lines = renderText(screen)
 
     if (screen.response.type === 'end') {
       send(stream, lines)
@@ -66,7 +67,7 @@ export const createStreamHandler = (
 
     // blank → re-render
     if (!cmd) {
-      sendScreenLines(stream, screenToLines(currentScreen))
+      sendScreenLines(stream, renderText(currentScreen))
       return
     }
 
@@ -93,7 +94,7 @@ export const createStreamHandler = (
 
     // no match
     send(stream, ['', 'INVALID COMMAND'])
-    sendScreenLines(stream, screenToLines(currentScreen))
+    sendScreenLines(stream, renderText(currentScreen))
   }
 
   return handleResponse

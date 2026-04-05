@@ -3,7 +3,6 @@ import { TextScreen } from '../view/types.js'
 import { screen } from '../view/screen.js'
 import { menu } from '../view/menu.js'
 import { meta } from '../view/meta.js'
-import { tab } from '../view/table.js'
 import { input } from '../view/input-path.js'
 import { end } from '../view/end.js'
 import { MenuItem } from '../view/types.js'
@@ -69,7 +68,6 @@ export const parseStaticTextScreen = (staticText: string): TextScreen => {
       textLines.pop()
 
     if (textLines.length > 0) {
-      // push as string[] (equivalent to p() calls with blank line separators)
       // split on blank lines to create paragraph groups
       const paragraphs: string[][] = []
       let current: string[] = []
@@ -88,8 +86,7 @@ export const parseStaticTextScreen = (staticText: string): TextScreen => {
       if (current.length > 0) paragraphs.push(current)
 
       for (const para of paragraphs) {
-        // each paragraph becomes lines + blank separator  
-        args.push([...para, ''])
+        args.push({ type: 'paragraph', lines: para })
       }
     }
 
@@ -115,7 +112,7 @@ export const parseStaticTextScreen = (staticText: string): TextScreen => {
         args.push(meta(metaObj))
         metaObj = {}
       } else if (block === 'tab') {
-        args.push(tab(...tabRows))
+        args.push({ type: 'table', rows: tabRows })
         tabRows = []
       }
 
@@ -190,7 +187,10 @@ export const parseStaticTextScreen = (staticText: string): TextScreen => {
 
     // __inc should already be resolved before parsing
     if (trimmed.startsWith('__inc ')) {
-      throw Error(`Unresolved include: "${trimmed}" - includes must be resolved before parsing`)
+      throw Error(
+        `Unresolved include: "${trimmed}" - ` +
+        `includes must be resolved before parsing`
+      )
     }
 
     // plain text
