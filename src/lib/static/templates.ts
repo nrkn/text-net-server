@@ -26,7 +26,9 @@ export const resolveTemplates = (
     // {{/path}} or {{/path fallback}} - session.data deep path
     if (trimmed.startsWith('/')) {
       const spaceIdx = trimmed.indexOf(' ')
-      const path = spaceIdx === -1 ? trimmed.slice(1) : trimmed.slice(1, spaceIdx)
+      const path = (
+        spaceIdx === -1 ? trimmed.slice(1) : trimmed.slice(1, spaceIdx)
+      )
       const fallback = spaceIdx === -1 ? undefined : trimmed.slice(spaceIdx + 1)
 
       if (!maybe(session))
@@ -35,9 +37,11 @@ export const resolveTemplates = (
 
       const value = getDeep(session.data, path)
 
-      if (value === undefined || value === null)
+      if (!maybe(value)) {
         if (fallback !== undefined) return fallback
-        else throw Error(`Template {{${trimmed}}}: key not found in session.data`)
+
+        throw Error(`Template {{${trimmed}}}: key not found in session.data`)
+      }
 
       return String(value)
     }
@@ -47,15 +51,19 @@ export const resolveTemplates = (
     const key = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx)
     const fallback = spaceIdx === -1 ? undefined : trimmed.slice(spaceIdx + 1)
 
-    if (!maybe(session))
+    if (!maybe(session)) {
       if (fallback !== undefined) return fallback
-      else throw Error(`Template {{${trimmed}}}: no session`)
+
+      throw Error(`Template {{${trimmed}}}: no session`)
+    }
 
     const value = (session as Record<string, unknown>)[key]
 
-    if (value === undefined || value === null || value === '')
+    if (!maybe(value) || value === '') {
       if (fallback !== undefined) return fallback
-      else throw Error(`Template {{${trimmed}}}: key "${key}" not found or empty`)
+      throw Error(`Template {{${trimmed}}}: key "${key}" not found or empty`)
+
+    }
 
     return String(value)
   })

@@ -20,8 +20,9 @@ export const resolveIncludes = (
 
         if (!name) throw Error('Empty __inc directive')
 
-        if (stack.includes(name))
-          throw Error(`Include cycle detected: ${[...stack, name].join(' -> ')}`)
+        if (stack.includes(name)) throw Error(
+          `Include cycle detected: ${[...stack, name].join(' -> ')}`
+        )
 
         stack.push(name)
 
