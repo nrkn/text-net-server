@@ -69,6 +69,119 @@ To see help <<charmode press h|pointer click h|default type h and press enter>>
 but at least start the cap wizard before doing the stack nav - it will be a good
 test of if we even need that
 
+### subrouting / sub-apps
+
+`app.mount(prefix, setupFn, options)` — mount a sub-application at a path 
+prefix; the sub-app is a regular `setupRoutes` function that doesn't know its 
+mount point
+
+enables:
+
+- reusable modules — session/token management, common views etc as mountable 
+  route modules
+- composable apps — a bbs mounts games at `/chess`, `/forum` etc; each game 
+  is also a standalone app
+- namespace isolation — routes, middleware, and session data are scoped to the 
+  mount prefix
+
+#### how mount works
+
+mount creates a proxy app object that the sub-app's `setupRoutes` receives:
+
+- `subApp.on(path, ...handlers)` -> registers as 
+  `app.on(prefix + path, ...wrappedHandlers)`
+- `subApp.use(...handlers)` -> middleware only runs for paths under the prefix
+- `subApp.mount(subPrefix, fn)` -> nests further: `prefix + subPrefix`
+- `req.path` inside sub-app handlers shows the path with prefix stripped 
+  (`/games/chess/board` -> `/board`)
+- `res.redirect(path)` inside sub-app handlers prepends the prefix 
+  (`/board` -> `/games/chess/board`)
+
+static middleware (`useStaticRoutes`) works unchanged — it calls `app.on()`, 
+which the proxy prefixes automatically; templates and includes are unaffected
+
+#### session data scoping
+
+mount takes an optional data key:
+
+```
+app.mount('/games/chess', chessSetupRoutes, { dataKey: 'chess' })
+```
+
+sub-app sees `session.data` but it's transparently scoped — reads and writes 
+go to `session.data.chess` on the real session; template tags using `{{/key}}` 
+resolve against the scoped data
+
+when no `dataKey` is provided, the sub-app shares the parent's full 
+`session.data` (useful for utility modules like session management that need 
+access to top-level session properties)
+
+#### end response in sub-apps
+
+when standalone, `end` closes the connection / ends the session as normal
+
+when mounted, `end` is intercepted by mount's wrapper and converted to a 
+redirect back to the parent app; the sub-app's goodbye text is discarded 
+(it's for standalone mode only)
+
+the return path is required in mount options:
+
+```
+app.mount('/games/chess', chessSetupRoutes, { 
+  dataKey: 'chess', returnPath: '/games' 
+})
+```
+
+#### standalone vs embedded
+
+a sub-app exports its core routes separately from session management:
+
+```
+// chess/routes.ts — core game routes (no session management)
+export const setupChessRoutes: SetupRoutes = (app, state, sessions) => {
+  useStaticRoutes(app, 'data/chess/static', () => state.session)
+  app.on('/move/:move', ...)
+  app.on('/board', ...)
+}
+```
+
+standalone — wraps core routes with session management:
+
+```
+// chess/standalone.ts
+createStreamHandler((app, state, sessions) => {
+  useSessionRoutes(app, state, sessions)
+  setupChessRoutes(app, state, sessions)
+}, sessions, '/welcome')
+```
+
+embedded in a parent app:
+
+```
+// bbs/routes.ts
+setupRoutes = (app, state, sessions) => {
+  useSessionRoutes(app, state, sessions)
+  app.mount('/chess', setupChessRoutes, { dataKey: 'chess', returnPath: '/games' })
+  app.mount('/forum', setupForumRoutes, { dataKey: 'forum', returnPath: '/games' })
+}
+```
+
+#### reusable session routes
+
+extract current session/token management from test-app/routes.ts into a shared
+module (`useSessionRoutes`) that any app can mount; provides `/welcome`, 
+`/new`, `/resume`, `/resume/:token`, `/token` — the test-app itself would use 
+it as the first consumer
+
+#### implementation notes
+
+- mount is implemented on the router, not the transport/handler layer — the 
+  proxy app is a thin wrapper over `app.on` and `app.use`
+- scoped middleware wraps each handler to check path prefix before executing
+- session data scoping passes a modified `state` to the sub-app where 
+  `state.session.data` is proxied to `session.data[dataKey]`
+- no changes needed to transports, renderers, or the static text system
+
 ## future
 
 when the server is relatively stable, we can start using it to make some things
