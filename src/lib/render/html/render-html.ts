@@ -1,5 +1,8 @@
-import { menuToLines } from './text.js'
-import { TextScreen } from '../view/types.js'
+import { MAX_COLS_HTML } from '../../const.js'
+import { TextScreen } from '../../view/types.js'
+import { menuToLines } from '../text/render-menu.js'
+import { tableToLines } from '../text/render-table.js'
+import { wrapText } from '../text/text-util.js'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;')
@@ -7,8 +10,11 @@ const escapeHtml = (s: string) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 
+const wrap = (text: string) => wrapText(text, MAX_COLS_HTML)
+
 export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
   const html: string[] = [
+    '<!doctype html>',
     '<html>',
     '<head><title>TELNET</title></head>',
     '<body>',
@@ -18,31 +24,31 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
   for (const part of screen.parts) {
     if (part.type === 'paragraph') {
       for (const line of part.lines) {
-        html.push(escapeHtml(line))
+        html.push(...wrap(escapeHtml(line)))
       }
 
       html.push('')
     } else if (part.type === 'table') {
-      for (const row of part.rows) {
-        html.push(row.map(cell => escapeHtml(cell)).join(' | '))
-      }
+      const tableLines = tableToLines(part.rows, MAX_COLS_HTML, escapeHtml)
 
-      html.push('')
+      html.push(...tableLines)
     } else if (part.type === 'meta') {
       continue
     } else if (part.type === 'menu') {
       const { menu } = part
 
+      const menuLines = menuToLines(
+        menu,
+        escapeHtml,
+        escapeHtml,
+        (long, short, path) =>
+          `<a href="${escapeHtml(tokenPrefix + path)}" ` +
+          `accesskey="${escapeHtml(short.toLowerCase())}"` +
+          `>${escapeHtml(long)}</a>`
+      )
+
       html.push(
-        ...menuToLines(
-          menu,
-          escapeHtml,
-          escapeHtml,
-          (long, short, path) =>
-            `<a href="${escapeHtml(tokenPrefix + path)}" ` +
-            `accesskey="${escapeHtml(short.toLowerCase())}"` +
-            `>${escapeHtml(long)}</a>`
-        )
+        ...menuLines.flatMap(wrap)
       )
     } else {
       throw Error(`Unknown screen part type: ${(part as any).type}`)

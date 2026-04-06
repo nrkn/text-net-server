@@ -7,6 +7,28 @@ section in readme, and maybe also to the `done` section below
 
 ## maybe
 
+### gemini transport
+
+request-response transport like http; gemini has a native input mechanism - 
+status codes 10/11 cause the client to prompt for freeform text, which is 
+URL-encoded and sent as the query on a follow-up request to the same URI; 
+status 11 hides input (for tokens etc)
+
+session tokens go in the URL path like the http transport; output is gemtext 
+(line-oriented format with links, headings, lists) — needs a gemtext renderer 
+alongside html and text
+
+mandatory TLS; one connection per request; port 1965
+
+### websocket transport
+
+persistent bidirectional stream like telnet — fits the existing line-based 
+`CreateHandler` pattern directly; client sends lines, server writes to the 
+stream
+
+works through firewalls and browsers unlike raw telnet; could share the same 
+http server (upgrade handshake on the existing port)
+
 ### stack based nav
 
 replace res.redirect with:

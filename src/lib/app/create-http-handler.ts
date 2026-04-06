@@ -1,4 +1,4 @@
-import { renderHtml } from '../render/html.js'
+import { renderHtml } from '../render/html/render-html.js'
 import { createRouter } from '../routing/index.js'
 import { SessionStore } from '../session.js'
 import { isValidToken } from '../token.js'
@@ -46,7 +46,7 @@ export const createHttpRequestHandler = (
 
     // append form input to path
     if (req.method === 'POST' && form.input) {
-      const input = sanitizeInput(form.input).trim().replace(/\s+/g, '')
+      const input = sanitizeInput(form.input).trim()
 
       if (input) {
         // read the input route from the hidden field, fill in the param

@@ -1,6 +1,6 @@
 import { TextScreen } from '../view/types.js'
 import { sanitizeInput, splitCommand, maybe } from '../util.js'
-import { renderText } from '../render/text.js'
+import { renderText } from '../render/text/render-text.js'
 import { join } from '../output.js'
 import { SessionStore } from '../session.js'
 import { createRouter } from '../routing/index.js'

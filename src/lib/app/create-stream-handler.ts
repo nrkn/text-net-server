@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream'
 import { TextScreen } from '../view/types.js'
 import { sanitizeInput, splitCommand } from '../util.js'
-import { renderText } from '../render/text.js'
+import { renderText } from '../render/text/render-text.js'
 import { send, sendScreenLines } from '../output.js'
 import { CRLF } from '../const.js'
 import { SessionStore } from '../session.js'
