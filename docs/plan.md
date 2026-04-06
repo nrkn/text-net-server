@@ -5,51 +5,6 @@ things that we're going to do next
 if we do them remember to remove from here and maybe add to the app framework
 section in readme, and maybe also to the `done` section below
 
-## maybe
-
-### gemini transport
-
-request-response transport like http; gemini has a native input mechanism - 
-status codes 10/11 cause the client to prompt for freeform text, which is 
-URL-encoded and sent as the query on a follow-up request to the same URI; 
-status 11 hides input (for tokens etc)
-
-session tokens go in the URL path like the http transport; output is gemtext 
-(line-oriented format with links, headings, lists) — needs a gemtext renderer 
-alongside html and text
-
-mandatory TLS; one connection per request; port 1965
-
-### websocket transport
-
-persistent bidirectional stream like telnet — fits the existing line-based 
-`CreateHandler` pattern directly; client sends lines, server writes to the 
-stream
-
-works through firewalls and browsers unlike raw telnet; could share the same 
-http server (upgrade handshake on the existing port)
-
-### stack based nav
-
-replace res.redirect with:
-
-- res.push
-- res.pop
-- res.replace
-
-useful for modals, wizards etc
-
-could be either explicit (you call manually from route handlers), or automatic,
-framework uses semantic meaning (eg is this a menu) to decide what to push and
-pop, or some combination of the two (have to be careful that they interact 
-gracefully)
-
-### flash middleware
-
-allow a route to send a message to the next screen, cleared after display
-
-shown at the top before the normal screen render
-
 ## definitely
 
 things we definitely want, but maybe not just yet
@@ -284,6 +239,51 @@ json errors instead of html error pages:
   the json transport should serve the raw screen model as-is, leaving 
   sanitization to the client; this means the json handler bypasses 
   `renderText` entirely
+
+## maybe
+
+### gemini transport
+
+request-response transport like http; gemini has a native input mechanism - 
+status codes 10/11 cause the client to prompt for freeform text, which is 
+URL-encoded and sent as the query on a follow-up request to the same URI; 
+status 11 hides input (for tokens etc)
+
+session tokens go in the URL path like the http transport; output is gemtext 
+(line-oriented format with links, headings, lists) — needs a gemtext renderer 
+alongside html and text
+
+mandatory TLS; one connection per request; port 1965
+
+### websocket transport
+
+persistent bidirectional stream like telnet — fits the existing line-based 
+`CreateHandler` pattern directly; client sends lines, server writes to the 
+stream
+
+works through firewalls and browsers unlike raw telnet; could share the same 
+http server (upgrade handshake on the existing port)
+
+### stack based nav
+
+replace res.redirect with:
+
+- res.push
+- res.pop
+- res.replace
+
+useful for modals, wizards etc
+
+could be either explicit (you call manually from route handlers), or automatic,
+framework uses semantic meaning (eg is this a menu) to decide what to push and
+pop, or some combination of the two (have to be careful that they interact 
+gracefully)
+
+### flash middleware
+
+allow a route to send a message to the next screen, cleared after display
+
+shown at the top before the normal screen render
 
 ## future
 
