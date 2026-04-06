@@ -240,7 +240,88 @@ json errors instead of html error pages:
   sanitization to the client; this means the json handler bypasses 
   `renderText` entirely
 
+### richer screen parts
+
+initially, headers:
+
+h1, h2, h3, h4
+
+dsl:
+
+```ts
+h1('hello world')
+```
+
+text:
+
+```
+# hello world
+```
+
+in current level 0 state these are entirely semantic - they will render 
+identically to paragraphs - but later when we have capabilities, they may render
+bold, a different color, etc
+
+initial output, with level 0 uppercase etc applied:
+
+```
+HELLO WORLD
+
+```
+
+later, other new parts might include lists etc
+
 ## maybe
+
+### styling
+
+tss - text style sheets
+
+this is more like a "probably" but we'll keep it in maybe for now as it's quite
+large in scope
+
+css like - extend dsl and text format to allow tagging content (tags, similar to 
+HTML classes) 
+
+media-query like syntax for capabilities
+
+currently text blocks (paragraphs, menus etc) emit an extra blank line as a 
+separator - this is the kind of thing that could be controlled by tss, eg 
+
+```css
+/* one line-feed */
+p { 
+  margin-bottom: 1lf; 
+} 
+
+/* or maybe */
+p::after {
+  content: '\r\n';
+}
+```
+
+capabilities, text decorations etc:
+
+```css
+@cap ansi-attr {
+  h1 {
+    font-weight: bold;
+  }
+}
+
+@cap ascii {
+  h1::before {
+    content: '-=< ';
+  }
+
+  h1::after {
+    content: ' >=-';
+  }
+}
+```
+
+no attempt made for parity with css - use a small subset - add features as they 
+are needed/useful
 
 ### gemini transport
 
