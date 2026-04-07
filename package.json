@@ -6,6 +6,7 @@
     "telnet": "npx tsc && node dist/test-app/telnet.js",
     "cli": "npx tsc && node dist/test-app/cli.js",
     "http": "npx tsc && node dist/test-app/http.js",
+    "json": "npx tsc && node dist/test-app/json.js",
     "shell": "npx tsc && node dist/test-app/shell.js --"
   },
   "devDependencies": {

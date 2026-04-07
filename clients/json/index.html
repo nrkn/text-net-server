@@ -1,0 +1,330 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>text-net-server</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
+    rel="stylesheet">
+  <style>
+    html {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #00bfff;
+      margin: 0;
+    }
+
+    body,
+    input {
+      font-family: "IBM Plex Mono", monospace;
+      font-optical-sizing: auto;
+      font-size: 2.5rem;
+      font-weight: 500;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-size: 1em;
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: inherit;
+    }
+
+    #screen {
+      background-color: #ffffff;
+      border: 0.5em solid #aaaaaa;
+      border-radius: 1em;
+      color: #444444;
+      max-width: 40em;
+      margin: auto;
+      margin-top: 1em;
+      padding: 1em;
+    }
+
+    #screen :first-child {
+      margin-top: 0;
+    }
+
+    #screen :last-child {
+      margin-bottom: 0;
+    }
+
+    #screen ul {
+      padding: 0;
+      list-style: none;
+    }
+
+    #screen li {
+      margin-bottom: 0.25em;
+    }
+
+    #screen nav {
+      margin-bottom: 1em;
+    }
+
+    #screen kbd {
+      font-weight: bold;
+      background-color: #3399ff;
+      color: #ffffff;
+      padding: 0 0.3em;
+      border-radius: 0.25em;
+    }
+
+    #screen a {
+      color: #3399ff;
+      text-decoration: none;
+    }
+
+    #screen a:hover {
+      text-decoration: underline;
+    }
+
+    #screen table {
+      border-collapse: collapse;
+      white-space: pre;
+    }
+
+    #screen input {
+      max-width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="screen"></div>
+  <script>
+    const BASE_URL = 'http://localhost:8080'
+
+    const screenEl = document.getElementById('screen')
+
+    let token = null
+
+    let currentResponse = null
+    let currentParts = null
+
+    // path helpers
+
+    const tokenPath = path =>
+      token ? '/' + token + path : path
+
+    const fetchUrl = path =>
+      BASE_URL + tokenPath(path)
+
+    // screen rendering
+
+    const $ = localName => document.createElement(localName)
+
+    const renderScreen = data => {
+      screenEl.innerHTML = ''
+
+      const links = []
+
+      for (const part of data.parts) {
+        if (part.type === 'paragraph') {
+          const p = $('p')
+
+          for (let i = 0; i < part.lines.length; i++) {
+            p.append(part.lines[i])
+
+            if (i < part.lines.length - 1) {
+              p.append($('br'))
+            }
+          }
+
+          screenEl.append(p)
+        } else if (part.type === 'table') {
+          const table = $('table')
+
+          for (const row of part.rows) {
+            const tr = $('tr')
+
+            for (const cell of row) {
+              const td = $('td')
+
+              td.append(cell)
+              tr.append(td)
+            }
+
+            table.append(tr)
+          }
+
+          screenEl.append(table)
+        } else if (part.type === 'menu') {
+          const { title, items } = part.menu
+
+          const nav = $('nav')
+          const menuTitle = $('h2')
+          const ul = $('ul')
+
+          menuTitle.append(title)
+
+          for (const item of items) {
+            const li = $('li')
+
+            const [short, long, path] = item
+
+            const shortEl = $('kbd')
+
+            shortEl.append(short)
+
+            const link = $('a')
+
+            link.href = path
+            link.accessKey = short
+            link.dataset.path = path
+
+
+            link.append(long)
+            li.append(shortEl, ' ', link)
+            ul.append(li)
+
+            links.push(link)
+          }
+
+
+          nav.append(menuTitle)
+          nav.append(ul)
+
+          screenEl.append(nav)
+        }
+        // meta parts are skipped
+      }
+
+      let form
+
+      if (data.response.type === 'input') {
+        form = $('form')
+
+        form.id = 'input-form'
+
+        const input = $('input')
+
+        input.type = 'text'
+        input.name = 'input'
+
+        const submit = $('input')
+
+        submit.type = 'submit'
+        submit.value = 'GO'
+
+        form.append(input, submit)
+        screenEl.append(form)
+
+        input.focus()
+      }
+
+      // bind menu links
+      for (const a of links) {
+        a.addEventListener('click', e => {
+          e.preventDefault()
+          navigate(a.dataset.path)
+        })
+      }
+
+      // bind keyboard shortcuts for menu items
+      const shortcutMap = new Map()
+
+      for (const a of links) {
+        shortcutMap.set(a.accessKey.toUpperCase(), a.dataset.path)
+      }
+
+      const onKeyDown = e => {
+        const path = shortcutMap.get(e.key.toUpperCase())
+
+        if (path) {
+          e.preventDefault()
+
+          document.removeEventListener('keydown', onKeyDown)
+
+          navigate(path)
+        }
+      }
+
+      if (shortcutMap.size > 0) {
+        document.addEventListener('keydown', onKeyDown)
+      }
+
+      if (form) {
+        form.addEventListener('submit', e => {
+          e.preventDefault()
+          const input = form.querySelector('input[name="input"]').value
+          submitInput(input, currentResponse)
+        })
+      }
+    }
+
+    // navigation
+
+    const handleResponse = data => {
+      if (data.token) token = data.token
+
+      currentResponse = data.response
+      currentParts = data.parts
+
+      renderScreen(data)
+    }
+
+    const showMessage = message => {
+      screenEl.innerHTML = ''
+
+      const pre = $('pre')
+
+      pre.append(message)
+
+      screenEl.append(pre)
+    }
+
+    const navigate = async path => {
+      try {
+        const res = await fetch(fetchUrl(path))
+        const data = await res.json()
+
+        if (data.error) {
+          showMessage(data.error)
+
+          return
+        }
+
+        handleResponse(data)
+      } catch (err) {
+        showMessage(err.message || 'Unknown Error')
+      }
+    }
+
+    const submitInput = async (input, response) => {
+      if (!response || response.type !== 'input') return
+
+      const trimmed = input.trim()
+
+      if (!trimmed) {
+        // blank input - re-render the current screen
+        handleResponse({ parts: currentParts, response: currentResponse, token })
+
+        return
+      }
+
+      // template the input into the response path, eg 
+      // /resume/:token -> /resume/ABCD
+      const path = response.path.replace(/:(\w+)/, encodeURIComponent(trimmed))
+
+      navigate(path)
+    }
+
+    // start
+
+    navigate('/')
+  </script>
+</body>
+
+</html>

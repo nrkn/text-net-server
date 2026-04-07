@@ -121,87 +121,6 @@ etc) or purgable (completed games, temporary data etc) and if (when haha) we run
 out of disk, it can tidy up from purgable, doesn't have to be smart, can delete
 oldest, biggest etc; todo consider how this interacts with snapshots
 
-### json http transport
-
-a new http transport that serves `TextScreen` as json rather than html
-
-the current html transport targets HTML 2 capability (forms, links, 
-accesskey as a progressive enhancement) - it's designed for the broadest 
-browser support, but the html rendering is opinionated and limited
-
-the json transport serves the screen model directly, allowing modern browser
-clients (or any http client) to interpret and render screens however they want
-
-#### how it works
-
-same request flow as the html transport:
-
-- token-in-url scheme (`/<TOKEN>/path`) for session binding
-- POST body for input submission (json body instead of form-encoded)
-- per-request router creation, dispatch, capture
-- auto-save on dirty session
-
-the response is the captured `TextScreen` serialized as json:
-
-```json
-{
-  "parts": [
-    { "type": "paragraph", "lines": ["HELLO USER"] },
-    { "type": "menu", "menu": { 
-        "title": "COMMANDS", 
-        "items": [["N", "NEW GAME", "/new"], ["Q", "QUIT", "/quit"]] 
-    }}
-  ],
-  "response": { 
-    "type": "menu", 
-    "menu": { 
-      "title": "", 
-      "items": [["N", "NEW GAME", "/new"], ["Q", "QUIT", "/quit"]] 
-    }
-  },
-  "token": "YPAEPYNKSK3JRX6X"
-}
-```
-
-`token` is included in the response body (created on `/new`, present when 
-session is active) so the client knows which token to use in subsequent 
-requests - no need to parse it from url redirects
-
-#### input submission
-
-POST json body rather than form-encoded:
-
-```json
-{ "input": "YPAEPYNKSK3JRX6X" }
-```
-
-the handler reads `input`, applies it to the input path from the current 
-screen's response, and dispatches - same as the html transport but without 
-the hidden `_inputPath` field (the server tracks it)
-
-#### error responses
-
-json errors instead of html error pages:
-
-```json
-{ "error": "NOT FOUND", "status": 404 }
-```
-
-#### implementation notes
-
-- new file: `src/lib/app/create-json-handler.ts` - largely parallel to 
-  `create-http-handler.ts` but returns json instead of calling `renderHtml`
-- no new renderer needed - `TextScreen` is already a plain object, just 
-  `JSON.stringify` it (with a thin wrapper to add `token`)
-- shares the same `HttpRequest`/`HttpResponse` types and `startHttp` transport
-- the test-app gets a new entry point (eg `src/test-app/json.ts`) and npm 
-  script
-- content-type: `application/json`
-- text sanitization (uppercase, charset stripping) is a rendering concern - 
-  the json transport should serve the raw screen model as-is, leaving 
-  sanitization to the client; this means the json handler bypasses 
-  `renderText` entirely
-
 ### richer screen parts
 
 initially, headers:
@@ -388,6 +307,33 @@ fidonet et al have news/message passing systems - investigate and implement
 ## done
 
 things that were on one of the lists above, but we did 'em
+
+### json http transport
+
+`src/lib/app/create-json-handler.ts` - serves `TextScreen` as json rather 
+than html; shares the same `startHttp` transport and request flow as the html 
+handler (token-in-url, per-request router, auto-save) but returns raw screen 
+model as json with a `token` field; no renderer needed
+
+the client sends input via the screen's `response.path` template (e.g. 
+`/name/:name`) - the client substitutes the param client-side and navigates 
+via GET, so no POST or server-tracked input path is needed for the client; 
+the handler also supports POST with `{ "input": "..." }` using server-tracked 
+`_inputPath` in `session.data` for non-browser clients
+
+error responses are json: `{ "error": "NOT FOUND", "status": 404 }`; 
+content-type is `application/json`; CORS headers included for cross-origin 
+clients
+
+text sanitization (uppercase, charset stripping) is left to the client - the 
+json transport serves the raw screen model as-is
+
+a reference client is provided at `clients/json/index.html` - a single-file 
+browser client that fetches from the json handler and renders screens using 
+DOM elements; supports keyboard shortcuts for menu items (press the short key 
+directly, no modifier needed)
+
+test-app entry point: `src/test-app/json.ts`; npm script: `npm run json`
 
 ### text based screen format and static middleware
 

@@ -30,6 +30,10 @@ clients, web browsers, CLIs - using only node.js built ins
   before parsing
 - transport abstractions - telnet/TCP, CLI/readline, HTTP and stateless 
   - html transport, uses forms, links etc
+  - json transport, serves raw `TextScreen` as json over the same http 
+    layer; token in response body; CORS enabled; no rendering - clients 
+    interpret the screen model directly; reference browser client at 
+    `clients/json/index.html`
   - shell transport, stateless args based CLI with command chaining and users'
     current path persisted between calls
 - connection state - per connection session binding (separate from session 
