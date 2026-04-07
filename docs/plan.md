@@ -192,7 +192,7 @@ json errors instead of html error pages:
 - new file: `src/lib/app/create-json-handler.ts` - largely parallel to 
   `create-http-handler.ts` but returns json instead of calling `renderHtml`
 - no new renderer needed - `TextScreen` is already a plain object, just 
-  `JSON.stringify` it (possibly with a thin wrapper to add `token`)
+  `JSON.stringify` it (with a thin wrapper to add `token`)
 - shares the same `HttpRequest`/`HttpResponse` types and `startHttp` transport
 - the test-app gets a new entry point (eg `src/test-app/json.ts`) and npm 
   script
@@ -282,8 +282,11 @@ capabilities, text decorations etc:
 }
 ```
 
-no attempt made for parity with css - use a small subset - add features as they 
-are needed/useful
+no attempt made for parity with css - use a very small subset and only add 
+features as they are needed/useful
+
+we might also use an alternate syntax that's easier to parse (possibly even
+based on our existing text format), but css syntax is used above for familiarity
 
 ### gemini transport
 
