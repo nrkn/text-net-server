@@ -35,6 +35,18 @@ clients, web browsers, CLIs - using only node.js built ins
 - connection state - per connection session binding (separate from session 
   storage)    
 - session store; file backed, dirty-flag + auto-save
+- sub-app mounting - `mount(app, state, sessions, prefix, setupRoutes, opts)` 
+  mounts a sub-application at a path prefix; the sub-app receives a proxy 
+  router that transparently prefixes routes, strips prefixes from `req.path`, 
+  prepends prefixes on `res.redirect`, and rewrites screen paths; `end` 
+  responses in mounted sub-apps are intercepted and converted to a redirect 
+  back to the parent app; optional `dataKey` scopes `session.data` so the 
+  sub-app reads/writes a nested object transparently; supports nesting
+- reusable session routes - `useSessionRoutes(app, state, sessions, opts?)` 
+  registers session management routes (`/welcome`, `/new`, `/resume`, 
+  `/resume/:token`, `/token`, `/setname`, `/name/:name`, `/quit`); ships with 
+  default static views in `data/session/static/`; consumers can override 
+  individual views by providing a `staticDir` with replacement `.txt` files
 
 ### transport differences
 
