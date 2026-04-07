@@ -1,0 +1,5 @@
+==Session
+T Show Token /token
+N Set Name /setname
+Q Quit /quit
+==

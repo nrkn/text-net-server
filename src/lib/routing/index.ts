@@ -39,7 +39,8 @@ export const createRouter = <Content>(
     const exec = [...regexp.exec(path)!]
 
     const params: Record<string, string> = keys.reduce((map, key, i) => {
-      map[key.name] = exec[i + 1]
+      const raw = exec[i + 1]
+      map[key.name] = raw !== undefined ? decodeURIComponent(raw) : raw
 
       return map
     }, {} as Record<string, string>)

@@ -1,0 +1,6 @@
+Welcome
+
+==Commands
+N New Session /new
+R Resume Session /resume
+==

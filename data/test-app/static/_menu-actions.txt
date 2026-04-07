@@ -1,4 +1,5 @@
 ==Actions
 N Set Name /setname
+O Notes /notes/main
 H Help /help
 ==

@@ -1,0 +1,8 @@
+Notes
+
+{{/note (no note set)}}
+
+==Commands
+A Add Note /add
+L Leave /leave
+==

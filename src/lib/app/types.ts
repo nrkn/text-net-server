@@ -12,3 +12,8 @@ export type SetupRoutes = (
 export type ConnectionState = {
   session: Maybe<Session>
 }
+
+export type MountOptions = {
+  dataKey?: string
+  returnPath: string
+}
