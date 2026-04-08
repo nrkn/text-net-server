@@ -1,4 +1,4 @@
-import { createRouter } from '../routing/index.js'
+import { createRouter } from '../routing/create-router.js'
 import { SessionStore } from '../session.js'
 import { isValidToken } from '../token.js'
 import { HttpRequest, HttpResponse } from '../transport/http.js'
