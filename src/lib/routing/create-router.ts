@@ -50,6 +50,7 @@ export const createRouter = <Content>(
 
     let middlewareIndex = -1
     let handlerIndex = -1
+    let handlerPromise: void | Promise<void> = undefined
 
     const next: RtrNextFunction = arg => {
       if (arg === 'route') {
@@ -61,9 +62,16 @@ export const createRouter = <Content>(
       let handler = middlewares[middlewareIndex]
 
       if (handler !== undefined) {
-        handler(req, res, next)
+        const result = handler(req, res, next)
 
-        return
+        // only capture async middleware results - sync middlewares
+        // that call next() synchronously will have already set
+        // handlerPromise via the nested next() call
+        if (result && typeof (result as Promise<void>).then === 'function') {
+          handlerPromise = result as Promise<void>
+        }
+
+        return handlerPromise
       }
 
       handlerIndex++
@@ -73,10 +81,14 @@ export const createRouter = <Content>(
       if (handler === undefined)
         throw Error('Unexpected next, no more handlers')
 
-      handler(req, res, next)
+      handlerPromise = handler(req, res, next)
+
+      return handlerPromise
     }
 
     next()
+
+    return handlerPromise
   }
 
   const app: RtrApp<Content> = { on, use, dispatch }

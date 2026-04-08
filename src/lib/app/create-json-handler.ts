@@ -43,7 +43,7 @@ export const createJsonRequestHandler = (
   setupRoutes: SetupRoutes, sessions: SessionStore, startPath = '/',
   onTokenPath = '/main'
 ) => {
-  const handleRequest = (req: HttpRequest): HttpResponse => {
+  const handleRequest = async (req: HttpRequest): Promise<HttpResponse> => {
     // CORS preflight
     if (req.method === 'OPTIONS') {
       return { status: 204, headers: CORS_HEADERS, body: '' }
@@ -94,14 +94,14 @@ export const createJsonRequestHandler = (
     let captured: TextScreen | null = null
 
     const sendScreen = (screen: TextScreen) => { captured = screen }
-    const redirect = (rpath: string) => { app.dispatch(rpath) }
+    const redirect = (rpath: string) => { return app.dispatch(rpath) }
 
     const app = createRouter<TextScreen>(sendScreen, redirect)
 
     setupRoutes(app, state, sessions)
 
     try {
-      app.dispatch(path)
+      await app.dispatch(path)
     } catch {
       return jsonError(404, 'NOT FOUND')
     }

@@ -1,0 +1,8 @@
+# Guessing Game
+
+I'm thinking of a number between 1 and 100.
+
+==Commands
+N New Game /new
+L Leave /leave
+==

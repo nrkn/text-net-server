@@ -14,4 +14,5 @@ export type GgState = {
   target: number
   attempts: number
   finished: boolean
+  lastGuess?: number
 }

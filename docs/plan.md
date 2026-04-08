@@ -46,81 +46,6 @@ To see help <<charmode press h|pointer click h|default type h and press enter>>
 but at least start the cap wizard before doing the stack nav - it will be a good
 test of if we even need that
 
-### db
-
-we need a way to persist state outside of sessions (session.data can maybe 
-however link to the state - eg session.data.chess.storeName or etc) - for 
-example, for game sims and etc
-
-because we have no external deps as a rule, it has to be simple and robust
-
-probably the best bet is an append only log, with in memory snapshots created
-by replaying the log to avoid constantly hitting the disk; we can also store 
-disk snapshots intermittently so that we don't have the replay the entire log 
-
-we are running in node so we have a single thread and file writes (especially 
-appends) are pretty reliably atomic 
-
-worst thing that can happen is that a single log entry gets corrupted, we can
-detect and skip bad entries
-
-this is why it makes more sense than eg a JSON store, where we can run into all 
-kinds of issues doing read-modify-write
-
-if logs start taking up too much space, we can snapshot then truncate the log
-
-might look something like:
-
-```
-1710000000 POST general nik "hello world"
-1710000012 GUESS_GAME nik 42
-```
-
-append only logs can be used in a variety of ways depending on use case
-
-for example, a log that was handling some state might do (json-path syntax over 
-the state object):
-
-```
-1710000000 set foo/bar/0 "hello"
-1710000012 delete foo/bar/1
-```
-
-framework can provide helpers for the above
-
-or a game sim might be like:
-
-```
-1710000000 new-game
-1710000032 seed 16798
-1710000123 player move n
-1710000134 player move e
-1710000134 game spawn bat 13,34
-```
-
-in this case, it's specific to the game, so the game itself handles 
-replay/reducing
-
-use cases:
-
-- system log; connections, telnet negotiation, errors etc
-- input log; raw user traversal per session, for debugging, replays etc
-- domain log; sim events with custom reducer
-
-contract would be something like one entry per line, timestamp first, rest of 
-the line format is up to the writer/consumer
-
-text for compact/human readable logs, NDJSON for more complex data
-
-in src/sims/readme.md we talk about game sims being pure and just taking a dep
-for persistence - this enables that
-
-we could also do something, at the low log level, that's a bit like the zone 
-allocator in doom - a log can be marked static (a game in progress, system log 
-etc) or purgable (completed games, temporary data etc) and if (when haha) we run 
-out of disk, it can tidy up from purgable, doesn't have to be smart, can delete
-oldest, biggest etc; todo consider how this interacts with snapshots
-
 ## maybe
 
 ### styling
@@ -276,6 +201,81 @@ fidonet et al have news/message passing systems - investigate and implement
 ## done
 
 things that were on one of the lists above, but we did 'em
+
+### db
+
+we need a way to persist state outside of sessions (session.data can maybe 
+however link to the state - eg session.data.chess.storeName or etc) - for 
+example, for game sims and etc
+
+because we have no external deps as a rule, it has to be simple and robust
+
+probably the best bet is an append only log, with in memory snapshots created
+by replaying the log to avoid constantly hitting the disk; we can also store 
+disk snapshots intermittently so that we don't have the replay the entire log 
+
+we are running in node so we have a single thread and file writes (especially 
+appends) are pretty reliably atomic 
+
+worst thing that can happen is that a single log entry gets corrupted, we can
+detect and skip bad entries
+
+this is why it makes more sense than eg a JSON store, where we can run into all 
+kinds of issues doing read-modify-write
+
+if logs start taking up too much space, we can snapshot then truncate the log
+
+might look something like:
+
+```
+1710000000 POST general nik "hello world"
+1710000012 GUESS_GAME nik 42
+```
+
+append only logs can be used in a variety of ways depending on use case
+
+for example, a log that was handling some state might do (json-path syntax over 
+the state object):
+
+```
+1710000000 set foo/bar/0 "hello"
+1710000012 delete foo/bar/1
+```
+
+framework can provide helpers for the above
+
+or a game sim might be like:
+
+```
+1710000000 new-game
+1710000032 seed 16798
+1710000123 player move n
+1710000134 player move e
+1710000134 game spawn bat 13,34
+```
+
+in this case, it's specific to the game, so the game itself handles 
+replay/reducing
+
+use cases:
+
+- system log; connections, telnet negotiation, errors etc
+- input log; raw user traversal per session, for debugging, replays etc
+- domain log; sim events with custom reducer
+
+contract would be something like one entry per line, timestamp first, rest of 
+the line format is up to the writer/consumer
+
+text for compact/human readable logs, NDJSON for more complex data
+
+in src/sims/readme.md we talk about game sims being pure and just taking a dep
+for persistence - this enables that
+
+we could also do something, at the low log level, that's a bit like the zone 
+allocator in doom - a log can be marked static (a game in progress, system log 
+etc) or purgable (completed games, temporary data etc) and if (when haha) we run 
+out of disk, it can tidy up from purgable, doesn't have to be smart, can delete
+oldest, biggest etc; todo consider how this interacts with snapshots
 
 ### json http transport
 

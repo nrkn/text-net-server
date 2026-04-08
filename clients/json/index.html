@@ -139,7 +139,14 @@
 
     const $ = localName => document.createElement(localName)
 
+    let activeKeyDownHandler = null
+
     const renderScreen = data => {
+      if (activeKeyDownHandler) {
+        document.removeEventListener('keydown', activeKeyDownHandler)
+        activeKeyDownHandler = null
+      }
+
       screenEl.innerHTML = ''
 
       const links = []
@@ -263,16 +270,15 @@
         const path = shortcutMap.get(e.key.toUpperCase())
 
         if (path) {
+          console.log('keydown nav to', path)
+
           e.preventDefault()
 
+          activeKeyDownHandler = null
           document.removeEventListener('keydown', onKeyDown)
 
           navigate(path)
         }
-      }
-
-      if (shortcutMap.size > 0) {
-        document.addEventListener('keydown', onKeyDown)
       }
 
       if (form) {
@@ -281,6 +287,9 @@
           const input = form.querySelector('input[name="input"]').value
           submitInput(input, currentResponse)
         })
+      } else if (shortcutMap.size > 0) {
+        activeKeyDownHandler = onKeyDown
+        document.addEventListener('keydown', onKeyDown)
       }
     }
 

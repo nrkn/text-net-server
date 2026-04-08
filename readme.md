@@ -6,9 +6,11 @@ clients, web browsers, CLIs - using only node.js built ins
 
 ## application framework
 
-- router - express style path matching with params, redirect, middleware etc
-- screen dsl - structured screen assembly helpers (`screen()`, `p()`, `h1()`–`h4()`,
-  `menu()`, `tab()`, `input()`, `end()`, `meta()`)
+- router - express style path matching with params, redirect, middleware etc; 
+  supports async handlers (dispatch propagates promises through the 
+  middleware/handler chain; transports await dispatch)
+- screen dsl - structured screen assembly helpers (`screen()`, `p()`, 
+  `h1()`–`h4()`, `menu()`, `tab()`, `input()`, `end()`, `meta()`)
 - screen model - screens composed of typed parts (paragraph, heading, menu,
   table, meta), flattened at render time
 - heading parts - `h1`–`h4` via dsl or `#`–`####` in text format; semantic at
@@ -41,6 +43,15 @@ clients, web browsers, CLIs - using only node.js built ins
 - connection state - per connection session binding (separate from session 
   storage)    
 - session store; file backed, dirty-flag + auto-save
+- append-only event log - `createLog(dir, name)` provides timestamped 
+  append, line-by-line replay, `replayReduce` fold, JSON snapshots, and log 
+  compaction (archive + rotate); flush before replay guarantees buffered 
+  writes are visible; used as the persistence layer for reducer stores
+- reducer store - `createReducerStore(log, initial, reduce, opts?)` wires a 
+  typed reducer over an event log; replays log on startup to rebuild state 
+  (snapshot + replay); `dispatch` appends and reduces in one step; pluggable 
+  `parse`/`format` for custom serialization; per-session stores enable 
+  independent persistent state per user
 - sub-app mounting - `mount(app, state, sessions, prefix, setupRoutes, opts)` 
   mounts a sub-application at a path prefix; the sub-app receives a proxy 
   router that transparently prefixes routes, strips prefixes from `req.path`, 
@@ -90,7 +101,8 @@ full taxonomy: [docs/capabilities.md](docs/capabilities.md)
 
 ## docs
 
-- [docs/text-format.md](docs/text-format.md) - syntax reference for `.txt` screen files
+- [docs/text-format.md](docs/text-format.md) - syntax reference for `.txt` 
+  screen files
 - [docs/level-0.md](docs/level-0.md) - level 0 definition and contract
 - [docs/capabilities.md](docs/capabilities.md) - capability taxonomy
 - [docs/plan.md](docs/plan.md) - roadmap and done list

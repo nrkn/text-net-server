@@ -15,7 +15,7 @@ export const createStatelessHandler = (
   sessions: SessionStore,
   startPath = '/'
 ) => {
-  const handle = (args: string[]): string => {
+  const handle = async (args: string[]): Promise<string> => {
     const state = createConnectionState()
     const output: string[] = []
 
@@ -25,17 +25,17 @@ export const createStatelessHandler = (
     const sendScreen = (screen: TextScreen) => { captured = screen }
     const redirect = (path: string) => {
       lastPath = path
-      app.dispatch(path)
+      return app.dispatch(path)
     }
 
     const app = createRouter<TextScreen>(sendScreen, redirect)
 
     setupRoutes(app, state, sessions)
 
-    const dispatchTo = (path: string) => {
+    const dispatchTo = async (path: string) => {
       lastPath = path
       captured = undefined
-      app.dispatch(path)
+      await app.dispatch(path)
     }
 
     // parse args: [token] [command...]
@@ -61,7 +61,7 @@ export const createStatelessHandler = (
     }
 
     // dispatch to current path to get the screen
-    dispatchTo(currentPath)
+    await dispatchTo(currentPath)
 
     if (!captured) return 'ERROR'
 
@@ -87,14 +87,14 @@ export const createStatelessHandler = (
         }
 
         if (nextPath) {
-          dispatchTo(nextPath)
+          await dispatchTo(nextPath)
           if (!captured) return 'ERROR'
 
           // chain: menu led to input screen with remaining args
           if (cmd.args.length > 0 && captured.response.type === 'input') {
             const fill = sanitizeInput(cmd.args.join(' ')).trim()
             if (fill) {
-              dispatchTo(captured.response.path.replace(/:(\w+)/, fill))
+              await dispatchTo(captured.response.path.replace(/:(\w+)/, fill))
               if (!captured) return 'ERROR'
             }
           }

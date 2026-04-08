@@ -130,18 +130,17 @@ export const mount = (
       const subRes = {
         send: (screen: TextScreen) => {
           if (screen.response.type === 'end') {
-            res.redirect(options.returnPath)
-            return
+            return res.redirect(options.returnPath)
           }
 
           res.send(prefixScreenPaths(prefix, screen))
         },
         redirect: (path: string) => {
-          res.redirect(prefix + path)
+          return res.redirect(prefix + path)
         },
       }
 
-      handler(subReq, subRes, next)
+      return handler(subReq, subRes, next)
     }
 
   const proxyApp: RtrApp<TextScreen> = {

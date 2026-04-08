@@ -20,7 +20,8 @@ export const ggSim = (state: GgState, event: GgEvent): GgState => {
     return {
       ...state,
       attempts,
-      finished
+      finished,
+      lastGuess: event.value
     }
   }
 

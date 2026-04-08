@@ -19,7 +19,7 @@ export const createHttpRequestHandler = (
   setupRoutes: SetupRoutes, sessions: SessionStore, startPath = '/',
   onTokenPath = '/main'
 ) => {
-  const handleRequest = (req: HttpRequest): HttpResponse => {
+  const handleRequest = async (req: HttpRequest): Promise<HttpResponse> => {
     const form = req.method === 'POST' ? parseFormBody(req.body) : {}
 
     let path = req.path
@@ -66,14 +66,14 @@ export const createHttpRequestHandler = (
     let captured: TextScreen | null = null
 
     const sendScreen = (screen: TextScreen) => { captured = screen }
-    const redirect = (rpath: string) => { app.dispatch(rpath) }
+    const redirect = (rpath: string) => { return app.dispatch(rpath) }
 
     const app = createRouter<TextScreen>(sendScreen, redirect)
 
     setupRoutes(app, state, sessions)
 
     try {
-      app.dispatch(path)
+      await app.dispatch(path)
     } catch {
       return errorPage(404, 'NOT FOUND')
     }

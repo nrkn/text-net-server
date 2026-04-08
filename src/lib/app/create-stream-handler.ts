@@ -32,7 +32,7 @@ export const createStreamHandler = (
   }
 
   const redirect = (path: string) => {
-    app.dispatch(path)
+    return app.dispatch(path)
   }
 
   const autoSave = () => {
@@ -41,8 +41,8 @@ export const createStreamHandler = (
     }
   }
 
-  const dispatchTo = (path: string) => {
-    app.dispatch(path)
+  const dispatchTo = async (path: string) => {
+    await app.dispatch(path)
     autoSave()
     return currentScreen.response.type === 'end'
   }
@@ -51,13 +51,12 @@ export const createStreamHandler = (
 
   setupRoutes(app, state, sessions)
 
-  // initial navigation
-  if (dispatchTo(startPath)) {
-    close()
-    return () => {}
-  }
+  // initial navigation - use an IIFE to handle the async dispatch
+  let pending: Promise<void> = dispatchTo(startPath).then(isEnd => {
+    if (isEnd) close()
+  })
 
-  const handleResponse = (line: string) => {
+  const handleResponse = async (line: string) => {
     const input = sanitizeInput(line)
 
     // echo input back for clients without local echo
@@ -80,7 +79,7 @@ export const createStreamHandler = (
       )
 
       if (item) {
-        if (dispatchTo(item[2])) close()
+        if (await dispatchTo(item[2])) close()
         return
       }
     }
@@ -88,7 +87,7 @@ export const createStreamHandler = (
     // freeform input
     if (response.type === 'input') {
       const path = response.path.replace(/:(\w+)/, input.trim())
-      if (dispatchTo(path)) close()
+      if (await dispatchTo(path)) close()
       return
     }
 
@@ -97,5 +96,8 @@ export const createStreamHandler = (
     sendScreenLines(stream, renderText(currentScreen))
   }
 
-  return handleResponse
+  // serialize line handling to prevent overlapping async operations
+  return (line: string) => {
+    pending = pending.then(() => handleResponse(line))
+  }
 }

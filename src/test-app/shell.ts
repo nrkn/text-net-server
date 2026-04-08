@@ -7,7 +7,7 @@ const start = async () => {
 
   const handle = createStatelessHandler(setupRoutes, sessions, '/welcome')
 
-  const result = handle(process.argv.slice(2))
+  const result = await handle(process.argv.slice(2))
 
   process.stdout.write(result + '\n')
 }

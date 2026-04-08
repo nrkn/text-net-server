@@ -10,11 +10,11 @@ export type RtrResponse<Content> = {
   redirect: RtrRedirect
 }
 
-export type RtrNextFunction = (arg?: 'route') => void
+export type RtrNextFunction = (arg?: 'route') => void | Promise<void>
 
 export type RtrRequestHandler<Content> = (
   req: RtrRequest, res: RtrResponse<Content>, next: RtrNextFunction
-) => void
+) => void | Promise<void>
 
 export type RtrRouteMatcher<Content> = (
   path: string, ...handlers: RtrRequestHandler<Content>[]
@@ -26,14 +26,14 @@ export type RtrMiddlewareHandler<Content> = (
 
 export type RtrSend<Content> = (content: Content) => void
 
-export type RtrRedirect = (path: string) => void
+export type RtrRedirect = (path: string) => void | Promise<void>
 
 export type RtrPathRegexp = {
   keys: RouteKey[]
   regexp: RegExp
 }
 
-export type RtrDispatch = (path: string) => void
+export type RtrDispatch = (path: string) => void | Promise<void>
 
 export type RtrApp<Content> = {
   on: RtrRouteMatcher<Content>
