@@ -104,7 +104,7 @@
 
     #screen table {
       border-collapse: collapse;
-      white-space: pre;
+      white-space: pre-wrap;
     }
 
     #screen input {
@@ -126,6 +126,8 @@
     let currentParts = null
 
     // path helpers
+
+    const TOKEN_RE = /^\/([A-HJ-NP-Z2-9]{16})(\/.*)?$/
 
     const tokenPath = path =>
       token ? '/' + token + path : path
@@ -303,6 +305,13 @@
       screenEl.append(pre)
     }
 
+    let currentHash = ''
+
+    const setHash = path => {
+      currentHash = tokenPath(path)
+      location.hash = currentHash
+    }
+
     const navigate = async path => {
       try {
         const res = await fetch(fetchUrl(path))
@@ -315,6 +324,27 @@
         }
 
         handleResponse(data)
+        setHash(path)
+      } catch (err) {
+        showMessage(err.message || 'Unknown Error')
+      }
+    }
+
+    // navigate directly to a full path (with token already included)
+    const navigateDirect = async fullPath => {
+      try {
+        const res = await fetch(BASE_URL + fullPath)
+        const data = await res.json()
+
+        if (data.error) {
+          showMessage(data.error)
+
+          return
+        }
+
+        handleResponse(data)
+        currentHash = fullPath
+        location.hash = fullPath
       } catch (err) {
         showMessage(err.message || 'Unknown Error')
       }
@@ -339,9 +369,32 @@
       navigate(path)
     }
 
+    // hash navigation
+
+    const navigateFromHash = () => {
+      const hash = location.hash.slice(1)
+
+      if (!hash || hash === currentHash) return
+
+      const match = hash.match(TOKEN_RE)
+
+      if (match) {
+        token = match[1]
+        navigateDirect(hash)
+      } else {
+        navigate(hash)
+      }
+    }
+
+    window.addEventListener('hashchange', navigateFromHash)
+
     // start
 
-    navigate('/')
+    if (location.hash.length > 1) {
+      navigateFromHash()
+    } else {
+      navigate('/')
+    }
   </script>
 </body>
 
