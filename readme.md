@@ -7,10 +7,12 @@ clients, web browsers, CLIs - using only node.js built ins
 ## application framework
 
 - router - express style path matching with params, redirect, middleware etc
-- screen dsl - structured screen assembly helpers (`screen()`, `p()`, `menu()`,
-  `tab()`, `input()`, `end()`, `meta()`)
-- screen model - screens composed of typed parts (paragraph, menu, table, meta),
-  flattened at render time
+- screen dsl - structured screen assembly helpers (`screen()`, `p()`, `h1()`–`h4()`,
+  `menu()`, `tab()`, `input()`, `end()`, `meta()`)
+- screen model - screens composed of typed parts (paragraph, heading, menu,
+  table, meta), flattened at render time
+- heading parts - `h1`–`h4` via dsl or `#`–`####` in text format; semantic at
+  level 0 (render as paragraphs), styled by capable renderers
 - response types - menu (choose from list), input (freeform input), 
   end (goodbye) - exactly one per screen
 - multiple menus per screen - menus in the body are merged into a single 

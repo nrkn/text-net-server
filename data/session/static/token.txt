@@ -1,4 +1,4 @@
-Your Token
+# Your Token
 
 {{/_formattedToken}}
 

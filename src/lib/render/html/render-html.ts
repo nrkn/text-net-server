@@ -74,6 +74,9 @@ export const renderHtml = (screen: TextScreen, tokenPrefix = ''): string => {
       }
 
       html.push('')
+    } else if (part.type === 'heading') {
+      html.push(...wrap(escapeHtml(part.text)))
+      html.push('')
     } else if (part.type === 'table') {
       const tableLines = tableToLines(part.rows, MAX_COLS_HTML, escapeHtml)
 

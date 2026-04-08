@@ -1,4 +1,4 @@
-Help
+# Help
 
 Type a command letter and press Enter.
 

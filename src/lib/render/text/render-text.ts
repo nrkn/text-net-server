@@ -14,6 +14,9 @@ export const renderText = (screen: TextScreen): string[] => {
       }
 
       lines.push('')
+    } else if (part.type === 'heading') {
+      lines.push(...wrapText(sanitizeOutput(part.text)))
+      lines.push('')
     } else if (part.type === 'table') {
       lines.push(...tableToLines(part.rows))
     } else if (part.type === 'meta') {

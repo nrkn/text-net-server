@@ -1,7 +1,7 @@
-Hello {{name User}}
+# Hello {{name User}}
 
 __inc _menu-actions
 
-Session management:
+## Session management:
 
 __inc _menu-session

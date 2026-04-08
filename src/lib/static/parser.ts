@@ -5,7 +5,7 @@ import { menu } from '../view/menu.js'
 import { meta } from '../view/meta.js'
 import { input } from '../view/input-path.js'
 import { end } from '../view/end.js'
-import { MenuItem } from '../view/types.js'
+import { MenuItem, HeadingPart } from '../view/types.js'
 
 type BlockState = 'none' | 'menu' | 'meta' | 'tab'
 
@@ -191,6 +191,15 @@ export const parseStaticTextScreen = (staticText: string): TextScreen => {
         `Unresolved include: "${trimmed}" - ` +
         `includes must be resolved before parsing`
       )
+    }
+
+    // headings: # through ####
+    const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)$/)
+    if (headingMatch) {
+      flushText()
+      const level = headingMatch[1].length as HeadingPart['level']
+      args.push({ type: 'heading', level, text: headingMatch[2] })
+      continue
     }
 
     // plain text

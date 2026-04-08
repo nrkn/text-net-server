@@ -6,6 +6,7 @@ import { isInputResponse } from './input-path.js'
 import { isEndResponse } from './end.js'
 import { isMeta } from './meta.js'
 import { isTable } from './table.js'
+import { isHeading } from './util.js'
 
 const mixedResponseErr = Error('Cannot mix menu with input or end response')
 const multiResponseErr = Error('Only one input or end response per screen')
@@ -52,6 +53,8 @@ export const screen = (...args: ScreenArg[]): TextScreen => {
       pushParagraph(parts, [arg.message])
     } else if (isParagraph(arg)) {
       pushParagraph(parts, arg.lines)
+    } else if (isHeading(arg)) {
+      parts.push(arg)
     } else if (isTable(arg)) {
       parts.push(arg)
     } else if (isMenu(arg)) {

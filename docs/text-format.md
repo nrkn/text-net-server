@@ -40,6 +40,20 @@ single line comments - ignored and stripped:
 
 must be at the start of the line (after trim)
 
+## headings
+
+markdown-style headings using `#` through `####`:
+
+```
+# Main Title
+## Section
+### Subsection
+#### Minor
+```
+
+produces heading parts with levels 1-4; at level 0 these render identically to
+paragraphs (semantic only) but capable renderers may style them differently
+
 ## menu blocks
 
 menu syntax is a special form of the general block - `==` opens with a title

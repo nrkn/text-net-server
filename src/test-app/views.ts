@@ -3,7 +3,7 @@ import { formatToken } from '../lib/token.js'
 import { screen } from '../lib/view/screen.js'
 import { input } from '../lib/view/input-path.js'
 import { menu } from '../lib/view/menu.js'
-import { p } from '../lib/view/util.js'
+import { p, h1 } from '../lib/view/util.js'
 import { end } from '../lib/view/end.js'
 import { tab } from '../lib/view/table.js'
 import { meta } from '../lib/view/meta.js'
@@ -18,7 +18,7 @@ export const welcomeScreen = () => screen(
     // comparison to the new text format in data/text-app/static/welcome.txt
     path: '/welcome', 
   }),
-  p('Welcome'),
+  h1('Welcome'),
   menu(
     'Commands',
     ['N', 'New Session', '/new'],
@@ -27,7 +27,7 @@ export const welcomeScreen = () => screen(
 )
 
 export const resumePromptScreen = () => screen(
-  p('Resume Session'),
+  h1('Resume Session'),
   'Enter your token:',
   input('/resume/:token')
 )
@@ -43,13 +43,13 @@ export const resumeFailScreen = () => screen(
 )
 
 export const namePromptScreen = () => screen(
-  p('Set Name'),
+  h1('Set Name'),
   'Enter your name:',
   input('/name/:name')
 )
 
 export const tokenScreen = (session: Session) => screen(
-  p('Your Token'),
+  h1('Your Token'),
   p(formatToken(session.token)),
   p('Use this token to resume your session.'),
   menu(

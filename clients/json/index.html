@@ -24,7 +24,7 @@
     input {
       font-family: "IBM Plex Mono", monospace;
       font-optical-sizing: auto;
-      font-size: 2.5rem;
+      font-size: 2.25rem;
       font-weight: 500;
     }
 
@@ -50,6 +50,18 @@
       margin: auto;
       margin-top: 1em;
       padding: 1em;
+    }
+
+    #screen h1 {
+      color: hsl(23, 75%, 62%);
+    }
+
+    #screen h2 {
+      color: hsl(305, 65%, 65%);
+    }
+
+    #screen nav h2 {
+      color: hsl(168, 75%, 45%);
     }
 
     #screen :first-child {
@@ -143,6 +155,12 @@
           }
 
           screenEl.append(p)
+        } else if (part.type === 'heading') {
+          const el = $('h' + part.level)
+
+          el.append(part.text)
+
+          screenEl.append(el)
         } else if (part.type === 'table') {
           const table = $('table')
 

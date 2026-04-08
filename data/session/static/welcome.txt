@@ -1,4 +1,4 @@
-Welcome
+# Welcome
 
 ==Commands
 N New Session /new

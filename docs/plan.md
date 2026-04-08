@@ -121,37 +121,6 @@ etc) or purgable (completed games, temporary data etc) and if (when haha) we run
 out of disk, it can tidy up from purgable, doesn't have to be smart, can delete
 oldest, biggest etc; todo consider how this interacts with snapshots
 
-### richer screen parts
-
-initially, headers:
-
-h1, h2, h3, h4
-
-dsl:
-
-```ts
-h1('hello world')
-```
-
-text:
-
-```
-# hello world
-```
-
-in current level 0 state these are entirely semantic - they will render 
-identically to paragraphs - but later when we have capabilities, they may render
-bold, a different color, etc
-
-initial output, with level 0 uppercase etc applied:
-
-```
-HELLO WORLD
-
-```
-
-later, other new parts might include lists etc
-
 ## maybe
 
 ### styling
@@ -334,6 +303,20 @@ DOM elements; supports keyboard shortcuts for menu items (press the short key
 directly, no modifier needed)
 
 test-app entry point: `src/test-app/json.ts`; npm script: `npm run json`
+
+### richer screen parts (headings)
+
+heading parts (`h1`–`h4`) - a new `HeadingPart` type 
+`{ type: 'heading', level: 1|2|3|4, text: string }` added to the screen model
+
+dsl: `h1('title')` through `h4('title')`; text format: `# title` through 
+`#### title` (markdown-style)
+
+at level 0 headings render identically to paragraphs (semantic only); the json 
+client renders them as proper `<h1>`–`<h4>` elements
+
+existing views updated - title-like first paragraphs in static `.txt` files 
+and programmatic views converted to `h1`
 
 ### text based screen format and static middleware
 
