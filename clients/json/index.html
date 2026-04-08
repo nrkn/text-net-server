@@ -22,6 +22,7 @@
 
     body,
     input {
+      color: #666666;
       font-family: "IBM Plex Mono", monospace;
       font-optical-sizing: auto;
       font-size: 2.25rem;
@@ -49,7 +50,6 @@
       background-color: #ffffff;
       border: 0.5em solid #aaaaaa;
       border-radius: 1em;
-      color: #444444;
       max-width: 40em;
       margin: auto;
       margin-top: 1em;
@@ -57,15 +57,15 @@
     }
 
     #screen h1 {
-      color: hsl(23, 75%, 62%);
+      color: #e06cd6;
     }
 
     #screen h2 {
-      color: hsl(168, 75%, 45%);
+      color: #e78d55;
     }
 
     #screen nav h2 {
-      color: hsl(305, 65%, 65%);
+      color: #1dc9a6;
     }
 
     #screen :first-child {
@@ -99,11 +99,12 @@
 
     #screen a {
       color: #3399ff;
-      text-decoration: none;
     }
 
     #screen a:hover {
-      text-decoration: underline;
+      background-color: #3399ff;
+      color: #ffffff;
+      text-decoration: none;
     }
 
     #screen table {
@@ -142,6 +143,9 @@
     // screen rendering
 
     const $ = localName => document.createElement(localName)
+
+    const pathToSlug = path =>
+      path.replace(/\//g, '-').replace(/:/g, '_')
 
     let activeKeyDownHandler = null
 
@@ -233,16 +237,19 @@
       }
 
       let form
+      let input
 
       if (data.response.type === 'input') {
+        const inputPath = pathToSlug(data.response.path)
+
         form = $('form')
 
         form.id = 'input-form'
 
-        const input = $('input')
+        input = $('input')
 
         input.type = 'text'
-        input.name = 'input'
+        input.name = 'input' + inputPath
 
         const submit = $('input')
 
@@ -288,8 +295,7 @@
       if (form) {
         form.addEventListener('submit', e => {
           e.preventDefault()
-          const input = form.querySelector('input[name="input"]').value
-          submitInput(input, currentResponse)
+          submitInput(input.value, currentResponse)
         })
       } else if (shortcutMap.size > 0) {
         activeKeyDownHandler = onKeyDown
