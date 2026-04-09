@@ -39,3 +39,37 @@ export const isRecord = (value: unknown): value is Record<string, any> =>
   value !== null && typeof value === 'object' && !Array.isArray(value)
 
 export const id = <T>(x: T) => x
+
+// numbers
+
+export const assertFinite = (value: number) => {
+  if (Number.isFinite(value)) return
+
+  throw Error(`Expected a finite number, saw "${value}"`)
+}
+
+export const assertNonZero = (value: number) => {
+  assertFinite(value)
+
+  if (value !== 0) return
+
+  throw Error('Expected a non-zero number')
+}
+
+export const assertPositive = (value: number) => {
+  assertFinite(value)
+
+  if (value >= 0) return
+
+  throw Error(`Expected a positive number, saw "${value}"`)
+}
+
+export const assertPositiveInt = (value: number) => {
+  assertPositive(value)
+
+  if (Number.isInteger(value)) return
+
+  throw Error(`Expected an integer, saw "${value}"`)
+}
+
+export const boolish = (value: number): boolean => value !== 0

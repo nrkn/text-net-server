@@ -6,7 +6,7 @@ import { Store } from '../lib/log/types.js'
 import { createLog } from '../lib/log/create-log.js'
 import { createReducerStore } from '../lib/log/create-store.js'
 import { GgState, GgEvent } from '../sims/guessing-game/types.js'
-import { ggSim, parseGuess, formatGuess } from '../sims/guessing-game/gg-sim.js'
+import { ggSim, parseGgEvent, formatGgEvent } from '../sims/guessing-game/gg-sim.js'
 import { existsSync } from 'node:fs'
 import { screen } from '../lib/view/screen.js'
 import { input } from '../lib/view/input-path.js'
@@ -33,7 +33,7 @@ const getOrCreateStore = (token: string) => {
 
     storePromise = createReducerStore<GgState, GgEvent>(
       log, INITIAL_STATE, ggSim,
-      { parse: parseGuess as (data: string) => GgEvent, format: formatGuess }
+      { parse: parseGgEvent as (data: string) => GgEvent, format: formatGgEvent }
     )
 
     stores.set(token, storePromise)

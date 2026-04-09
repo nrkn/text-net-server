@@ -28,7 +28,7 @@ export const ggSim = (state: GgState, event: GgEvent): GgState => {
   throw Error(`unknown event type: "${(event as GgEvent).type}"`)
 }
 
-export const parseGuess = (data: string) => {
+export const parseGgEvent = (data: string) => {
   const [cmd, arg] = data.split(' ')
 
   if (cmd === 'new') return { type: 'new', seed: Number(arg) }
@@ -38,7 +38,7 @@ export const parseGuess = (data: string) => {
   throw Error(`unknown event: ${data}`)
 }
 
-export const formatGuess = (event: GgEvent) => {
+export const formatGgEvent = (event: GgEvent) => {
   if (event.type === 'new') return `new ${event.seed}`
 
   if (event.type === 'guess') return `guess ${event.value}`
