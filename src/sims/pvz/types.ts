@@ -65,6 +65,7 @@ export type Zombie = {
   //effects: Effect[]
 
   eating?: number // the plant id
+  nextBite?: number
 }
 
 export type Plant = {
