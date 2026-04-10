@@ -1,6 +1,8 @@
 import { GgEvent, GgState } from './types.js'
 
 export const ggSim = (state: GgState, event: GgEvent): GgState => {
+  if (state.finished) return state
+
   if (event.type === 'new') {
     const target = (event.seed % 100) + 1
 
@@ -12,8 +14,6 @@ export const ggSim = (state: GgState, event: GgEvent): GgState => {
   }
 
   if (event.type === 'guess') {
-    if (state.finished) return state
-
     const attempts = state.attempts + 1
     const finished = event.value === state.target
 
@@ -25,7 +25,7 @@ export const ggSim = (state: GgState, event: GgEvent): GgState => {
     }
   }
 
-  throw Error(`unknown event type: "${(event as GgEvent).type}"`)
+  throw Error(`Unknown event type: "${(event as GgEvent).type}"`)
 }
 
 export const parseGgEvent = (data: string) => {

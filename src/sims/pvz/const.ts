@@ -18,6 +18,10 @@ export const advanceConditions = [
   'sunIncrease'
 ] as const
 
+export const pvzGameStatus = [
+  'playing', 'won', 'lost'
+] as const
+
 export const BOARD_ROWS = 5
 export const BOARD_COLS = 10 // 1 for mower + 9 plantable
 

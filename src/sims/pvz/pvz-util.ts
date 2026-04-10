@@ -1,7 +1,10 @@
+import { BOARD_COLS } from './const.js'
 import { isCol, isRow } from './guards.js'
 
-const assertPos = (row: any, col: any) => {
-  if (isRow(row) && isCol(col)) return
+export const isPos = (row: any, col: any) => isRow(row) && isCol(col)
+
+export const assertPos = (row: any, col: any) => {
+  if (isPos(row, col)) return
 
   throw Error(`Expected a valid position, saw row="${row}", col="${col}"`)
 }
@@ -45,4 +48,19 @@ export const formatPos = (row: number, col: number) => {
   assertPos(row, col)
 
   return `${formatRow(row)}${col}`
+}
+
+// throw on oob - if you don't want to throw call isPos first and handle it
+// yourself
+export const getIdx = (row: number, col: number) => {
+  assertPos(row, col)
+
+  return row * BOARD_COLS + col
+}
+
+// throw on oob - see above
+export const getPlantableIdx = (row: number, col: number) => {
+  assertPos(row, col)
+
+  return row * (BOARD_COLS - 1) + (col - 1)
 }

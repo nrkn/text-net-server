@@ -1,4 +1,4 @@
-import { PlantName, ZombieName } from '../types.js'
+import { PlantName, ZombieName } from '../sim-types.js'
 
 // cd = cooldown
 // all times are in seconds
@@ -66,6 +66,9 @@ export type LevelDef = {
 
   // some levels give you no mowers as a challenge
   initialMowers: boolean[] // rows
+
+  // can't shovel on some levels, or don't have shovel yet
+  canShovel: boolean
 
   initialSun: number // how much player starts with 
   firstSun: number // when first sun spawns

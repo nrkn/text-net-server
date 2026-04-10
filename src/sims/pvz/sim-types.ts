@@ -1,4 +1,4 @@
-import { advanceConditions, plantNames, zombieNames } from './const.js'
+import { advanceConditions, pvzGameStatus, plantNames, zombieNames } from './const.js'
 
 /*
   ok a pvz sim next :D
@@ -7,6 +7,7 @@ import { advanceConditions, plantNames, zombieNames } from './const.js'
 export type PlantName = typeof plantNames[number]
 export type ZombieName = typeof zombieNames[number]
 export type AdvanceCondition = typeof advanceConditions[number]
+export type PvzGameStatus = typeof pvzGameStatus[number]
 
 export type PvzNewEvent = {
   type: 'new'
@@ -53,11 +54,12 @@ export type Zombie = {
   kind: ZombieName
   id: number
   row: number
+  // all x units are col as a float, eg halfway across col 5 === 5.5
   x: number
-  
+
   // not needed - defined by ZombieDef, later ZombieDef + Effects
   // speed: number
-  
+
   // remaining hp, whereas ZombieDef.hp is initial hp
   hp: number
 
@@ -110,6 +112,8 @@ export type Projectile = {
 
 export type PvzState = {
   time: number
+  status: PvzGameStatus
+  levelId: number
 
   // not needed, can be derived from entity maps below
   // grid: Tile[] // rows * cols
@@ -120,7 +124,7 @@ export type PvzState = {
   zombies: Map<number, Zombie> // id -> zombie
 
   // time a plant can next be bought
-  nextBuy: Map<PlantName,number>
+  nextBuy: Map<PlantName, number>
 
   // only one mower may be manually launched per level  
   // we could track which mowers have auto launched, but it can be derived
@@ -143,6 +147,7 @@ export type PvzTile = {
   plant?: number
   mower?: number // nb - row number - only one per row, so id is row
   zombies: number[]
+  projectiles: number[]
 }
 
 export type PvzGrid = {

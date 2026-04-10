@@ -5,7 +5,7 @@ import {
 
 import { isAdvanceCondition, isPlantName } from './guards.js'
 import { formatPos, formatRow, parsePos, parseRow } from './pvz-util.js'
-import { PvzEvent } from './types.js'
+import { PvzEvent } from './sim-types.js'
 
 const dataToArgs = (data: string) =>
   data.split(' ').map(s => s.trim()).filter(s => s !== '')

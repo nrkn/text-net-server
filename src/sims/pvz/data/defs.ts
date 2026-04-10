@@ -1,6 +1,6 @@
 import { boolish } from '../../../lib/util.js'
-import { PlantName, ZombieName } from '../types.js'
-import { LevelDef, PlantDef, ZombieDef } from './types.js'
+import { PlantName, ZombieName } from '../sim-types.js'
+import { LevelDef, PlantDef, ZombieDef } from './def-types.js'
 
 const baseZombie = {
   speed: 0.23,
@@ -60,6 +60,7 @@ export const levels: LevelDef[] = [
     initialPlants: [],
     plantWhitelist: ['peashooter'],
     initialMowers: b(0, 0, 1, 0, 0),
+    canShovel: false,
     initialSun: 150,
     firstSun: 5,
     sunCd: 5,
@@ -95,7 +96,7 @@ export const levels: LevelDef[] = [
         ]
       },
       {
-        startTime: 45,        
+        startTime: 45,
         spawns: [
           {
             kind: 'normal',

@@ -2,7 +2,7 @@ import {
   advanceConditions, BOARD_COLS, BOARD_ROWS, plantNames, zombieNames
 } from './const.js'
 
-import { AdvanceCondition, PlantName, ZombieName } from './types.js'
+import { AdvanceCondition, PlantName, ZombieName } from './sim-types.js'
 
 export const isPlantName = (value: any): value is PlantName =>
   plantNames.includes(value)
