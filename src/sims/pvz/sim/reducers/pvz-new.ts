@@ -1,30 +1,33 @@
-import { maybe } from '../../../lib/util.js'
+import { maybe } from '../../../../lib/util.js'
+
 import {
   PVZ_CURR_VERSION, BOARD_ROWS, BOARD_COLS, plantNames
-} from '../const.js'
+} from '../../pvz-const.js'
 
-import { levels, plants } from '../data/defs.js'
-import { getPlantableIdx } from '../pvz-util.js'
-import { PvzState, PvzNewEvent, Mower, Plant } from '../sim-types.js'
-import { newState, canPlant, stateToGrid, issueId } from './sim-util.js'
+import { getPlantableIdx } from '../../pvz-util.js'
+import { PvzState, PvzNewEvent, Mower } from '../../pvz-types.js'
+import { canPlant } from '../pvz-query.js'
+import { newState } from '../pvz-state.js'
+import { placePlant } from '../pvz-mutate.js'
+import { actionFail, getLevel } from '../pvz-util.js'
 
 export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
   const { levelId, seed, version } = event
 
+  state = newState(seed)
+
   if (version !== PVZ_CURR_VERSION) {
-    throw Error(
+    const message = (
       `Version mismatch; current is "${PVZ_CURR_VERSION}" but saw "${version}"`
     )
+
+    state.error = actionFail('new', 'versionMismatch', message)
+    state.status = 'unplayable'
+
+    return state
   }
 
-  // level 1 is in levels[ 0 ] etc
-  const level = levels[levelId - 1]
-
-  if (level === undefined) {
-    throw Error('Level out of range')
-  }
-
-  state = newState(seed)
+  const level = getLevel(levelId)
 
   // populate state with level data
 
@@ -49,28 +52,22 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
         // I *think* the only thing that can go wrong here is if an initial
         // plant is defined as being on an unplantable tile, or isn't in the 
         // whitelist, but may as well just test everything
-        const plantResult = canPlant(
-          // new grid for every single plant, but it doesn't really matter, it's
-          // safer than mutating an existing grid - we can always add an 
-          // updateGrid mutation later if it's actually a bottleneck
-          stateToGrid(state), 
-          level, kind, row, col
-        )
+        const plantResult = canPlant(state, kind, row, col, 'initial')
 
         if (!plantResult.ok) {
-          throw Error(
-            `Level "${levelId}" has impossible initial plant; ` +
-            `"${plantResult.reason}"`
+          const { reason = '' } = plantResult
+
+          const message = (
+            `Level "${levelId}" has impossible initial plant; "${reason}"`
           )
+
+          state.error = actionFail('new', reason, message)
+          state.status = 'unplayable'
+
+          return state
         }
 
-        const id = issueId(state)
-        const { hp } = plants[kind]
-        const nextAction = 0
-
-        const plant: Plant = { kind, id, row, col, hp, nextAction }
-
-        state.plants.set(id, plant)
+        placePlant(state, kind, row, col, 'initial')
       }
     }
   }

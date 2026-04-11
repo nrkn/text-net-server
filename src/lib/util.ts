@@ -76,3 +76,5 @@ export const boolish = (value: number): boolean => value !== 0
 
 export const seq = <T>(length: number, map: (index: number) => T) =>
   Array.from({ length }, (_v, k) => map(k))
+
+export const cloneMap = <K, V>(map: Map<K, V>) => new Map<K, V>(map)

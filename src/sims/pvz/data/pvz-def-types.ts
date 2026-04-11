@@ -1,4 +1,4 @@
-import { PlantName, ZombieName } from '../sim-types.js'
+import { PlantName, ZombieName } from '../pvz-types.js'
 
 // cd = cooldown
 // all times are in seconds

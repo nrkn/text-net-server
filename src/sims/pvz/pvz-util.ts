@@ -1,5 +1,5 @@
-import { BOARD_COLS } from './const.js'
-import { isCol, isRow } from './guards.js'
+import { BOARD_COLS } from './pvz-const.js'
+import { isCol, isRow } from './pvz-guards.js'
 
 export const isPos = (row: any, col: any) => isRow(row) && isCol(col)
 

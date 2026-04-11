@@ -1,4 +1,4 @@
-import { advanceConditions, pvzGameStatus, plantNames, zombieNames } from './const.js'
+import { advanceConditions, pvzGameStatus, plantNames, zombieNames } from './pvz-const.js'
 
 /*
   ok a pvz sim next :D
@@ -17,9 +17,9 @@ export type PvzNewEvent = {
   version: number
 }
 
-export type PvzPlantEvent = {
-  type: 'plant'
-  name: PlantName
+export type PvzPlaceEvent = {
+  type: 'place'
+  plantName: PlantName
   row: number
   col: number
 }
@@ -46,9 +46,11 @@ export type PvzAdvanceUntilEvent = {
 }
 
 export type PvzEvent = (
-  PvzNewEvent | PvzPlantEvent | PvzShovelEvent | PvzLaunchMowerEvent |
+  PvzNewEvent | PvzPlaceEvent | PvzShovelEvent | PvzLaunchMowerEvent |
   PvzAdvanceEvent | PvzAdvanceUntilEvent
 )
+
+export type PvzEventType = PvzEvent['type']
 
 export type Zombie = {
   kind: ZombieName
@@ -110,10 +112,19 @@ export type Projectile = {
   // collides with a zombie or goes off the board and then despawns
 }
 
+export type PvzActionFailed = {
+  ok: false
+  event: PvzEventType
+  reason: string
+  message?: string
+}
+
 export type PvzState = {
-  time: number
-  status: PvzGameStatus
+  time: number  
   levelId: number
+
+  status: PvzGameStatus
+  error?: PvzActionFailed
 
   // not needed, can be derived from entity maps below
   // grid: Tile[] // rows * cols

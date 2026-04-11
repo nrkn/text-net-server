@@ -3,9 +3,9 @@ import {
   assertFinite
 } from '../../lib/util.js'
 
-import { isAdvanceCondition, isPlantName } from './guards.js'
+import { isAdvanceCondition, isPlantName } from './pvz-guards.js'
 import { formatPos, formatRow, parsePos, parseRow } from './pvz-util.js'
-import { PvzEvent } from './sim-types.js'
+import { PvzEvent } from './pvz-types.js'
 
 const dataToArgs = (data: string) =>
   data.split(' ').map(s => s.trim()).filter(s => s !== '')
@@ -13,7 +13,7 @@ const dataToArgs = (data: string) =>
 export const parsePvzEvent = (data: string): PvzEvent => {
   const [type, ...args] = dataToArgs(data)
 
-  // eg 'new 7 1775623176551'
+  // eg 'new 7 1775623176551 0.1'
   if (type === 'new') {
     const [levelId, seed, version] = args.map(Number)
 
@@ -27,17 +27,17 @@ export const parsePvzEvent = (data: string): PvzEvent => {
     return { type, levelId, seed, version }
   }
 
-  // eg 'plant sunflower C3'
-  if (type === 'plant') {
-    const [name, pos] = args
+  // eg 'place sunflower C3'
+  if (type === 'place') {
+    const [plantName, pos] = args
 
-    if (!isPlantName(name)) {
-      throw Error(`Expected a plant name, saw "${name}"`)
+    if (!isPlantName(plantName)) {
+      throw Error(`Expected a plant name, saw "${plantName}"`)
     }
 
     const [row, col] = parsePos(pos)
 
-    return { type, name, row, col }
+    return { type, plantName, row, col }
   }
 
   // eg 'shovel C3'
@@ -54,6 +54,7 @@ export const parsePvzEvent = (data: string): PvzEvent => {
     return { type, row }
   }
 
+  // eg 'advance 0.5'
   if (type === 'advance') {
     const seconds = Number(args[0])
 
@@ -62,6 +63,7 @@ export const parsePvzEvent = (data: string): PvzEvent => {
     return { type, seconds }
   }
 
+  // eg 'advanceUntil sunIncrease'
   if (type === 'advanceUntil') {
     const condition = args[0]
 
@@ -80,8 +82,8 @@ export const formatPvzEvent = (event: PvzEvent) => {
     return `new ${event.levelId} ${event.seed} ${event.version}`
   }
 
-  if (event.type === 'plant') {
-    return `plant ${event.name} ${formatPos(event.row, event.col)}`
+  if (event.type === 'place') {
+    return `place ${event.plantName} ${formatPos(event.row, event.col)}`
   }
 
   if (event.type === 'shovel') {

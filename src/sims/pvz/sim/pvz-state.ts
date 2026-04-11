@@ -1,11 +1,12 @@
-import { seq } from '../../../lib/util.js'
-import { BOARD_COLS, BOARD_ROWS } from '../const.js'
-import { LevelDef } from '../data/def-types.js'
-import { getIdx, getPlantableIdx, isPos } from '../pvz-util.js'
+import { cloneMap, maybe, seq } from '../../../lib/util.js'
+import { BOARD_COLS, BOARD_ROWS } from '../pvz-const.js'
+import { getIdx } from '../pvz-util.js'
 
 import {
   Mower, Plant, PlantName, Projectile, PvzGrid, PvzState, Zombie
-} from '../sim-types.js'
+} from '../pvz-types.js'
+
+// # state utils
 
 type Mob = {
   row: number
@@ -63,8 +64,9 @@ export const stateToGrid = (state: PvzState) => {
 export const newState = (rng = Date.now()) => {
   const state: PvzState = {
     time: 0,
-    status: 'playing',
     levelId: 1,
+
+    status: 'playing',
 
     mowers: new Map<number, Mower>(),
     plants: new Map<number, Plant>(),
@@ -86,39 +88,24 @@ export const newState = (rng = Date.now()) => {
   return state
 }
 
-// note - mutates state - fine to use inside an event, don't use it outside
-export const issueId = (state: PvzState) => {
-  const id = state.nextId
+export const cloneState = (
+  state: PvzState
+): PvzState => ({
+  ...state,
 
-  state.nextId++
+  error: maybe(state.error) ? { ...state.error } : undefined,
 
-  return id
-}
+  mowers: cloneMap(state.mowers),
+  plants: cloneMap(state.plants),
+  projectiles: cloneMap(state.projectiles),
+  zombies: cloneMap(state.zombies),
 
-export const canPlant = (
-  grid: PvzGrid,
-  level: LevelDef,
-  plantName: PlantName,
-  row: number, col: number
-) => {
-  if (!isPos(row, col))
-    return { ok: false, reason: 'outOfBounds' } as const
+  nextBuy: cloneMap(state.nextBuy)
+})
 
-  if (col === 0)
-    return { ok: false, reason: 'inMowerCol' } as const
+// on new event, clone and reset error
+export const newEventState = (state: PvzState) => ({
+  ...cloneState(state),
+  error: undefined
+})
 
-  const idx = getIdx(row, col)
-
-  if (grid.data[idx].plant !== undefined)
-    return { ok: false, reason: 'plantAlreadyHere' } as const
-
-  const pIdx = getPlantableIdx(row, col)
-
-  if (!level.plantableTiles[pIdx])
-    return { ok: false, reason: 'tileBlocked' } as const
-
-  if (level.plantWhitelist && !level.plantWhitelist.includes(plantName))
-    return { ok: false, reason: 'notInWhitelist' } as const
-
-  return { ok: true }
-}

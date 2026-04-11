@@ -1,8 +1,8 @@
 import { maybe, seq } from '../../lib/util.js'
-import { BOARD_COLS, BOARD_ROWS } from './const.js'
+import { BOARD_COLS, BOARD_ROWS } from './pvz-const.js'
 import { formatPos, formatRow, getIdx } from './pvz-util.js'
-import { PlantName, PvzState, ZombieName } from './sim-types.js'
-import { stateToGrid } from './sim/sim-util.js'
+import { PlantName, PvzState, ZombieName } from './pvz-types.js'
+import { stateToGrid } from './sim/pvz-state.js'
 
 /*
    0 1 2 3 4 5 6 7 8 9 

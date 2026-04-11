@@ -19,7 +19,7 @@ export const advanceConditions = [
 ] as const
 
 export const pvzGameStatus = [
-  'playing', 'won', 'lost'
+  'playing', 'won', 'lost', 'unplayable'
 ] as const
 
 export const BOARD_ROWS = 5

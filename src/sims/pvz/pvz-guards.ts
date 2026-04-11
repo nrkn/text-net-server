@@ -1,8 +1,8 @@
 import {
   advanceConditions, BOARD_COLS, BOARD_ROWS, plantNames, zombieNames
-} from './const.js'
+} from './pvz-const.js'
 
-import { AdvanceCondition, PlantName, ZombieName } from './sim-types.js'
+import { AdvanceCondition, PlantName, ZombieName } from './pvz-types.js'
 
 export const isPlantName = (value: any): value is PlantName =>
   plantNames.includes(value)

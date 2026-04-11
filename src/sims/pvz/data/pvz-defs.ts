@@ -1,6 +1,6 @@
 import { boolish } from '../../../lib/util.js'
-import { PlantName, ZombieName } from '../sim-types.js'
-import { LevelDef, PlantDef, ZombieDef } from './def-types.js'
+import { PlantName, ZombieName } from '../pvz-types.js'
+import { LevelDef, PlantDef, ZombieDef } from './pvz-def-types.js'
 
 const baseZombie = {
   speed: 0.23,

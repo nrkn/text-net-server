@@ -1,4 +1,4 @@
-import { GgEvent, GgState } from './types.js'
+import { GgEvent, GgState } from './gg-types.js'
 
 export const ggSim = (state: GgState, event: GgEvent): GgState => {
   if (state.finished) return state
