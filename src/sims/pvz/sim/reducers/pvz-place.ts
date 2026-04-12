@@ -12,6 +12,7 @@ export const reducePvzPlace = (
 
   const { plantName, row, col } = event
 
+  // passing 'bought' also checks cooldown and cost <= state.sun
   const plantResult = canPlant(state, plantName, row, col, 'bought')
 
   if (!plantResult.ok) {
@@ -25,6 +26,7 @@ export const reducePvzPlace = (
     return state
   }
 
+  // passing 'bought' resets cooldown and deducts plant cost
   placePlant(state, plantName, row, col, 'bought')
 
   return state

@@ -3,6 +3,7 @@ import { isPos, getIdx, getPlantableIdx } from '../pvz-util.js'
 import { PvzState, PlantName } from '../pvz-types.js'
 import { getLevel } from './pvz-util.js'
 import { stateToGrid } from './pvz-state.js'
+import { maybe } from '../../../lib/util.js'
 
 export const canPlant = (
   state: PvzState,
@@ -20,7 +21,7 @@ export const canPlant = (
 
   const idx = getIdx(row, col)
 
-  if (grid.data[idx].plant !== undefined)
+  if (maybe(grid.data[idx].plant))
     return { ok: false, reason: 'plantAlreadyHere' } as const
 
   const level = getLevel(state.levelId)

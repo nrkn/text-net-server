@@ -5,6 +5,10 @@ things that we're going to do next
 if we do them remember to remove from here and maybe add to the app framework
 section in readme, and maybe also to the `done` section below
 
+## current WIP
+
+pvz sim from definitely
+
 ## definitely
 
 things we definitely want, but maybe not just yet
