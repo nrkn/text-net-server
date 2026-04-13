@@ -127,6 +127,8 @@ export type PvzState = {
 
   status: PvzGameStatus
   error?: PvzActionFailed
+  // we can make it a more complex type later
+  tickEvents: string[]
 
   // not needed, can be derived from entity maps below
   // grid: Tile[] // rows * cols

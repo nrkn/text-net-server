@@ -6,6 +6,7 @@ import { getLevel } from './pvz-sim-util.js'
 import { stateToGrid } from './pvz-state.js'
 import { maybe } from '../../../lib/util.js'
 import { isRow } from '../pvz-guards.js'
+import { Spawn } from '../data/pvz-def-types.js'
 
 export const canPlant = (
   state: PvzState,
@@ -111,9 +112,7 @@ export const canLaunchMower = (
 export type CanLaunchMowerResult = ReturnType<typeof canLaunchMower>
 
 // how much sun should the level spawn between state.time and state.time + dt?
-export const levelSunSpawned = (
-  state: PvzState, dt: number
-): number => {  
+export const levelSunSpawned = (state: PvzState, dt: number): number => {
   const level = getLevel(state.levelId)
 
   const { firstSun, sunCd } = level
@@ -131,4 +130,27 @@ export const levelSunSpawned = (
   const count = atOrBefore(t1) - atOrBefore(t0)
 
   return count * SUN_DROP
+}
+
+export const zombiesSpawned = (state: PvzState, dt: number) =>
+  getLevel(state.levelId).spawns.filter(
+    s => s.absTime >= state.time && s.absTime < (state.time + dt)
+  )
+
+export const plantHasTarget = (state: PvzState, plantId: number) => {
+  const plant = state.plants.get(plantId)
+
+  if (!maybe(plant)) {
+    throw Error(`No plant found for id "${plantId}"`)
+  }
+
+  const { row, col } = plant
+
+  for( const [ _id, zombie ] of state.zombies ){
+    if( zombie.row !== row ) continue
+
+    if( zombie.x > col ) return true
+  }
+
+  return false
 }

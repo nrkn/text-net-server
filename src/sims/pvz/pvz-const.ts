@@ -44,3 +44,6 @@ export const FIXED_TICK = 0.01
 
 // until we have proper projectiles
 export const peaDamage = 20
+export const peaSpeed = 3.3 // tiles per second
+
+export const mowerSpeed = 6.5

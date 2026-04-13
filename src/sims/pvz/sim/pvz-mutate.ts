@@ -1,6 +1,7 @@
 import { maybe } from '../../../lib/util.js'
-import { plants } from '../data/pvz-defs.js'
-import { PvzState, PlantName, Plant } from '../pvz-types.js'
+import { plants, zombies } from '../data/pvz-defs.js'
+import { BOARD_COLS } from '../pvz-const.js'
+import { PvzState, PlantName, Plant, ZombieName, Zombie } from '../pvz-types.js'
 import { formatPos, formatRow, getIdx } from '../pvz-util.js'
 import { stateToGrid } from './pvz-state.js'
 
@@ -78,4 +79,20 @@ export const launchMower = (
   mower.active = true
 
   if (launchType === 'manual') state.launched = true
+}
+
+export const spawnZombie = (
+  state: PvzState, kind: ZombieName, row: number
+) => {
+  const id = issueId(state)
+  const { hp } = zombies[kind]
+  // oob - but it will move in the same turn that it spawned and be inside the 
+  // grid
+  const x = BOARD_COLS
+
+  const zombie: Zombie = { kind, id, row, x, hp }
+
+  state.zombies.set(id, zombie)
+
+  return id
 }

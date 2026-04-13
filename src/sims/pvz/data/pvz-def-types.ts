@@ -41,7 +41,7 @@ export type SpawnDef = {
   spawnRow?: number // random if undefined
 }
 
-export type SpawnAbs = SpawnDef & {
+export type Spawn = SpawnDef & {
   absTime: number
   waveIndex: number
 }
@@ -85,5 +85,5 @@ export type LevelDef = {
   // eg in the first tut, sun and wave spawns don't happen until first plant
   // is placed - but we will ignore that for now
 
-  waves: WaveDef[]
+  spawns: Spawn[]
 }

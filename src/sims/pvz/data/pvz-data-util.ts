@@ -1,8 +1,8 @@
-import { SpawnAbs, WaveDef } from './pvz-def-types.js'
+import { Spawn, WaveDef } from './pvz-def-types.js'
 
 // flatten and sort earliest first (waves may overlap)
-export const flattenWaves = (waves: WaveDef[]): SpawnAbs[] => {
-  const result: SpawnAbs[] = []
+export const flattenWaves = (waves: WaveDef[]): Spawn[] => {
+  const result: Spawn[] = []
 
   for (let w = 0; w < waves.length; w++) {
     const wave = waves[w]

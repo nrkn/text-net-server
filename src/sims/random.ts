@@ -19,3 +19,5 @@ export const createRandom = (seed: number) => {
 
   return { next, nextInt, peek }
 }
+
+export type Random = ReturnType<typeof createRandom>

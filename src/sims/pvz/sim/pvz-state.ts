@@ -67,6 +67,7 @@ export const newState = (rng = Date.now()) => {
     levelId: 1,
 
     status: 'playing',
+    tickEvents: [],
 
     mowers: new Map<number, Mower>(),
     plants: new Map<number, Plant>(),
@@ -93,6 +94,7 @@ export const cloneState = (
 ): PvzState => ({
   ...state,
 
+  tickEvents: [...state.tickEvents],
   error: maybe(state.error) ? { ...state.error } : undefined,
 
   mowers: cloneMap(state.mowers),
@@ -106,6 +108,7 @@ export const cloneState = (
 // on new event, clone and reset error
 export const newEventState = (state: PvzState) => ({
   ...cloneState(state),
+  tickEvents: [],
   error: undefined
 })
 

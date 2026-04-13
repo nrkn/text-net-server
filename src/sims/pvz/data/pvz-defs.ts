@@ -1,5 +1,6 @@
 import { boolish } from '../../../lib/util.js'
 import { PlantName, ZombieName } from '../pvz-types.js'
+import { flattenWaves } from './pvz-data-util.js'
 import { LevelDef, PlantDef, ZombieDef } from './pvz-def-types.js'
 
 const baseZombie = {
@@ -64,53 +65,59 @@ export const levels: LevelDef[] = [
     initialSun: 150,
     firstSun: 5,
     sunCd: 5,
-    waves: [
-      {
-        startTime: 15,
-        spawns: [
-          {
-            kind: 'normal',
-            spawnTime: 0,
-            spawnRow: 2
-          }
-        ]
-      },
-      {
-        startTime: 25,
-        spawns: [
-          {
-            kind: 'normal',
-            spawnTime: 0,
-            spawnRow: 2
-          }
-        ]
-      },
-      {
-        startTime: 35,
-        spawns: [
-          {
-            kind: 'normal',
-            spawnTime: 0,
-            spawnRow: 2
-          }
-        ]
-      },
-      {
-        startTime: 45,
-        spawns: [
-          {
-            kind: 'normal',
-            spawnTime: 0,
-            spawnRow: 2
-          },
-          {
-            kind: 'normal',
-            // last wave comes out about ~1 step apart
-            spawnTime: 0.23,
-            spawnRow: 2
-          }
-        ]
-      }
-    ]
+    spawns: flattenWaves(
+      [
+        // wave 1
+        {
+          startTime: 15,
+          spawns: [
+            {
+              kind: 'normal',
+              spawnTime: 0,
+              spawnRow: 2
+            }
+          ]
+        },
+        // wave 2
+        {
+          startTime: 25,
+          spawns: [
+            {
+              kind: 'normal',
+              spawnTime: 0,
+              spawnRow: 2
+            }
+          ]
+        },
+        // wave 3
+        {
+          startTime: 35,
+          spawns: [
+            {
+              kind: 'normal',
+              spawnTime: 0,
+              spawnRow: 2
+            }
+          ]
+        },
+        // wave 4
+        {
+          startTime: 45,
+          spawns: [
+            {
+              kind: 'normal',
+              spawnTime: 0,
+              spawnRow: 2
+            },
+            {
+              kind: 'normal',
+              // last wave comes out about ~1 step apart
+              spawnTime: 0.23,
+              spawnRow: 2
+            }
+          ]
+        }
+      ]
+    )
   }
 ]
