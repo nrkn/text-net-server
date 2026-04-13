@@ -1,5 +1,8 @@
+import { maybe } from '../../../lib/util.js'
 import { plants } from '../data/pvz-defs.js'
 import { PvzState, PlantName, Plant } from '../pvz-types.js'
+import { formatPos, formatRow, getIdx } from '../pvz-util.js'
+import { stateToGrid } from './pvz-state.js'
 
 // note - mutates state - use only *inside* events
 
@@ -34,4 +37,45 @@ export const placePlant = (
   if (placeType === 'initial') return
 
   throw Error(`Unexpected placeType "${placeType}"`)
+}
+
+// guard behind eg canShovel
+// nb - does not clear zombie.biteTarget - advance reducer should handle
+// zombies whose biteTarget no longer exists (eg shovelled)
+export const removePlant = (
+  state: PvzState, row: number, col: number
+) => {
+  const grid = stateToGrid(state)
+
+  const idx = getIdx(row, col)
+
+  const tile = grid.data[idx]
+
+  const plantId = tile.plant
+
+  // if guarded, should never happen - so throw Error
+  if (!maybe(plantId)) {
+    throw Error(`No plant found to remove at "${formatPos(row, col)}}"`)
+  }
+
+  // same
+  if (!state.plants.delete(plantId)) {
+    throw Error(`No plant with id "${plantId}" in state`)
+  }
+}
+
+// guard behind canLaunchMower
+export const launchMower = (
+  state: PvzState, row: number, launchType: 'manual' | 'auto'
+) => {
+  const mower = state.mowers.get(row)
+
+  // shouldn't happen - something has gone wrong
+  if (!maybe(mower)) {
+    throw Error(`No mower found to launch at "${formatRow(row)}"`)
+  }
+
+  mower.active = true
+
+  if (launchType === 'manual') state.launched = true
 }

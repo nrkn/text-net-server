@@ -9,7 +9,7 @@ import { PvzState, PvzNewEvent, Mower } from '../../pvz-types.js'
 import { canPlant } from '../pvz-query.js'
 import { newState } from '../pvz-state.js'
 import { placePlant } from '../pvz-mutate.js'
-import { actionFail, getLevel } from '../pvz-util.js'
+import { actionFail, getLevel } from '../pvz-sim-util.js'
 
 export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
   const { levelId, seed, version } = event
@@ -52,6 +52,8 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
         // I *think* the only thing that can go wrong here is if an initial
         // plant is defined as being on an unplantable tile, or isn't in the 
         // whitelist, but may as well just test everything
+        //
+        // passing initial skips checking cooldowns and sun cost
         const plantResult = canPlant(state, kind, row, col, 'initial')
 
         if (!plantResult.ok) {
@@ -67,6 +69,7 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
           return state
         }
 
+        // passing initial skips setting cooldown or deducting cost
         placePlant(state, kind, row, col, 'initial')
       }
     }

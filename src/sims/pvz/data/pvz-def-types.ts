@@ -41,6 +41,11 @@ export type SpawnDef = {
   spawnRow?: number // random if undefined
 }
 
+export type SpawnAbs = SpawnDef & {
+  absTime: number
+  waveIndex: number
+}
+
 export type WaveDef = {
   startTime: number // absolute time of the wave start
 

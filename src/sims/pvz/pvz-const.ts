@@ -36,5 +36,11 @@ if (BOARD_COLS > 10) throw Error(
 // so that sim can throw if you try to run an old log after eg rebalancing
 export const PVZ_CURR_VERSION = 0.1
 
+// sun dropped per level spawn (sky sun)
+export const SUN_DROP = 25
+
+// tick step - 10ms in seconds
+export const FIXED_TICK = 0.01
+
 // until we have proper projectiles
 export const peaDamage = 20

@@ -3,7 +3,7 @@ import { PvzPlaceEvent, PvzState } from '../../pvz-types.js'
 import { canPlant } from '../pvz-query.js'
 import { newEventState } from '../pvz-state.js'
 import { placePlant } from '../pvz-mutate.js'
-import { actionFail } from '../pvz-util.js'
+import { actionFail } from '../pvz-sim-util.js'
 
 export const reducePvzPlace = (
   state: PvzState, event: PvzPlaceEvent
