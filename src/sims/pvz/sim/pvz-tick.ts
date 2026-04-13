@@ -1,50 +1,149 @@
 import { maybe } from '../../../lib/util.js'
 import { createRandom, Random } from '../../random.js'
 import { plants, zombies } from '../data/pvz-defs.js'
+
 import {
   BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, peaDamage, peaSpeed, SUN_DROP
 } from '../pvz-const.js'
-import { Mower, Plant, Projectile, PvzState, Zombie } from '../pvz-types.js'
+
+import {
+  AdvanceCondition, Mower, Plant, Projectile, PvzState, Zombie
+} from '../pvz-types.js'
+
 import { formatPos, formatRow } from '../pvz-util.js'
 import { issueId, spawnZombie } from './pvz-mutate.js'
 import { levelSunSpawned, plantHasTarget, zombiesSpawned } from './pvz-query.js'
-import { getLevel } from './pvz-sim-util.js'
+import { actionFail, getLevel } from './pvz-sim-util.js'
 
 // tick!
 
-export const tick = (state: PvzState, dt: number) => {
-  const random = createRandom(state.rng)
-  const log = (entry: string) => { state.tickEvents.push(entry) }
+type Log = (entry: string) => void
 
+const winHandler = (state: PvzState, log: Log) => {
   // has the last spawn already happened, but there are no zombies left?
   const level = getLevel(state.levelId)
   const lastSpawnTime = Math.max(...level.spawns.map(s => s.absTime))
 
-  for (let i = 0; i < dt; i += FIXED_TICK) {
+  const maybeWin = () => {
+    if (state.time < lastSpawnTime + FIXED_TICK) return false
+    if (state.zombies.size > 0) return false
+
+    log('won')
+    state.status = 'won'
+
+    return true
+  }
+
+  return maybeWin
+}
+
+export const tick = (state: PvzState, dt: number) => {
+  const random = createRandom(state.rng)
+
+  const log = (entry: string) => { state.tickEvents.push(entry) }
+
+  const maybeWin = winHandler(state, log)
+
+  const ticks = Math.floor(dt / FIXED_TICK)
+
+  for (let i = 0; i < ticks; i++) {
     tickFixed(state, random, log)
 
-    if (state.time >= lastSpawnTime + FIXED_TICK) {
-      if (state.zombies.size === 0) {
-        log('won')
-        state.status = 'won'
+    if (maybeWin()) break
+  }
 
-        return
-      }
+  state.rng = random.peek()
+}
+
+const MAX_TICKS = 600000
+
+type IsCondition = (entry: string) => boolean
+
+const isSunIncrease = (entry: string) =>
+  entry.includes('sunDropped') || entry.includes('spawnedSun')
+
+const isZombieSpawn = (entry: string) =>
+  entry.includes('zombieSpawned')
+
+const conditionTests: Record<AdvanceCondition, IsCondition> = {
+  sunIncrease: isSunIncrease,
+  zombieSpawn: isZombieSpawn,
+  // placeholder - we won't check logs for it, it doesn't log
+  plantReady: () => false
+}
+
+const isReady = (state: PvzState, time: number) =>
+  time <= state.time
+
+const plantBuyCooldownCount = (state: PvzState) => {
+  let count = 0
+
+  for (const [_plantName, nextTime] of state.nextBuy) {
+    if (!isReady(state, nextTime)) count++
+  }
+
+  return count
+}
+
+export const tickUntil = (state: PvzState, condition: AdvanceCondition) => {
+  // no plant cooldowns to wait on
+  if (condition === 'plantReady' && plantBuyCooldownCount(state) === 0) {
+    return
+  }
+
+  const random = createRandom(state.rng)
+  const test = conditionTests[condition]
+
+  let doneTicking = false
+
+  const log = (entry: string) => {
+    state.tickEvents.push(entry)
+
+    doneTicking = doneTicking || test(entry)
+  }
+
+  const maybeWin = winHandler(state, log)
+
+  for (let i = 0; i < MAX_TICKS; i++) {
+    const beforeBuyCds = plantBuyCooldownCount(state)
+
+    tickFixed(state, random, log)
+
+    const afterBuyCds = plantBuyCooldownCount(state)
+
+    // a plant buy cooldown expired
+    if (condition === 'plantReady' && afterBuyCds < beforeBuyCds) break
+
+    // handle win
+    if (maybeWin()) break
+    // handle loss, state unplayable
+    if (state.status !== 'playing') break
+    // early out on condition
+    if (doneTicking) break
+
+    if (i === MAX_TICKS - 1) {
+      state.error = actionFail(
+        'advanceUntil', 'maxTicksReached',
+        `${condition} was not met within ${MAX_TICKS} ticks`
+      )
     }
   }
 
   state.rng = random.peek()
 }
 
-const isReady = (state: PvzState, time: number) =>
-  time <= state.time
-
 const tof = (value: number, digits = 3) => value.toFixed(digits)
 
 const tickFixed = (
   state: PvzState, random: Random, log: ((entry: string) => void)
 ) => {
-  state.sun += levelSunSpawned(state, FIXED_TICK)
+  const levelSun = levelSunSpawned(state, FIXED_TICK)
+
+  if (levelSun > 0) {
+    state.sun += levelSun
+
+    log(`sunDropped ${levelSun}`)
+  }
 
   // later consider adding time - 
   // eg it happend between state.time and state.time + FIXED_TICK and the
@@ -234,7 +333,7 @@ const tickFixed = (
 
     const newZombie = state.zombies.get(id)!
 
-    zombieLog(newZombie)('spawned')
+    zombieLog(newZombie)('zombieSpawned')
   }
 
   const getRowPlants = (row: number) => {

@@ -1,6 +1,6 @@
 import { PvzEvent, PvzState } from '../pvz-types.js'
 import { newEventState } from './pvz-state.js'
-import { tick } from './pvz-tick.js'
+import { tick, tickUntil } from './pvz-tick.js'
 import { reducePvzLaunchMower } from './reducers/pvz-launch.js'
 import { reducePvzNew } from './reducers/pvz-new.js'
 import { reducePvzPlace } from './reducers/pvz-place.js'
@@ -30,9 +30,14 @@ export const pvzSim = (state: PvzState, event: PvzEvent): PvzState => {
     return state
   }
 
-  // todo - just don't expose in ui yet
-  if (event.type === 'advanceUntil') {    
-    throw Error('Not implemented')
+  if (event.type === 'advanceUntil') {
+    const { condition } = event
+
+    state = newEventState(state)
+
+    tickUntil(state, condition)
+
+    return state
   }
 
   throw Error('Unexpected event')
