@@ -1,7 +1,8 @@
 # todo
 
 the logical board should be bigger, eg contain addressable but not interactable 
-cols on the right where zombies enter
+cols on the right where zombies enter - projectiles/mower can actually hit the 
+zombies in these cols, even if the player can't plant here
 
 make the current event log first class - at the moment, if you borrow the 
 terminology from text-net-server, the player event log is requests - the event 
@@ -14,3 +15,7 @@ produce a combined log which is like:
 {time} res { reqid } { simEventLine[ 0 ] } 
 {time} res { reqid } { simEventLine[ 1 ] } //etc
 ```
+
+adaptive pacing - waves are currently fixed - pvz does something like, if all
+zombies cleared, send next wave early - we need this because stalling is an
+important strat

@@ -1,28 +1,30 @@
-import { boolish } from '../../../lib/util.js'
 import { PlantName, ZombieName } from '../pvz-types.js'
-import { flattenWaves } from './pvz-data-util.js'
+import { level1 } from './levels/pvz-level-1-1.js'
+import { level2 } from './levels/pvz-level-1-2.js'
 import { LevelDef, PlantDef, ZombieDef } from './pvz-def-types.js'
 
+// times are all in seconds, cd = cooldown
+
 const baseZombie = {
-  speed: 0.23,
-  biteDamage: 100,
-  biteCd: 1
+  speed: 0.35, // tiles per second
+  biteDamage: 4,
+  biteCd: 0.04
 } as const
 
 export const zombies: Record<ZombieName, ZombieDef> = {
   normal: {
     kind: 'normal',
-    hp: 200,
+    hp: 270,
     ...baseZombie
   },
   cone: {
     kind: 'cone',
-    hp: 560,
+    hp: 640,
     ...baseZombie
   },
   bucket: {
     kind: 'bucket',
-    hp: 1300,
+    hp: 1370,
     ...baseZombie
   }
 }
@@ -30,7 +32,7 @@ export const zombies: Record<ZombieName, ZombieDef> = {
 export const plants: Record<PlantName, PlantDef> = {
   sunflower: {
     kind: 'sunflower',
-    hp: 200,
+    hp: 300,
     buyCost: 50,
     buyCd: 7.5,
     actionCd: 24
@@ -44,80 +46,9 @@ export const plants: Record<PlantName, PlantDef> = {
   }
 }
 
-// 0|1 are easier to type and read, but bools are better for the sim
-const b = (...values: number[]) => values.map(boolish)
-
 export const levels: LevelDef[] = [
   // tutorial 1-1: single strip in middle row
-  {
-    id: 1,
-    plantableTiles: b(
-      0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0,
-      1, 1, 1, 1, 1, 1, 1, 1, 1,
-      0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ),
-    initialPlants: [],
-    plantWhitelist: ['peashooter'],
-    initialMowers: b(0, 0, 1, 0, 0),
-    canShovel: false,
-    initialSun: 150,
-    firstSun: 5,
-    sunCd: 5,
-    spawns: flattenWaves(
-      [
-        // wave 1
-        {
-          startTime: 15,
-          spawns: [
-            {
-              kind: 'normal',
-              spawnTime: 0,
-              spawnRow: 2
-            }
-          ]
-        },
-        // wave 2
-        {
-          startTime: 25,
-          spawns: [
-            {
-              kind: 'normal',
-              spawnTime: 0,
-              spawnRow: 2
-            }
-          ]
-        },
-        // wave 3
-        {
-          startTime: 35,
-          spawns: [
-            {
-              kind: 'normal',
-              spawnTime: 0,
-              spawnRow: 2
-            }
-          ]
-        },
-        // wave 4
-        {
-          startTime: 45,
-          spawns: [
-            {
-              kind: 'normal',
-              spawnTime: 0,
-              spawnRow: 2
-            },
-            {
-              kind: 'normal',
-              // last wave comes out about ~1 step apart
-              spawnTime: 0.23,
-              spawnRow: 2
-            }
-          ]
-        }
-      ]
-    )
-  }
+  level1,
+  // tutorial 1-2: three strips, adds sunflower
+  level2
 ]

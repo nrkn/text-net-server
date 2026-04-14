@@ -1,3 +1,4 @@
+import { boolish } from '../../../lib/util.js'
 import { Spawn, WaveDef } from './pvz-def-types.js'
 
 // flatten and sort earliest first (waves may overlap)
@@ -20,3 +21,6 @@ export const flattenWaves = (waves: WaveDef[]): Spawn[] => {
 
   return result
 }
+
+// 0|1 are easier to type and read, but bools are better for the sim
+export const b = (...values: number[]) => values.map(boolish)
