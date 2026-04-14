@@ -1,4 +1,4 @@
-import { maybe } from '../../../lib/util.js'
+import { maybe, seq } from '../../../lib/util.js'
 import { createRandom, Random } from '../../random.js'
 import { plants, projectiles, zombies } from '../data/pvz-defs.js'
 
@@ -14,7 +14,7 @@ import {
 
 import { formatPos, formatRow } from '../pvz-util.js'
 import { issueId, spawnZombie } from './pvz-mutate.js'
-import { levelSunSpawned, plantHasTarget, resolveWave, zombiesSpawned } from './pvz-query.js'
+import { levelSunSpawned, plantHasTarget, resolveWave, zombiesSpawned, currentWaveIndex } from './pvz-query.js'
 import { actionFail, getLevel } from './pvz-sim-util.js'
 
 // tick!
@@ -332,6 +332,7 @@ const tickFixed = (
     logWithZombie(mlog, 'triggeredBy', target)
 
     mower.active = true
+    state.mowerFiredWave.set(row, currentWaveIndex(state))
 
     // launch - just kill the trigger zombie - consider if this is the right    
     // thing to do or if it should happen naturally anyway?
@@ -347,9 +348,24 @@ const tickFixed = (
   for (const { kind, waveIndex } of newZombies) {
     const level = getLevel(state.levelId)
 
-    const row = maybe(level.spawnRows)
-      ? random.pick(level.spawnRows)
-      : random.nextInt(BOARD_ROWS)
+    const candidates = maybe(level.spawnRows)
+      ? level.spawnRows
+      : seq(BOARD_ROWS, i => i)
+
+    const weights = candidates.map(r => {
+      const firedWave = state.mowerFiredWave.get(r)
+
+      if (firedWave === undefined) return 1
+
+      const delta = waveIndex - firedWave
+
+      if (delta <= 1) return 0.01
+      if (delta === 2) return 0.5
+      
+      return 1
+    })
+
+    const row = random.weightedPick(candidates, weights)
 
     const x = random.range(SPAWN_X_MIN, SPAWN_X_MAX)
     const def = zombies[kind]

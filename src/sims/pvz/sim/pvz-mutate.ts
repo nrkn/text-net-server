@@ -4,6 +4,7 @@ import { BOARD_COLS } from '../pvz-const.js'
 import { PvzState, PlantName, Plant, ZombieName, Zombie } from '../pvz-types.js'
 import { formatPos, formatRow, getIdx } from '../pvz-util.js'
 import { stateToGrid } from './pvz-state.js'
+import { currentWaveIndex } from './pvz-query.js'
 
 // note - mutates state - use only *inside* events
 
@@ -80,6 +81,7 @@ export const launchMower = (
   }
 
   mower.active = true
+  state.mowerFiredWave.set(row, currentWaveIndex(state))
 
   if (launchType === 'manual') state.launched = true
 }

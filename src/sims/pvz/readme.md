@@ -12,8 +12,6 @@ produce a combined log which is like:
 {time} res { reqid } { simEventLine[ 1 ] } //etc
 ```
 
-deprioritize recently mowed rows when spawning random-row zombies
-
 towers should have optional ranges (puff/chomper etc) and infinite if not set,
 but can wait til we have those plants
 
@@ -123,3 +121,18 @@ insta-kill all zombies in 3x3 pattern, destroys plant
 how can we make this behaviour reusable, so it can be applied to any plant?
 maybe add { explodes?: '3x3' } (we can add types other than 3x3 later if needed)
 to PlantDef?
+
+---
+
+deprioritize recently mowed rows when spawning random-row zombies - it tracks
+which wave the mower fired on per row then weights the row selection for new
+spawns accordingly:
+
+```
+since fired/chance
+0–1	0.01	Nearly zero chance (~1%)
+2	  0.5	  Half weight
+3+	1.0	  Normal
+```
+
+so we will need to add weighted to random

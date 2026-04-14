@@ -9,6 +9,17 @@ import { isRow } from '../pvz-guards.js'
 import { WaveDef } from '../data/pvz-def-types.js'
 import { createRandom } from '../../random.js'
 
+// highest wave index where waveStartTimes[i] <= state.time, or -1
+export const currentWaveIndex = (state: PvzState) => {
+  let result = -1
+
+  for (let i = 0; i < state.waveStartTimes.length; i++) {
+    if (state.waveStartTimes[i] <= state.time) result = i
+  }
+
+  return result
+}
+
 export const canPlant = (
   state: PvzState,
   plantName: PlantName,

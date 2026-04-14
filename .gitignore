@@ -1,4 +1,5 @@
 data/test-app/sessions/**
+_temp
 
 # Logs
 logs

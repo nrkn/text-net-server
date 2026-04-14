@@ -6,9 +6,10 @@ import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
 import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY } from '../sims/pvz/pvz-const.js'
 import { levels, plants, zombies } from '../sims/pvz/data/pvz-defs.js'
-import { resolveWave, deriveWaveSeed } from '../sims/pvz/sim/pvz-query.js'
+import { resolveWave, deriveWaveSeed, currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
 import { WaveDef } from '../sims/pvz/data/pvz-def-types.js'
 import { createLevel } from '../sims/pvz/data/pvz-def-util.js'
+import { createRandom } from '../sims/random.js'
 
 // helpers
 
@@ -671,5 +672,128 @@ describe('cherry bomb', () => {
       p => p.kind === 'sunflower'
     )
     assert.ok(sunflower, 'sunflower should survive cherry bomb explosion')
+  })
+})
+
+// weightedPick
+
+describe('weightedPick', () => {
+  it('always picks the only nonzero weight', () => {
+    const rng = createRandom(42)
+
+    for (let i = 0; i < 50; i++) {
+      assert.equal(rng.weightedPick(['a', 'b', 'c'], [0, 0, 1]), 'c')
+    }
+  })
+
+  it('distributes roughly evenly for equal weights', () => {
+    const rng = createRandom(42)
+    const counts = [0, 0]
+
+    for (let i = 0; i < 1000; i++) {
+      const v = rng.weightedPick(['a', 'b'], [1, 1])
+      counts[v === 'a' ? 0 : 1]++
+    }
+
+    // each should be roughly 500 ± 100
+    assert.ok(counts[0] > 350 && counts[0] < 650, `a count: ${counts[0]}`)
+    assert.ok(counts[1] > 350 && counts[1] < 650, `b count: ${counts[1]}`)
+  })
+
+  it('respects skewed weights', () => {
+    const rng = createRandom(42)
+    const counts = [0, 0]
+
+    for (let i = 0; i < 1000; i++) {
+      const v = rng.weightedPick(['a', 'b'], [0.01, 1])
+      counts[v === 'a' ? 0 : 1]++
+    }
+
+    // a should be ~1%, b should be ~99%
+    assert.ok(counts[0] < 50, `a count should be rare: ${counts[0]}`)
+    assert.ok(counts[1] > 950, `b count should dominate: ${counts[1]}`)
+  })
+})
+
+// currentWaveIndex
+
+describe('currentWaveIndex', () => {
+  it('returns -1 before any waves', () => {
+    const s = newGame()
+
+    assert.equal(currentWaveIndex(s), -1)
+  })
+
+  it('returns 0 after first wave starts', () => {
+    const s = send(newGame(),
+      { type: 'advance', seconds: firstSpawnTime + 0.1 }
+    )
+
+    assert.equal(currentWaveIndex(s), 0)
+  })
+})
+
+// mower row deprioritization
+
+describe('mower row deprioritization', () => {
+  // fixture: 2 waves, wave 0 at t=5 (single normal), wave 1 at t=15 (many normals)
+  const mowerLevel = createLevel({
+    id: 998,
+    initialSun: 0,
+    waves: [
+      { startTime: 5, fixed: ['normal'] },
+      { startTime: 15, fixed: [
+        'normal', 'normal', 'normal', 'normal', 'normal',
+        'normal', 'normal', 'normal', 'normal', 'normal',
+        'normal', 'normal', 'normal', 'normal', 'normal',
+        'normal', 'normal', 'normal', 'normal', 'normal'
+      ] }
+    ]
+  })
+
+  levels.push(mowerLevel)
+
+  const newMowerGame = () => send(
+    newState(SEED),
+    { type: 'new', levelId: 998, seed: SEED, version: PVZ_CURR_VERSION }
+  )
+
+  it('records mowerFiredWave on auto-trigger', () => {
+    // advance past wave 0 spawn, let zombie walk to mower
+    const s = send(newMowerGame(),
+      { type: 'advance', seconds: 40 }
+    )
+
+    assert.ok(s.mowerFiredWave.size > 0, 'should have recorded a mower fire')
+  })
+
+  it('deprioritizes mowed row in next wave', () => {
+    // advance enough for mower to fire and wave 1 to spawn
+    const s = send(newMowerGame(),
+      { type: 'advance', seconds: 40 }
+    )
+
+    // find which row the mower fired on
+    const mowedRow = [...s.mowerFiredWave.keys()][0]
+
+    // count wave 1 zombies on the mowed row vs others
+    const wave1Zombies = [...s.zombies.values()].filter(
+      z => z.waveIndex === 1
+    )
+
+    const onMowedRow = wave1Zombies.filter(z => z.row === mowedRow).length
+    const total = wave1Zombies.length
+
+    // with 20 zombies and 5 rows, uniform would give ~4 per row
+    // mowed row should get significantly fewer (weight 0.01)
+    assert.ok(
+      total > 0,
+      'wave 1 should have spawned zombies'
+    )
+
+    assert.ok(
+      onMowedRow <= 2,
+      `mowed row ${mowedRow} got ${onMowedRow}/${total} zombies, expected very few`
+    )
   })
 })

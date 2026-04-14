@@ -22,6 +22,20 @@ export const createRandom = (seed: number) => {
 
   const pick = <T>(values: T[]) => values[nextInt(values.length)]
 
+  const weightedPick = <T>(values: T[], weights: number[]) => {
+    let total = 0
+    for (const w of weights) total += w
+
+    let r = next() * total
+
+    for (let i = 0; i < values.length; i++) {
+      r -= weights[i]
+      if (r <= 0) return values[i]
+    }
+
+    return values[values.length - 1]
+  }
+
   const consume = (count: number) => {
     for (let i = 0; i < count; i++){
       next()
@@ -30,7 +44,7 @@ export const createRandom = (seed: number) => {
 
   const peek = () => seed
 
-  return { next, nextInt, rangeInt, range, pick, consume, peek }
+  return { next, nextInt, rangeInt, range, pick, weightedPick, consume, peek }
 }
 
 export type Random = ReturnType<typeof createRandom>

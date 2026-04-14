@@ -150,6 +150,9 @@ export type PvzState = {
   // separate rng for wave resolution (derive don't store spawns)
   levelRng: number
 
+  // row -> waveIndex when mower fired, for deprioritizing recently mowed rows
+  mowerFiredWave: Map<number, number>
+
   nextId: number
 
   sun: number
