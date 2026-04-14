@@ -41,7 +41,7 @@ export type ProjectileDef = {
 export type WaveDef = {
   startTime: number // absolute time of the wave start
 
-  fixed: ZombieName[] // always spawned
+  fixed?: ZombieName[] // always spawned
   pool?: ZombieName[] // if present, budget remaining after fixed is spent on pool
   pointMultiplier?: number // scales budget for flag waves etc
 }

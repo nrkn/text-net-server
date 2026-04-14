@@ -149,12 +149,14 @@ export const resolveWave = (
   // fixed spawns always happen - subtract their cost from budget
   let remaining = budget
 
-  for (const kind of wave.fixed) {
+  const { fixed = [] } = wave
+
+  for (const kind of fixed) {
     remaining -= zombies[kind].waveCost
   }
 
   // no pool or budget exhausted by fixed spawns
-  if (!maybe(wave.pool) || remaining <= 0) return [...wave.fixed]
+  if (!maybe(wave.pool) || remaining <= 0) return [...fixed]
 
   // ensure normal is always in the pool
   const pool: ZombieName[] = wave.pool.includes('normal')
@@ -175,7 +177,7 @@ export const resolveWave = (
     poolResult.push(pick)
   }
 
-  return [...wave.fixed, ...poolResult]
+  return [...fixed, ...poolResult]
 }
 
 export const zombiesSpawned = (state: PvzState, dt: number) => {
