@@ -140,12 +140,11 @@ export const zombiesSpawned = (state: PvzState, dt: number) => {
 
   for (let w = 0; w < level.waves.length; w++) {
     const effectiveStart = state.waveStartTimes[w]
-    const wave = level.waves[w]
 
-    for (const spawn of wave.spawns) {
-      const absTime = effectiveStart + spawn.spawnTime
+    if (effectiveStart >= t0 && effectiveStart < t1) {
+      const wave = level.waves[w]
 
-      if (absTime >= t0 && absTime < t1) {
+      for (const spawn of wave.spawns) {
         result.push({ spawn, waveIndex: w })
       }
     }

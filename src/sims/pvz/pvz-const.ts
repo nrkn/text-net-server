@@ -54,3 +54,7 @@ export const mowerSpeed = 6.5
 export const WAVE_MIN_TIME = 4
 export const WAVE_HP_THRESHOLD = 0.575 // midpoint of 50-65%
 export const WAVE_ACCEL_DELAY = 2
+
+// zombie spawn x range - they appear spread out on the right edge
+export const SPAWN_X_MIN = BOARD_COLS + 0.25
+export const SPAWN_X_MAX = BOARD_COLS + 0.75

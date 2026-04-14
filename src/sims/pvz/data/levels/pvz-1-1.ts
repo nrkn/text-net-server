@@ -23,50 +23,29 @@ export const level1: LevelDef = {
       {
         startTime: 18,
         spawns: [
-          {
-            kind: 'normal',
-            spawnTime: 0,
-            spawnRow: 2
-          }
+          { kind: 'normal', spawnRow: 2 }
         ]
       },
       // wave 2
       {
-        startTime: 28,
+        startTime: 46,
         spawns: [
-          {
-            kind: 'normal',
-            spawnTime: 0,
-            spawnRow: 2
-          }
+          { kind: 'normal', spawnRow: 2 }
         ]
       },
       // wave 3
       {
-        startTime: 38,
+        startTime: 74,
         spawns: [
-          {
-            kind: 'normal',
-            spawnTime: 0,
-            spawnRow: 2
-          }
+          { kind: 'normal', spawnRow: 2 }
         ]
       },
       // wave 4
       {
-        startTime: 48,
+        startTime: 102,
         spawns: [
-          {
-            kind: 'normal',
-            spawnTime: 0,
-            spawnRow: 2
-          },
-          {
-            kind: 'normal',
-            // last wave comes out about ~1 step apart
-            spawnTime: 0.35,
-            spawnRow: 2
-          }
+          { kind: 'normal', spawnRow: 2 },
+          { kind: 'normal', spawnRow: 2 }
         ]
       }
     ],

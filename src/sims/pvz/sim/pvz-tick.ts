@@ -4,7 +4,8 @@ import { plants, projectiles, zombies } from '../data/pvz-defs.js'
 
 import {
   BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP,
-  WAVE_MIN_TIME, WAVE_HP_THRESHOLD, WAVE_ACCEL_DELAY
+  WAVE_MIN_TIME, WAVE_HP_THRESHOLD, WAVE_ACCEL_DELAY,
+  SPAWN_X_MIN, SPAWN_X_MAX
 } from '../pvz-const.js'
 
 import {
@@ -22,12 +23,7 @@ type Log = (entry: string) => void
 
 const winHandler = (state: PvzState, log: Log) => {
   // has the last spawn already happened, but there are no zombies left?
-  const level = getLevel(state.levelId)
-  const lastWave = level.waves.at(-1)!
-  const lastWaveStart = state.waveStartTimes.at(-1)!
-  const lastSpawnTime = lastWaveStart + Math.max(
-    ...lastWave.spawns.map(s => s.spawnTime)
-  )
+  const lastSpawnTime = state.waveStartTimes.at(-1)!
 
   const maybeWin = () => {
     if (state.time < lastSpawnTime + FIXED_TICK) return false
@@ -338,9 +334,11 @@ const tickFixed = (
         ? random.pick(level.spawnRows)
         : random.nextInt(BOARD_ROWS)
 
-    // spawn BEFORE you move - it's just off the board so calling things like 
-    // grid will fail
-    const id = spawnZombie(state, kind, row, waveIndex)
+    const x = random.range(SPAWN_X_MIN, SPAWN_X_MAX)
+    const def = zombies[kind]
+    const speed = random.range(def.speed[0], def.speed[1])
+
+    const id = spawnZombie(state, kind, row, waveIndex, x, speed)
 
     const newZombie = state.zombies.get(id)!
 
@@ -407,7 +405,7 @@ const tickFixed = (
   for (const [_zombieId, zombie] of state.zombies) {
     const def = zombies[zombie.kind]
 
-    const newX = zombie.x - def.speed * FIXED_TICK
+    const newX = zombie.x - zombie.speed * FIXED_TICK
     const newCol = Math.floor(newX)
 
     const zlog = zombieLog(zombie)

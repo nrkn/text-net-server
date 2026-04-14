@@ -21,47 +21,47 @@ export const level2: LevelDef = {
     {
       startTime: 50,
       spawns: [
-        { kind: 'normal', spawnTime: 0 }
+        { kind: 'normal' }
       ]
     },
     {
-      startTime: 60,
+      startTime: 78,
       spawns: [
-        { kind: 'normal', spawnTime: 0 }
+        { kind: 'normal' }
       ]
     },
     {
-      startTime: 70,
+      startTime: 106,
       spawns: [
-        { kind: 'normal', spawnTime: 0 }
+        { kind: 'normal' }
       ]
     },
     {
-      startTime: 80,
+      startTime: 134,
       spawns: [
-        { kind: 'normal', spawnTime: 0 },
-        { kind: 'normal', spawnTime: 0.35 }
+        { kind: 'normal' },
+        { kind: 'normal' }
       ]
     },
     {
-      startTime: 90,
+      startTime: 162,
       spawns: [
-        { kind: 'normal', spawnTime: 0 },
-        { kind: 'normal', spawnTime: 0.35 }
+        { kind: 'normal' },
+        { kind: 'normal' }
       ]
     },
     // flag wave
     {
-      startTime: 100,
+      startTime: 190,
       spawns: [
-        { kind: 'normal', spawnTime: 0, },
-        { kind: 'normal', spawnTime: 0.35 },
-        { kind: 'normal', spawnTime: 0.7 },
-        { kind: 'normal', spawnTime: 1.05 },
-        { kind: 'normal', spawnTime: 1.4 },
-        { kind: 'normal', spawnTime: 1.75 },
-        { kind: 'normal', spawnTime: 2.1 },
-        { kind: 'normal', spawnTime: 2.45 },
+        { kind: 'normal' },
+        { kind: 'normal' },
+        { kind: 'normal' },
+        { kind: 'normal' },
+        { kind: 'normal' },
+        { kind: 'normal' },
+        { kind: 'normal' },
+        { kind: 'normal' },
       ]
     }
   ],

@@ -85,15 +85,13 @@ export const launchMower = (
 }
 
 export const spawnZombie = (
-  state: PvzState, kind: ZombieName, row: number, waveIndex: number
+  state: PvzState, kind: ZombieName, row: number, waveIndex: number,
+  x: number, speed: number
 ) => {
   const id = issueId(state)
   const { hp } = zombies[kind]
-  // oob - but it will move in the same turn that it spawned and be inside the 
-  // grid
-  const x = BOARD_COLS
 
-  const zombie: Zombie = { kind, id, row, x, hp, waveIndex }
+  const zombie: Zombie = { kind, id, row, x, speed, hp, waveIndex }
 
   state.zombies.set(id, zombie)
 

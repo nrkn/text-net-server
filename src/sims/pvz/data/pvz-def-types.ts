@@ -6,7 +6,7 @@ import { PlantName, ProjectileName, ZombieName } from '../pvz-types.js'
 export type ZombieDef = {
   kind: ZombieName
 
-  speed: number // tiles per second
+  speed: [number, number] // [min, max] tiles per second
   hp: number
   // for now, we will just collide with the zombie's x, but this is more
   // in line with the real game
@@ -37,8 +37,6 @@ export type ProjectileDef = {
 
 export type SpawnDef = {
   kind: ZombieName
-
-  spawnTime: number // offset from start of wave 
   spawnRow?: number // random if undefined
 }
 

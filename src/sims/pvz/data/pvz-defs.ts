@@ -6,10 +6,10 @@ import { LevelDef, PlantDef, ProjectileDef, ZombieDef } from './pvz-def-types.js
 // times are all in seconds, cd = cooldown
 
 const baseZombie = {
-  speed: 0.35, // tiles per second
+  speed: [0.29, 0.4] as [number, number], // tiles per second
   biteDamage: 4,
   biteCd: 0.04
-} as const
+}
 
 export const zombies: Record<ZombieName, ZombieDef> = {
   normal: {

@@ -27,8 +27,7 @@ const level = levels[0]
 const pea = plants['peashooter']
 
 const mowerRow = level.initialMowers.findIndex(m => m)
-const firstSpawnTime = level.waves[0].startTime +
-  Math.min(...level.waves[0].spawns.map(s => s.spawnTime))
+const firstSpawnTime = level.waves[0].startTime
 
 describe('new', () => {
   it('initializes a playing state', () => {
@@ -304,8 +303,7 @@ describe('advanceUntil', () => {
 
 const level2 = levels[1]
 const sun = plants['sunflower']
-const level2FirstSpawn = level2.waves[0].startTime +
-  Math.min(...level2.waves[0].spawns.map(s => s.spawnTime))
+const level2FirstSpawn = level2.waves[0].startTime
 
 const newGame2 = () => send(
   newState(SEED),

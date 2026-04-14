@@ -18,12 +18,16 @@ type Static = {
   col: number
 }
 
-// entities that have left the map or haven't entered it properly shouldn't be 
-// in state anymore - if they are, something went wrong, getIdx will throw
-// as it calls assertPos
-const mobIdx = (mob: Mob) => getIdx(mob.row, Math.floor(mob.x))
+const mobCol = (mob: Mob) => Math.floor(mob.x)
 
-// as above - shouldn't have been able to plant outside the board!
+const isOnBoard = (mob: Mob) => {
+  const col = mobCol(mob)
+  return col >= 0 && col < BOARD_COLS
+}
+
+const mobIdx = (mob: Mob) => getIdx(mob.row, mobCol(mob))
+
+// shouldn't have been able to plant outside the board!
 const staticIdx = (sta: Static) => getIdx(sta.row, sta.col)
 
 export const stateToGrid = (state: PvzState) => {
@@ -35,27 +39,25 @@ export const stateToGrid = (state: PvzState) => {
   }
 
   for (const [id, zombie] of state.zombies) {
-    const tile = grid.data[mobIdx(zombie)]
+    if (!isOnBoard(zombie)) continue
 
-    tile.zombies.push(id)
+    grid.data[mobIdx(zombie)].zombies.push(id)
   }
 
   for (const [id, plant] of state.plants) {
-    const tile = grid.data[staticIdx(plant)]
-
-    tile.plant = id
+    grid.data[staticIdx(plant)].plant = id
   }
 
   for (const [row, mower] of state.mowers) {
-    const tile = grid.data[mobIdx(mower)]
+    if (!isOnBoard(mower)) continue
 
-    tile.mower = row
+    grid.data[mobIdx(mower)].mower = row
   }
 
   for (const [id, proj] of state.projectiles) {
-    const tile = grid.data[mobIdx(proj)]
+    if (!isOnBoard(proj)) continue
 
-    tile.projectiles.push(id)
+    grid.data[mobIdx(proj)].projectiles.push(id)
   }
 
   return grid

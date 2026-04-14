@@ -62,8 +62,8 @@ export type Zombie = {
   // all x units are col as a float, eg halfway across col 5 === 5.5
   x: number
 
-  // not needed - defined by ZombieDef, later ZombieDef + Effects
-  // speed: number
+  // rolled from ZombieDef.speed range at spawn
+  speed: number
 
   // remaining hp, whereas ZombieDef.hp is initial hp
   hp: number
