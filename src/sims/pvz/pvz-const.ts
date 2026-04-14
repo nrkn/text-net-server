@@ -46,7 +46,7 @@ export const SUN_DROP = 25
 // tick step - 10ms in seconds
 export const FIXED_TICK = 0.01
 
-export const mowerSpeed = 6.5
+export const mowerSpeed = 4.16
 
 // wave acceleration - after WAVE_MIN_TIME seconds, if a wave has lost
 // WAVE_HP_THRESHOLD of its total hp, the next wave is rescheduled to 

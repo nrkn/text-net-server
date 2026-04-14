@@ -155,7 +155,8 @@ export const deriveWaveSeed = (levelRng: number, waveIndex: number) => {
 export const resolveWave = (
   wave: WaveDef, waveIndex: number, levelRng: number
 ): ZombieName[] => {
-  const budget = (3 / (waveIndex + 1) + 1) * (wave.pointMultiplier ?? 1)
+  const ptMult = wave.pointMultiplier ?? 1
+  const budget = (Math.floor((waveIndex + 1) / 3) + 1) * ptMult
 
   // fixed spawns always happen - subtract their cost from budget
   let remaining = budget

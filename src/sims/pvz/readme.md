@@ -17,6 +17,11 @@ but can wait til we have those plants
 
 ## done
 
+nb - these are just sketches, didn't necessarily implement them exactly 
+like this
+
+---
+
 adaptive pacing - waves are currently fixed - pvz does something like, if all
 zombies cleared, send next wave early - we need this because stalling is an
 important strat

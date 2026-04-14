@@ -26,7 +26,7 @@ export type PlantDef = {
   buyCost: number // how much sun
   buyCd: number // how often can plant  
 
-  actionCd: number // time between shots/sun production
+  actionCd: number // time between shots/sun production etc
 
   projectile?: ProjectileName // undefined = doesn't fire (eg sunflower)
   explodes?: '3x3' // area damage on actionCd, self-destructs
@@ -42,7 +42,7 @@ export type WaveDef = {
   startTime: number // absolute time of the wave start
 
   fixed?: ZombieName[] // always spawned
-  pool?: ZombieName[] // if present, budget remaining after fixed is spent on pool
+  pool?: ZombieName[] // if present, budget remaining after fixed spent on pool
   pointMultiplier?: number // scales budget for flag waves etc
 }
 

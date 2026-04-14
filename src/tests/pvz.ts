@@ -423,8 +423,8 @@ describe('resolveWave', () => {
       pool: ['cone', 'bucket']
     }
 
-    // waveIndex 0: budget = (3/1)+1 = 4, fixed costs 1, remaining = 3
-    const result = resolveWave(wave, 0, LEVEL_RNG)
+    // waveIndex 8: budget = floor(9/3)+1 = 4, fixed costs 1, remaining = 3
+    const result = resolveWave(wave, 8, LEVEL_RNG)
 
     // must have at least the fixed normal + some pool zombies
     assert.equal(result[0], 'normal')
@@ -475,10 +475,10 @@ describe('resolveWave', () => {
       pointMultiplier: 3
     }
 
-    // waveIndex 0: budget = ((3/1)+1)*3 = 12, all normals at cost 1
+    // waveIndex 0: budget = (floor(1/3)+1)*3 = 3, all normals at cost 1
     const result = resolveWave(wave, 0, LEVEL_RNG)
 
-    assert.equal(result.length, 12)
+    assert.equal(result.length, 3)
   })
 
   it('is deterministic with same seed', () => {
@@ -501,11 +501,11 @@ describe('resolveWave', () => {
       pool: ['cone', 'bucket']
     }
 
-    const a = resolveWave(wave, 0, LEVEL_RNG)
-    const b = resolveWave(wave, 1, LEVEL_RNG)
+    const a = resolveWave(wave, 2, LEVEL_RNG)
+    const b = resolveWave(wave, 5, LEVEL_RNG)
 
-    // different wave indices produce different budgets at minimum
-    // waveIndex 0: budget 4, waveIndex 1: budget 2.5
+    // different wave indices produce different budgets
+    // waveIndex 2: budget 2, waveIndex 5: budget 3
     assert.notDeepEqual(a, b)
   })
 
@@ -555,10 +555,10 @@ describe('level 1-3: basics', () => {
   })
 
   it('pool produces cone or bucket zombies', () => {
-    // wave 0 has pool: ['cone'], budget = (3/1)+1 = 4, fixed 'normal' costs 1
-    // remaining 3 is enough for cone (cost 2)
+    // waves 0-1 have budget 1 (only normals), wave 2+ has budget 2+
+    // advance past wave 5 so several waves can afford cone (cost 2)
     const s = send(newGame3(),
-      { type: 'advance', seconds: level3FirstSpawn + 1 }
+      { type: 'advance', seconds: level3.waves[5].startTime + 1 }
     )
 
     const kinds = new Set<string>()

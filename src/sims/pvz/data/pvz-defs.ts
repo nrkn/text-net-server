@@ -36,7 +36,7 @@ export const zombies: Record<ZombieName, ZombieDef> = {
 export const projectiles: Record<ProjectileName, ProjectileDef> = {
   pea: {
     kind: 'pea',
-    speed: 3.3,
+    speed: 4.16,
     damage: 20
   }
 }
@@ -72,6 +72,6 @@ export const levels: LevelDef[] = [
   level1,
   // tutorial 1-2: three strips, adds sunflower
   level2,
-  // 1-3: all rows, introduces cone/bucket via wave pool
+  // 1-3: all rows, introduces cone via wave pool, adds cherry bomb
   level3
 ]
