@@ -152,7 +152,16 @@ shown at the top before the normal screen render
 
 when the server is relatively stable, we can start using it to make some things
 
+### bbs
+
+with some message boards and a few games
+
 ### pvz demake
+
+why? firstly - it will be a lot of fun to make. secondly, it's a really good 
+stress test for the system and overall philosophy. thirdly, people will 
+probably think it's neat, so could be a draw for our little bbs, or help get
+some eyes on text-net-server
 
 basic ui:
 
