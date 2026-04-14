@@ -1,4 +1,4 @@
-import { b, flattenWaves } from '../pvz-data-util.js'
+import { b, flattenWaves } from '../pvz-def-util.js'
 import { LevelDef } from '../pvz-def-types.js'
 
 export const level2: LevelDef = {
