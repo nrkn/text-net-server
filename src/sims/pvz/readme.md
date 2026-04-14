@@ -19,13 +19,17 @@ but can wait til we have those plants
 
 ## done
 
-daptive pacing - waves are currently fixed - pvz does something like, if all
+adaptive pacing - waves are currently fixed - pvz does something like, if all
 zombies cleared, send next wave early - we need this because stalling is an
 important strat
+
+---
 
 the logical board should be bigger, eg contain addressable but not 
 interactable cols on the right where zombies enter - projectiles/mower can 
 actually hit the zombies in these cols, even if the player can't plant here
+
+---
 
 wave system is wrong - the zombies inside a wave don't have time offsets - they
 spawn:
@@ -39,6 +43,8 @@ can't plant, and the views can ignore oob - I think we throw an error somewhere
 currently which we shouldn't do
 we also need to update zombie defs to have a range instead of fixed speed, as 
 a tuple [ 0.29, 0.4 ] then use random.rangeInt when we spawn the zombie
+
+---
 
 wave point system - we currently hard code the waves eg:
 
@@ -99,5 +105,21 @@ How does state store spawns now that they're random?
 2. store the spawns directly in state, on new state calculate them once,
    pros, easy and fast, cons, bloats state, inconsistent with other decisions
 
+---
+
 extract common levelDef values, eg `plantableTiles: allTiles` etc to a base 
 LevelDef - make the existing level defs partial and extend
+
+---
+
+1-3 needs cherry bomb:
+
+buyCost: 150
+buyCd: 50
+hp: technically 300 but invulnerable while fuse is lit
+1 second fuse on planting (can use actionCd)
+insta-kill all zombies in 3x3 pattern, destroys plant
+
+how can we make this behaviour reusable, so it can be applied to any plant?
+maybe add { explodes?: '3x3' } (we can add types other than 3x3 later if needed)
+to PlantDef?

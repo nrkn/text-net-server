@@ -1,5 +1,5 @@
 export const plantNames = [
-  'sunflower', 'peashooter'
+  'sunflower', 'peashooter', 'cherryBomb'
 ] as const
 
 export const zombieNames = [

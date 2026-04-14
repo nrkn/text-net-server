@@ -175,6 +175,12 @@ const tickFixed = (
 
   const zombieLog = entLog(zombieSlug)
 
+  const killZombie = (zombie: Zombie) => {
+    zombieLog(zombie)('died')
+
+    state.zombies.delete(zombie.id)
+  }
+
   // plants - action (sun/fire)
   for (const [plantId, plant] of state.plants) {
     const ready = isReady(state, plant.nextAction)
@@ -217,6 +223,27 @@ const tickFixed = (
       continue
     }
 
+    if (def.explodes === '3x3') {
+      for (const [_zId, zombie] of state.zombies) {
+        const zCol = Math.floor(zombie.x)
+
+        if (
+          Math.abs(zombie.row - row) <= 1 &&
+          zCol >= col - 1 && zCol <= col + 1
+        ) {
+          plog(`exploded ${zombieSlug(zombie)}`)
+
+          killZombie(zombie)
+        }
+      }
+
+      state.plants.delete(plantId)
+
+      plog('exploded selfDestruct')
+
+      continue
+    }
+
     throw Error(`Unexpected plant "${plant.kind}"`)
   }
 
@@ -232,12 +259,6 @@ const tickFixed = (
     zombies.sort((a, b) => a.x - b.x)
 
     return zombies
-  }
-
-  const killZombie = (zombie: Zombie) => {
-    zombieLog(zombie)('died')
-
-    state.zombies.delete(zombie.id)
   }
 
   const logWithZombie = (

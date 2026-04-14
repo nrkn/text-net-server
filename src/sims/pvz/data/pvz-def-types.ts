@@ -29,6 +29,7 @@ export type PlantDef = {
   actionCd: number // time between shots/sun production
 
   projectile?: ProjectileName // undefined = doesn't fire (eg sunflower)
+  explodes?: '3x3' // area damage on actionCd, self-destructs
 }
 
 export type ProjectileDef = {

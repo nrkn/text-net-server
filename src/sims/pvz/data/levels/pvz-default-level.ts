@@ -10,6 +10,6 @@ export const defaultLevel = (): LevelDefDefault => ({
   canShovel: true,
 
   initialSun: 50,
-  firstSun: 5,
-  sunCd: 5.5
+  firstSun: 5.5,
+  sunCd: 5
 })

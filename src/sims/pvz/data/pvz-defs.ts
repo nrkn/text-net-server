@@ -56,6 +56,14 @@ export const plants: Record<PlantName, PlantDef> = {
     buyCd: 7.5,
     actionCd: 1.425,
     projectile: 'pea'
+  },
+  cherryBomb: {
+    kind: 'cherryBomb',
+    hp: Number.MAX_SAFE_INTEGER,
+    buyCost: 150,
+    buyCd: 50,
+    actionCd: 1,
+    explodes: '3x3'
   }
 }
 

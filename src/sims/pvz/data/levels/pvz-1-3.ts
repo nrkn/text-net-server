@@ -2,8 +2,7 @@ import { createLevel } from '../pvz-def-util.js'
 
 export const level3 = createLevel({
   id: 3,
-  // todo - add cherryBomb
-  plantWhitelist: ['peashooter', 'sunflower'],
+  plantWhitelist: ['peashooter', 'sunflower', 'cherryBomb'],
   canShovel: false,
   waves: [
     {

@@ -21,7 +21,8 @@ const header = `  ${seq(BOARD_COLS, i => ` ${i}`).join('')}`
 
 const plantKeys: Record<PlantName, string> = {
   sunflower: 'S',
-  peashooter: 'P'
+  peashooter: 'P',
+  cherryBomb: 'X'
 }
 
 const zombieKeys: Record<ZombieName, string> = {

@@ -141,7 +141,6 @@ export const deriveWaveSeed = (levelRng: number, waveIndex: number) => {
   return random.peek()
 }
 
-
 export const resolveWave = (
   wave: WaveDef, waveIndex: number, levelRng: number
 ): ZombieName[] => {

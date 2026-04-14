@@ -586,3 +586,78 @@ describe('level 1-3: basics', () => {
     assert.deepEqual(kindsA, kindsB)
   })
 })
+
+// cherry bomb
+
+const cherry = plants['cherryBomb']
+
+describe('cherry bomb', () => {
+  it('deducts sun and sets buy cooldown', () => {
+    // need enough sun for cherry bomb (150)
+    const s = send(newGame3(),
+      // collect some sun first
+      { type: 'advance', seconds: 25 },
+      { type: 'place', plantName: 'cherryBomb', row: 2, col: 5 }
+    )
+
+    assert.equal(s.error, undefined)
+    assert.ok(s.nextBuy.get('cherryBomb')! > s.time)
+  })
+
+  it('explodes after 1s fuse and self-destructs', () => {
+    // spawn zombies then cherry bomb them
+    const s = send(newGame3(),
+      { type: 'advance', seconds: level3FirstSpawn + 1 },
+      { type: 'place', plantName: 'cherryBomb', row: 2, col: 8 },
+      { type: 'advance', seconds: cherry.actionCd + 0.1 }
+    )
+
+    // cherry bomb should be gone
+    const hasCherryBomb = [...s.plants.values()].some(
+      p => p.kind === 'cherryBomb'
+    )
+    assert.equal(hasCherryBomb, false, 'cherry bomb should self-destruct')
+    assert.ok(hasEvent(s, 'exploded selfDestruct'))
+  })
+
+  it('kills zombies in 3x3 area', () => {
+    // place cherry bomb where zombies are approaching
+    const s = send(newGame3(),
+      { type: 'advance', seconds: level3FirstSpawn + 1 },
+      { type: 'place', plantName: 'cherryBomb', row: 2, col: 8 },
+      { type: 'advance', seconds: cherry.actionCd + 0.1 }
+    )
+
+    assert.ok(hasEvent(s, 'exploded'))
+  })
+
+  it('does not kill zombies outside 3x3 range', () => {
+    // place peashooter col 1 to avoid interfering, cherry bomb col 1
+    // zombies spawn at col ~10.5, cherry at col 1 can't reach them
+    const s = send(newGame3(),
+      { type: 'advance', seconds: level3FirstSpawn + 1 },
+      { type: 'place', plantName: 'cherryBomb', row: 2, col: 1 },
+      { type: 'advance', seconds: cherry.actionCd + 0.1 }
+    )
+
+    // zombies should still be alive — they're at x ~10 and cherry was at col 1
+    assert.ok(s.zombies.size > 0, 'zombies outside 3x3 should survive')
+    assert.ok(hasEvent(s, 'exploded selfDestruct'))
+  })
+
+  it('does not destroy other plants in blast radius', () => {
+    const s = send(newGame3(),
+      { type: 'place', plantName: 'sunflower', row: 2, col: 4 },
+      { type: 'advance', seconds: 25 },
+      { type: 'place', plantName: 'cherryBomb', row: 2, col: 5 },
+      { type: 'advance', seconds: cherry.actionCd + 0.1 }
+    )
+
+    // sunflower at col 4 is in the 3x3 of cherry at col 5
+    // but cherry bomb does not destroy plants
+    const sunflower = [...s.plants.values()].find(
+      p => p.kind === 'sunflower'
+    )
+    assert.ok(sunflower, 'sunflower should survive cherry bomb explosion')
+  })
+})
