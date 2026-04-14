@@ -21,8 +21,11 @@ export const placePlant = (
   placeType: 'bought' | 'initial'
 ) => {
   const id = issueId(state)
-  const { hp, buyCost, buyCd } = plants[kind]
-  const nextAction = 0
+  const { hp, buyCost, buyCd, actionCd } = plants[kind]
+
+  // matches pvz - peashooters only feel like they shoot immediately because
+  // cd is so low
+  const nextAction = state.time + actionCd
 
   const plant: Plant = { kind, id, row, col, hp, nextAction }
 

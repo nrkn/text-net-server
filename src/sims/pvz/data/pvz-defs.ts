@@ -1,6 +1,6 @@
 import { PlantName, ZombieName } from '../pvz-types.js'
-import { level1 } from './levels/pvz-level-1-1.js'
-import { level2 } from './levels/pvz-level-1-2.js'
+import { level1 } from './levels/pvz-1-1.js'
+import { level2 } from './levels/pvz-1-2.js'
 import { LevelDef, PlantDef, ZombieDef } from './pvz-def-types.js'
 
 // times are all in seconds, cd = cooldown

@@ -70,5 +70,6 @@ export const level1: LevelDef = {
         ]
       }
     ]
-  )
+  ),
+  spawnRows: [2]
 }

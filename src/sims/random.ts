@@ -15,9 +15,11 @@ export const createRandom = (seed: number) => {
 
   const nextInt = (exclMax: number) => Math.floor(next() * exclMax)
 
+  const pick = <T>(values: T[]) => values[nextInt(values.length)]
+
   const peek = () => seed
 
-  return { next, nextInt, peek }
+  return { next, nextInt, pick, peek }
 }
 
 export type Random = ReturnType<typeof createRandom>

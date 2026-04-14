@@ -19,35 +19,41 @@ export const level2: LevelDef = {
   sunCd: 5,
   spawns: flattenWaves([
     {
-      startTime: 50, spawns: [
+      startTime: 50,
+      spawns: [
         { kind: 'normal', spawnTime: 0 }
       ]
     },
     {
-      startTime: 60, spawns: [
+      startTime: 60,
+      spawns: [
         { kind: 'normal', spawnTime: 0 }
       ]
     },
     {
-      startTime: 70, spawns: [
+      startTime: 70,
+      spawns: [
         { kind: 'normal', spawnTime: 0 }
       ]
     },
     {
-      startTime: 80, spawns: [
+      startTime: 80,
+      spawns: [
         { kind: 'normal', spawnTime: 0 },
         { kind: 'normal', spawnTime: 0.35 }
       ]
     },
     {
-      startTime: 90, spawns: [
+      startTime: 90,
+      spawns: [
         { kind: 'normal', spawnTime: 0 },
         { kind: 'normal', spawnTime: 0.35 }
       ]
     },
     // flag wave
     {
-      startTime: 100, spawns: [
+      startTime: 100,
+      spawns: [
         { kind: 'normal', spawnTime: 0, },
         { kind: 'normal', spawnTime: 0.35 },
         { kind: 'normal', spawnTime: 0.7 },
@@ -58,5 +64,6 @@ export const level2: LevelDef = {
         { kind: 'normal', spawnTime: 2.45 },
       ]
     }
-  ])
+  ]),
+  spawnRows: [1, 2, 3]
 }

@@ -325,7 +325,13 @@ const tickFixed = (
   for (const z of newZombies) {
     const { kind, spawnRow } = z
 
-    const row = maybe(spawnRow) ? spawnRow : random.nextInt(BOARD_ROWS)
+    const level = getLevel(state.levelId)
+
+    const row = maybe(spawnRow)
+      ? spawnRow
+      : maybe(level.spawnRows)
+        ? random.pick(level.spawnRows)
+        : random.nextInt(BOARD_ROWS)
 
     // spawn BEFORE you move - it's just off the board so calling things like 
     // grid will fail

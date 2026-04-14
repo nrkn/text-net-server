@@ -86,4 +86,8 @@ export type LevelDef = {
   // is placed - but we will ignore that for now
 
   spawns: Spawn[]
+
+  // which rows zombies can spawn on when spawnRow is not set on the spawn
+  // if not set, assumes all rows (0..BOARD_ROWS-1)
+  spawnRows?: number[]
 }
