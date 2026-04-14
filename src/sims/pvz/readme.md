@@ -19,3 +19,6 @@ produce a combined log which is like:
 adaptive pacing - waves are currently fixed - pvz does something like, if all
 zombies cleared, send next wave early - we need this because stalling is an
 important strat
+
+towers should have optional ranges (puff/chomper etc) and infinite if not set,
+but can wait til we have those plants

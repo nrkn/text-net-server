@@ -1,9 +1,9 @@
 import { maybe } from '../../../lib/util.js'
 import { createRandom, Random } from '../../random.js'
-import { plants, zombies } from '../data/pvz-defs.js'
+import { plants, projectiles, zombies } from '../data/pvz-defs.js'
 
 import {
-  BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, peaDamage, peaSpeed, SUN_DROP
+  BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP
 } from '../pvz-const.js'
 
 import {
@@ -154,8 +154,8 @@ const tickFixed = (
   const plantSlug = ({ kind, id, row, col }: Plant) =>
     `${kind} ${id} ${formatPos(row, col)}`
 
-  const projSlug = ({ row, id, x }: Projectile) =>
-    `pea ${id} ${formatRow(row)}${tof(x)}`
+  const projSlug = ({ kind, row, id, x }: Projectile) =>
+    `${kind} ${id} ${formatRow(row)}${tof(x)}`
 
   const mowerSlug = ({ row, x }: Mower) =>
     `mower ${formatRow(row)}${tof(x)}`
@@ -195,22 +195,22 @@ const tickFixed = (
       continue
     }
 
-    if (plant.kind === 'peashooter') {
+    if (maybe(def.projectile)) {
       if (plantHasTarget(state, plantId)) {
-        // no spawnProjectile fn, because we are using hardcoded peas atm
-        // when we add ProjectileDef and make PlantDef use it, we will revisit
+        const projDef = projectiles[def.projectile]
 
         const id = issueId(state)
         const x = col + 0.5
 
-        const pea: Projectile = {
-          id, row, x, speed: peaSpeed, damage: peaDamage
+        const proj: Projectile = {
+          kind: projDef.kind,
+          id, row, x, speed: projDef.speed, damage: projDef.damage
         }
 
-        state.projectiles.set(id, pea)
+        state.projectiles.set(id, proj)
         plant.nextAction += def.actionCd
 
-        plog(`fired pea`)
+        plog(`fired ${projDef.kind}`)
       }
 
       continue

@@ -6,6 +6,10 @@ export const zombieNames = [
   'normal', 'cone', 'bucket'
 ] as const
 
+export const projectileNames = [
+  'pea'
+] as const
+
 // later, these may be parameterized, but for now, still useful conditions
 export const advanceConditions = [
   // when any zombie spawns
@@ -41,9 +45,5 @@ export const SUN_DROP = 25
 
 // tick step - 10ms in seconds
 export const FIXED_TICK = 0.01
-
-// until we have proper projectiles
-export const peaDamage = 20
-export const peaSpeed = 3.3 // tiles per second
 
 export const mowerSpeed = 6.5

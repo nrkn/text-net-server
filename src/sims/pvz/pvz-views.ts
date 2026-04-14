@@ -86,7 +86,7 @@ export const pvzBoardView = (state: PvzState) => {
       if (maybe(tile.mower)) contents.push('mower')
       if (maybe(tile.plant)) contents.push(state.plants.get(tile.plant)!.kind)
 
-      contents.push(...seq(tile.projectiles.length, () => 'pea'))
+      contents.push(...tile.projectiles.map(id => state.projectiles.get(id)!.kind))
       contents.push(...tile.zombies.map(id => state.zombies.get(id)!.kind))
 
       const isMulti = contents.length > 1

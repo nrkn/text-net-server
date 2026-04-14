@@ -1,4 +1,4 @@
-import { PlantName, ZombieName } from '../pvz-types.js'
+import { PlantName, ProjectileName, ZombieName } from '../pvz-types.js'
 
 // cd = cooldown
 // all times are in seconds
@@ -16,22 +16,23 @@ export type ZombieDef = {
   biteCd: number // time between bites
 }
 
-// for now, we will hard code projectile firing vs sun etc based on PlantName
-// later, plant def will carry more info, and projectiles will have their own
-// defs
 export type PlantDef = {
   kind: PlantName
 
   hp: number
 
-  // do plants have a width? or are they just assumed to be a full tile?
-  // similar to zombie above - we'll treat them like a full tile for now, later
-  // we may add a width
-
   buyCost: number // how much sun
   buyCd: number // how often can plant  
 
   actionCd: number // time between shots/sun production
+
+  projectile?: ProjectileName // undefined = doesn't fire (eg sunflower)
+}
+
+export type ProjectileDef = {
+  kind: ProjectileName
+  speed: number // tiles per second
+  damage: number
 }
 
 export type SpawnDef = {

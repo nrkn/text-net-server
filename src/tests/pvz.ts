@@ -298,3 +298,59 @@ describe('advanceUntil', () => {
     }
   })
 })
+
+// --- level 1-2 ---
+
+const level2 = levels[1]
+const sun = plants['sunflower']
+const level2FirstSpawn = Math.min(...level2.spawns.map(s => s.absTime))
+
+const newGame2 = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 2, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
+describe('level 1-2: sunflower', () => {
+  it('sunflower produces sun after actionCd', () => {
+    const s = send(newGame2(),
+      { type: 'place', plantName: 'sunflower', row: 2, col: 1 },
+      { type: 'advance', seconds: sun.actionCd + 1 }
+    )
+
+    assert.ok(hasEvent(s, 'spawnedSun'))
+    assert.ok(s.sun > level2.initialSun - sun.buyCost)
+  })
+})
+
+describe('level 1-2: spawn rows', () => {
+  it('zombies only spawn on valid spawnRows', () => {
+    const s = send(newGame2(),
+      { type: 'advance', seconds: level2FirstSpawn + 1 }
+    )
+
+    assert.ok(s.zombies.size > 0)
+
+    for (const zombie of s.zombies.values()) {
+      assert.ok(
+        level2.spawnRows!.includes(zombie.row),
+        `zombie on row ${zombie.row} not in spawnRows ${level2.spawnRows}`
+      )
+    }
+  })
+})
+
+describe('level 1-2: mower auto-trigger', () => {
+  it('mower activates when zombie reaches it', () => {
+    // advance far enough that a zombie walks into mower range
+    const s = send(newGame2(),
+      { type: 'advance', seconds: level2FirstSpawn + 60 }
+    )
+
+    // at least one mower should have triggered (or been consumed)
+    const mowerTriggered = hasEvent(s, 'triggeredBy')
+    const mowersConsumed = s.mowers.size < 3
+
+    assert.ok(mowerTriggered || mowersConsumed,
+      'expected at least one mower to auto-trigger')
+  })
+})

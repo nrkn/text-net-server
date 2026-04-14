@@ -1,5 +1,5 @@
 import { 
-  advanceConditions, pvzGameStatus, plantNames, zombieNames 
+  advanceConditions, pvzGameStatus, plantNames, projectileNames, zombieNames 
 } from './pvz-const.js'
 
 /*
@@ -8,6 +8,7 @@ import {
 
 export type PlantName = typeof plantNames[number]
 export type ZombieName = typeof zombieNames[number]
+export type ProjectileName = typeof projectileNames[number]
 export type AdvanceCondition = typeof advanceConditions[number]
 export type PvzGameStatus = typeof pvzGameStatus[number]
 
@@ -99,19 +100,12 @@ export type Mower = {
 }
 
 export type Projectile = {
-  // we don't need this initially - but later we will have eg frozen peas etc
-  //kind: ProjectileName 
-
+  kind: ProjectileName
   id: number
   row: number
   x: number
-
-  // later these will probably come from ProjectileDef
   speed: number
   damage: number
-
-  // doesn't need to track eg the first zombie - it just moves right until it
-  // collides with a zombie or goes off the board and then despawns
 }
 
 export type PvzActionFailed = {
