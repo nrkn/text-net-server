@@ -17,6 +17,29 @@ deprioritize recently mowed rows when spawning random-row zombies
 towers should have optional ranges (puff/chomper etc) and infinite if not set,
 but can wait til we have those plants
 
+## done
+
+daptive pacing - waves are currently fixed - pvz does something like, if all
+zombies cleared, send next wave early - we need this because stalling is an
+important strat
+
+the logical board should be bigger, eg contain addressable but not 
+interactable cols on the right where zombies enter - projectiles/mower can 
+actually hit the zombies in these cols, even if the player can't plant here
+
+wave system is wrong - the zombies inside a wave don't have time offsets - they
+spawn:
+
+- all at once
+- randomly between x 10.25 to 10.75
+- have random speeds in a range, so they appear to spread out
+
+we need to implement logical board per above - peas and mowers can go there,
+can't plant, and the views can ignore oob - I think we throw an error somewhere
+currently which we shouldn't do
+we also need to update zombie defs to have a range instead of fixed speed, as 
+a tuple [ 0.29, 0.4 ] then use random.rangeInt when we spawn the zombie
+
 wave point system - we currently hard code the waves eg:
 
 ```
@@ -59,7 +82,7 @@ to choose:
 
 The formula is (3/wave)+1 points; plus multiplers for flag waves etc; so we 
 should add `pointMultipler?: 2.5` to the wave type; we also need to add 
-weighted random to random.ts
+weighted random to random.ts? or just existing pick is enough?
 
 normal zombies are *always* allowed regardless of whitelist, so `[]` is actually
 `[ 'normal' ]` - this ensures remaining points can always be spent
@@ -76,25 +99,5 @@ How does state store spawns now that they're random?
 2. store the spawns directly in state, on new state calculate them once,
    pros, easy and fast, cons, bloats state, inconsistent with other decisions
 
-## done
-
-daptive pacing - waves are currently fixed - pvz does something like, if all
-zombies cleared, send next wave early - we need this because stalling is an
-important strat
-
-the logical board should be bigger, eg contain addressable but not 
-interactable cols on the right where zombies enter - projectiles/mower can 
-actually hit the zombies in these cols, even if the player can't plant here
-
-wave system is wrong - the zombies inside a wave don't have time offsets - they
-spawn:
-
-- all at once
-- randomly between x 10.25 to 10.75
-- have random speeds in a range, so they appear to spread out
-
-we need to implement logical board per above - peas and mowers can go there,
-can't plant, and the views can ignore oob - I think we throw an error somewhere
-currently which we shouldn't do
-we also need to update zombie defs to have a range instead of fixed speed, as 
-a tuple [ 0.29, 0.4 ] then use random.rangeInt when we spawn the zombie
+extract common levelDef values, eg `plantableTiles: allTiles` etc to a base 
+LevelDef - make the existing level defs partial and extend

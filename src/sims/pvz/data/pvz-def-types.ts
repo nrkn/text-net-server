@@ -14,6 +14,8 @@ export type ZombieDef = {
 
   biteDamage: number // damage to plant being bitten
   biteCd: number // time between bites
+
+  waveCost: number // point cost when spawned from pool
 }
 
 export type PlantDef = {
@@ -35,15 +37,12 @@ export type ProjectileDef = {
   damage: number
 }
 
-export type SpawnDef = {
-  kind: ZombieName
-  spawnRow?: number // random if undefined
-}
-
 export type WaveDef = {
   startTime: number // absolute time of the wave start
 
-  spawns: SpawnDef[]
+  fixed: ZombieName[] // always spawned
+  pool?: ZombieName[] // if present, budget remaining after fixed is spent on pool
+  pointMultiplier?: number // scales budget for flag waves etc
 }
 
 export type LevelDef = {
@@ -85,3 +84,9 @@ export type LevelDef = {
   // if not set, assumes all rows (0..BOARD_ROWS-1)
   spawnRows?: number[]
 }
+
+type DesignKeys = 'id' | 'waves'
+
+export type LevelDefDefault = Omit<LevelDef, DesignKeys>
+
+export type LevelDefDesign = Partial<LevelDef> & Pick<LevelDef, DesignKeys>

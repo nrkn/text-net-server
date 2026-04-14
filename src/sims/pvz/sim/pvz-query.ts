@@ -1,12 +1,13 @@
-import { plants } from '../data/pvz-defs.js'
+import { plants, zombies } from '../data/pvz-defs.js'
 import { SUN_DROP } from '../pvz-const.js'
 import { isPos, getIdx, getPlantableIdx } from '../pvz-util.js'
-import { PvzState, PlantName } from '../pvz-types.js'
+import { PvzState, PlantName, ZombieName } from '../pvz-types.js'
 import { getLevel } from './pvz-sim-util.js'
 import { stateToGrid } from './pvz-state.js'
 import { maybe } from '../../../lib/util.js'
 import { isRow } from '../pvz-guards.js'
-import { SpawnDef } from '../data/pvz-def-types.js'
+import { WaveDef } from '../data/pvz-def-types.js'
+import { createRandom } from '../../random.js'
 
 export const canPlant = (
   state: PvzState,
@@ -132,20 +133,67 @@ export const levelSunSpawned = (state: PvzState, dt: number): number => {
   return count * SUN_DROP
 }
 
+export const deriveWaveSeed = (levelRng: number, waveIndex: number) => {
+  const random = createRandom(levelRng)
+
+  random.consume(waveIndex + 1)
+
+  return random.peek()
+}
+
+
+export const resolveWave = (
+  wave: WaveDef, waveIndex: number, levelRng: number
+): ZombieName[] => {
+  const budget = (3 / (waveIndex + 1) + 1) * (wave.pointMultiplier ?? 1)
+
+  // fixed spawns always happen - subtract their cost from budget
+  let remaining = budget
+
+  for (const kind of wave.fixed) {
+    remaining -= zombies[kind].waveCost
+  }
+
+  // no pool or budget exhausted by fixed spawns
+  if (!maybe(wave.pool) || remaining <= 0) return [...wave.fixed]
+
+  // ensure normal is always in the pool
+  const pool: ZombieName[] = wave.pool.includes('normal')
+    ? [...wave.pool]
+    : ['normal', ...wave.pool]
+
+  const random = createRandom(deriveWaveSeed(levelRng, waveIndex))
+  const poolResult: ZombieName[] = []
+
+  while (true) {
+    const affordable = pool.filter(k => zombies[k].waveCost <= remaining)
+
+    if (affordable.length === 0) break
+
+    const pick = random.pick(affordable)
+
+    remaining -= zombies[pick].waveCost
+    poolResult.push(pick)
+  }
+
+  return [...wave.fixed, ...poolResult]
+}
+
 export const zombiesSpawned = (state: PvzState, dt: number) => {
   const level = getLevel(state.levelId)
   const t0 = state.time
   const t1 = t0 + dt
-  const result: { spawn: SpawnDef, waveIndex: number }[] = []
+  const result: { kind: ZombieName, waveIndex: number }[] = []
 
   for (let w = 0; w < level.waves.length; w++) {
     const effectiveStart = state.waveStartTimes[w]
 
     if (effectiveStart >= t0 && effectiveStart < t1) {
       const wave = level.waves[w]
+      const kinds = resolveWave(wave, w, state.levelRng)
 
-      for (const spawn of wave.spawns) {
-        result.push({ spawn, waveIndex: w })
+      for (const kind of kinds) {
+        result.push({ kind, waveIndex: w })
       }
     }
   }
@@ -162,10 +210,10 @@ export const plantHasTarget = (state: PvzState, plantId: number) => {
 
   const { row, col } = plant
 
-  for( const [ _id, zombie ] of state.zombies ){
-    if( zombie.row !== row ) continue
+  for (const [_id, zombie] of state.zombies) {
+    if (zombie.row !== row) continue
 
-    if( zombie.x > col ) return true
+    if (zombie.x > col) return true
   }
 
   return false

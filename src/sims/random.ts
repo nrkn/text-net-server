@@ -22,9 +22,15 @@ export const createRandom = (seed: number) => {
 
   const pick = <T>(values: T[]) => values[nextInt(values.length)]
 
+  const consume = (count: number) => {
+    for (let i = 0; i < count; i++){
+      next()
+    }
+  }
+
   const peek = () => seed
 
-  return { next, nextInt, rangeInt, range, pick, peek }
+  return { next, nextInt, rangeInt, range, pick, consume, peek }
 }
 
 export type Random = ReturnType<typeof createRandom>

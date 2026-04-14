@@ -147,6 +147,9 @@ export type PvzState = {
   // mutated by wave acceleration
   waveStartTimes: number[]
 
+  // separate rng for wave resolution (derive don't store spawns)
+  levelRng: number
+
   nextId: number
 
   sun: number

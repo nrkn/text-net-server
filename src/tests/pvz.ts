@@ -6,6 +6,8 @@ import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
 import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY } from '../sims/pvz/pvz-const.js'
 import { levels, plants, zombies } from '../sims/pvz/data/pvz-defs.js'
+import { resolveWave, deriveWaveSeed } from '../sims/pvz/sim/pvz-query.js'
+import { WaveDef } from '../sims/pvz/data/pvz-def-types.js'
 
 // helpers
 
@@ -393,5 +395,194 @@ describe('wave acceleration', () => {
 
     assert.equal(s.waveStartTimes[1], wave2OrigStart)
     assert.ok(!hasEvent(s, 'waveAccelerated'))
+  })
+})
+
+// resolveWave
+
+describe('resolveWave', () => {
+  const LEVEL_RNG = 12345
+
+  it('returns only fixed when no pool', () => {
+    const wave: WaveDef = {
+      startTime: 10,
+      fixed: ['normal', 'cone']
+    }
+
+    const result = resolveWave(wave, 0, LEVEL_RNG)
+
+    assert.deepEqual(result, ['normal', 'cone'])
+  })
+
+  it('spends remaining budget on pool zombies', () => {
+    const wave: WaveDef = {
+      startTime: 10,
+      fixed: ['normal'],
+      pool: ['cone', 'bucket']
+    }
+
+    // waveIndex 0: budget = (3/1)+1 = 4, fixed costs 1, remaining = 3
+    const result = resolveWave(wave, 0, LEVEL_RNG)
+
+    // must have at least the fixed normal + some pool zombies
+    assert.equal(result[0], 'normal')
+    assert.ok(result.length > 1)
+
+    // all pool results must be affordable types
+    for (const kind of result.slice(1)) {
+      assert.ok(
+        kind === 'normal' || kind === 'cone' || kind === 'bucket',
+        `unexpected kind: ${kind}`
+      )
+    }
+  })
+
+  it('returns only fixed when budget goes negative', () => {
+    const wave: WaveDef = {
+      startTime: 10,
+      fixed: ['bucket', 'bucket'],
+      pool: ['cone']
+    }
+
+    // waveIndex 0: budget 4, fixed costs 4+4 = 8, remaining = -4
+    const result = resolveWave(wave, 0, LEVEL_RNG)
+
+    assert.deepEqual(result, ['bucket', 'bucket'])
+  })
+
+  it('always includes normal in pool', () => {
+    const wave: WaveDef = {
+      startTime: 10,
+      fixed: [],
+      pool: ['bucket'] // only bucket in pool, but normal always added
+    }
+
+    // waveIndex 0: budget 4, bucket costs 4 - could get one bucket
+    // but normal is always available too
+    const result = resolveWave(wave, 0, LEVEL_RNG)
+
+    // should have spawned something since budget is 4
+    assert.ok(result.length > 0)
+  })
+
+  it('scales budget with pointMultiplier', () => {
+    const wave: WaveDef = {
+      startTime: 10,
+      fixed: [],
+      pool: ['normal'],
+      pointMultiplier: 3
+    }
+
+    // waveIndex 0: budget = ((3/1)+1)*3 = 12, all normals at cost 1
+    const result = resolveWave(wave, 0, LEVEL_RNG)
+
+    assert.equal(result.length, 12)
+  })
+
+  it('is deterministic with same seed', () => {
+    const wave: WaveDef = {
+      startTime: 10,
+      fixed: ['normal'],
+      pool: ['cone', 'bucket']
+    }
+
+    const a = resolveWave(wave, 0, LEVEL_RNG)
+    const b = resolveWave(wave, 0, LEVEL_RNG)
+
+    assert.deepEqual(a, b)
+  })
+
+  it('varies by waveIndex', () => {
+    const wave: WaveDef = {
+      startTime: 10,
+      fixed: [],
+      pool: ['cone', 'bucket']
+    }
+
+    const a = resolveWave(wave, 0, LEVEL_RNG)
+    const b = resolveWave(wave, 1, LEVEL_RNG)
+
+    // different wave indices produce different budgets at minimum
+    // waveIndex 0: budget 4, waveIndex 1: budget 2.5
+    assert.notDeepEqual(a, b)
+  })
+
+  it('empty pool still spawns normals', () => {
+    const wave: WaveDef = {
+      startTime: 10,
+      fixed: [],
+      pool: []
+    }
+
+    // waveIndex 0: budget 4, pool is [] but normal is always added
+    const result = resolveWave(wave, 0, LEVEL_RNG)
+
+    assert.ok(result.length > 0)
+    assert.ok(result.every(k => k === 'normal'))
+  })
+})
+
+// level 1-3
+
+const level3 = levels[2]
+const level3FirstSpawn = level3.waves[0].startTime
+
+const newGame3 = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 3, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
+describe('level 1-3: basics', () => {
+  it('initializes with all 5 mowers', () => {
+    const s = newGame3()
+
+    assert.equal(s.status, 'playing')
+    assert.equal(s.mowers.size, 5)
+    assert.equal(s.sun, level3.initialSun)
+    assert.ok(s.levelRng !== 0, 'levelRng should be initialized')
+  })
+
+  it('spawns zombies from pool', () => {
+    // advance well past first few waves
+    const s = send(newGame3(),
+      { type: 'advance', seconds: level3FirstSpawn + 1 }
+    )
+
+    assert.ok(s.zombies.size > 0)
+    assert.ok(hasEvent(s, 'zombieSpawned'))
+  })
+
+  it('pool produces cone or bucket zombies', () => {
+    // wave 0 has pool: ['cone'], budget = (3/1)+1 = 4, fixed 'normal' costs 1
+    // remaining 3 is enough for cone (cost 2)
+    const s = send(newGame3(),
+      { type: 'advance', seconds: level3FirstSpawn + 1 }
+    )
+
+    const kinds = new Set<string>()
+
+    for (const z of s.zombies.values()) {
+      kinds.add(z.kind)
+    }
+
+    assert.ok(
+      kinds.has('cone') || kinds.has('bucket'),
+      `expected cone or bucket in spawns, got: ${[...kinds]}`
+    )
+  })
+
+  it('is deterministic with same seed', () => {
+    const a = send(newGame3(),
+      { type: 'advance', seconds: level3FirstSpawn + 1 }
+    )
+
+    const b = send(newGame3(),
+      { type: 'advance', seconds: level3FirstSpawn + 1 }
+    )
+
+    const kindsA = [...a.zombies.values()].map(z => z.kind)
+    const kindsB = [...b.zombies.values()].map(z => z.kind)
+
+    assert.deepEqual(kindsA, kindsB)
   })
 })

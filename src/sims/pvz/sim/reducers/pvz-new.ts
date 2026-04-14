@@ -10,6 +10,7 @@ import { canPlant } from '../pvz-query.js'
 import { newState } from '../pvz-state.js'
 import { placePlant } from '../pvz-mutate.js'
 import { actionFail, getLevel } from '../pvz-sim-util.js'
+import { createRandom } from '../../../random.js'
 
 export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
   const { levelId, seed, version } = event
@@ -82,6 +83,13 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
   state.sun = level.initialSun
 
   state.waveStartTimes = level.waves.map(w => w.startTime)
+
+  // derive levelRng from seed - separate stream from main rng
+  const levelRandom = createRandom(seed)
+  
+  levelRandom.consume(levelId + 1)
+  
+  state.levelRng = levelRandom.peek()
 
   // done!
 

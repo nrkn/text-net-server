@@ -1,7 +1,7 @@
-import { b } from '../pvz-def-util.js'
-import { LevelDef } from '../pvz-def-types.js'
+import { b, createLevel } from '../pvz-def-util.js'
+import { repeat } from '../../../../lib/util.js'
 
-export const level2: LevelDef = {
+export const level2 = createLevel({
   id: 2,
   plantableTiles: b(
     0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -10,60 +10,35 @@ export const level2: LevelDef = {
     1, 1, 1, 1, 1, 1, 1, 1, 1,
     0, 0, 0, 0, 0, 0, 0, 0, 0,
   ),
-  initialPlants: [],
   plantWhitelist: ['peashooter', 'sunflower'],
   initialMowers: b(0, 1, 1, 1, 0),
   canShovel: false,
-  initialSun: 50,
-  firstSun: 5.5,
-  sunCd: 5,
   waves: [
     {
       startTime: 50,
-      spawns: [
-        { kind: 'normal' }
-      ]
+      fixed: ['normal']
     },
     {
       startTime: 78,
-      spawns: [
-        { kind: 'normal' }
-      ]
+      fixed: ['normal']
     },
     {
       startTime: 106,
-      spawns: [
-        { kind: 'normal' }
-      ]
+      fixed: ['normal']
     },
     {
       startTime: 134,
-      spawns: [
-        { kind: 'normal' },
-        { kind: 'normal' }
-      ]
+      fixed: ['normal', 'normal']
     },
     {
       startTime: 162,
-      spawns: [
-        { kind: 'normal' },
-        { kind: 'normal' }
-      ]
+      fixed: ['normal', 'normal']
     },
     // flag wave
     {
       startTime: 190,
-      spawns: [
-        { kind: 'normal' },
-        { kind: 'normal' },
-        { kind: 'normal' },
-        { kind: 'normal' },
-        { kind: 'normal' },
-        { kind: 'normal' },
-        { kind: 'normal' },
-        { kind: 'normal' },
-      ]
+      fixed: repeat(8, 'normal')
     }
   ],
   spawnRows: [1, 2, 3]
-}
+})

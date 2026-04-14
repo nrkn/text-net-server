@@ -14,7 +14,7 @@ import {
 
 import { formatPos, formatRow } from '../pvz-util.js'
 import { issueId, spawnZombie } from './pvz-mutate.js'
-import { levelSunSpawned, plantHasTarget, zombiesSpawned } from './pvz-query.js'
+import { levelSunSpawned, plantHasTarget, resolveWave, zombiesSpawned } from './pvz-query.js'
 import { actionFail, getLevel } from './pvz-sim-util.js'
 
 // tick!
@@ -323,16 +323,12 @@ const tickFixed = (
 
   const newZombies = zombiesSpawned(state, FIXED_TICK)
 
-  for (const { spawn, waveIndex } of newZombies) {
-    const { kind, spawnRow } = spawn
-
+  for (const { kind, waveIndex } of newZombies) {
     const level = getLevel(state.levelId)
 
-    const row = maybe(spawnRow)
-      ? spawnRow
-      : maybe(level.spawnRows)
-        ? random.pick(level.spawnRows)
-        : random.nextInt(BOARD_ROWS)
+    const row = maybe(level.spawnRows)
+      ? random.pick(level.spawnRows)
+      : random.nextInt(BOARD_ROWS)
 
     const x = random.range(SPAWN_X_MIN, SPAWN_X_MAX)
     const def = zombies[kind]
@@ -362,10 +358,11 @@ const tickFixed = (
 
       if (elapsed >= WAVE_MIN_TIME) {
         const wave = waves[activeWave]
+        const resolved = resolveWave(wave, activeWave, state.levelRng)
 
         let totalHp = 0
 
-        for (const s of wave.spawns) totalHp += zombies[s.kind].hp
+        for (const kind of resolved) totalHp += zombies[kind].hp
 
         let remainingHp = 0
 
