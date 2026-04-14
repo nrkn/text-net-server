@@ -42,11 +42,6 @@ export type SpawnDef = {
   spawnRow?: number // random if undefined
 }
 
-export type Spawn = SpawnDef & {
-  absTime: number
-  waveIndex: number
-}
-
 export type WaveDef = {
   startTime: number // absolute time of the wave start
 
@@ -86,7 +81,7 @@ export type LevelDef = {
   // eg in the first tut, sun and wave spawns don't happen until first plant
   // is placed - but we will ignore that for now
 
-  spawns: Spawn[]
+  waves: WaveDef[]
 
   // which rows zombies can spawn on when spawnRow is not set on the spawn
   // if not set, assumes all rows (0..BOARD_ROWS-1)

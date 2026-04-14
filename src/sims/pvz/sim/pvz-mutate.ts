@@ -85,7 +85,7 @@ export const launchMower = (
 }
 
 export const spawnZombie = (
-  state: PvzState, kind: ZombieName, row: number
+  state: PvzState, kind: ZombieName, row: number, waveIndex: number
 ) => {
   const id = issueId(state)
   const { hp } = zombies[kind]
@@ -93,7 +93,7 @@ export const spawnZombie = (
   // grid
   const x = BOARD_COLS
 
-  const zombie: Zombie = { kind, id, row, x, hp }
+  const zombie: Zombie = { kind, id, row, x, hp, waveIndex }
 
   state.zombies.set(id, zombie)
 

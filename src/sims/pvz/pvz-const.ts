@@ -47,3 +47,10 @@ export const SUN_DROP = 25
 export const FIXED_TICK = 0.01
 
 export const mowerSpeed = 6.5
+
+// wave acceleration - after WAVE_MIN_TIME seconds, if a wave has lost
+// WAVE_HP_THRESHOLD of its total hp, the next wave is rescheduled to 
+// start WAVE_ACCEL_DELAY seconds from now
+export const WAVE_MIN_TIME = 4
+export const WAVE_HP_THRESHOLD = 0.575 // midpoint of 50-65%
+export const WAVE_ACCEL_DELAY = 2

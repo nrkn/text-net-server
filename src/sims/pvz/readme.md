@@ -22,3 +22,5 @@ important strat
 
 towers should have optional ranges (puff/chomper etc) and infinite if not set,
 but can wait til we have those plants
+
+deprioritize recently mowed rows when spawning random-row zombies

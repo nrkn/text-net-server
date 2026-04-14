@@ -6,7 +6,7 @@ import { getLevel } from './pvz-sim-util.js'
 import { stateToGrid } from './pvz-state.js'
 import { maybe } from '../../../lib/util.js'
 import { isRow } from '../pvz-guards.js'
-import { Spawn } from '../data/pvz-def-types.js'
+import { SpawnDef } from '../data/pvz-def-types.js'
 
 export const canPlant = (
   state: PvzState,
@@ -132,10 +132,27 @@ export const levelSunSpawned = (state: PvzState, dt: number): number => {
   return count * SUN_DROP
 }
 
-export const zombiesSpawned = (state: PvzState, dt: number) =>
-  getLevel(state.levelId).spawns.filter(
-    s => s.absTime >= state.time && s.absTime < (state.time + dt)
-  )
+export const zombiesSpawned = (state: PvzState, dt: number) => {
+  const level = getLevel(state.levelId)
+  const t0 = state.time
+  const t1 = t0 + dt
+  const result: { spawn: SpawnDef, waveIndex: number }[] = []
+
+  for (let w = 0; w < level.waves.length; w++) {
+    const effectiveStart = state.waveStartTimes[w]
+    const wave = level.waves[w]
+
+    for (const spawn of wave.spawns) {
+      const absTime = effectiveStart + spawn.spawnTime
+
+      if (absTime >= t0 && absTime < t1) {
+        result.push({ spawn, waveIndex: w })
+      }
+    }
+  }
+
+  return result
+}
 
 export const plantHasTarget = (state: PvzState, plantId: number) => {
   const plant = state.plants.get(plantId)

@@ -79,6 +79,8 @@ export type Zombie = {
   biteTarget?: number // the plant id
 
   nextBite?: number // time can next bite, if biteTargetId set
+
+  waveIndex: number
 }
 
 export type Plant = {
@@ -141,7 +143,9 @@ export type PvzState = {
   // and a manually launched mower will be active
   launched: boolean
 
-  // we could track the next wave/spawn but they can be derived
+  // effective wave start times - mutable copy from level.waves[i].startTime
+  // mutated by wave acceleration
+  waveStartTimes: number[]
 
   nextId: number
 

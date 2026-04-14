@@ -83,6 +83,8 @@ export const newState = (rng = Date.now()) => {
 
     sun: 0,
 
+    waveStartTimes: [],
+
     rng
   }
 
@@ -102,7 +104,9 @@ export const cloneState = (
   projectiles: cloneMap(state.projectiles),
   zombies: cloneMap(state.zombies),
 
-  nextBuy: cloneMap(state.nextBuy)
+  nextBuy: cloneMap(state.nextBuy),
+
+  waveStartTimes: [...state.waveStartTimes]
 })
 
 // on new event, clone and reset error

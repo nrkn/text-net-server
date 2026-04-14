@@ -1,4 +1,4 @@
-import { b, flattenWaves } from '../pvz-def-util.js'
+import { b } from '../pvz-def-util.js'
 import { LevelDef } from '../pvz-def-types.js'
 
 export const level2: LevelDef = {
@@ -17,7 +17,7 @@ export const level2: LevelDef = {
   initialSun: 50,
   firstSun: 5.5,
   sunCd: 5,
-  spawns: flattenWaves([
+  waves: [
     {
       startTime: 50,
       spawns: [
@@ -64,6 +64,6 @@ export const level2: LevelDef = {
         { kind: 'normal', spawnTime: 2.45 },
       ]
     }
-  ]),
+  ],
   spawnRows: [1, 2, 3]
 }

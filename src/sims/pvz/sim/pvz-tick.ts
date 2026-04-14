@@ -3,7 +3,8 @@ import { createRandom, Random } from '../../random.js'
 import { plants, projectiles, zombies } from '../data/pvz-defs.js'
 
 import {
-  BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP
+  BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP,
+  WAVE_MIN_TIME, WAVE_HP_THRESHOLD, WAVE_ACCEL_DELAY
 } from '../pvz-const.js'
 
 import {
@@ -22,7 +23,11 @@ type Log = (entry: string) => void
 const winHandler = (state: PvzState, log: Log) => {
   // has the last spawn already happened, but there are no zombies left?
   const level = getLevel(state.levelId)
-  const lastSpawnTime = Math.max(...level.spawns.map(s => s.absTime))
+  const lastWave = level.waves.at(-1)!
+  const lastWaveStart = state.waveStartTimes.at(-1)!
+  const lastSpawnTime = lastWaveStart + Math.max(
+    ...lastWave.spawns.map(s => s.spawnTime)
+  )
 
   const maybeWin = () => {
     if (state.time < lastSpawnTime + FIXED_TICK) return false
@@ -322,8 +327,8 @@ const tickFixed = (
 
   const newZombies = zombiesSpawned(state, FIXED_TICK)
 
-  for (const z of newZombies) {
-    const { kind, spawnRow } = z
+  for (const { spawn, waveIndex } of newZombies) {
+    const { kind, spawnRow } = spawn
 
     const level = getLevel(state.levelId)
 
@@ -335,11 +340,55 @@ const tickFixed = (
 
     // spawn BEFORE you move - it's just off the board so calling things like 
     // grid will fail
-    const id = spawnZombie(state, kind, row)
+    const id = spawnZombie(state, kind, row, waveIndex)
 
     const newZombie = state.zombies.get(id)!
 
     zombieLog(newZombie)('zombieSpawned')
+  }
+
+  // wave acceleration
+  {
+    const level = getLevel(state.levelId)
+    const waves = level.waves
+
+    // find latest wave that has started
+    let activeWave = -1
+
+    for (let w = 0; w < waves.length; w++) {
+      if (state.waveStartTimes[w] <= state.time) activeWave = w
+    }
+
+    if (activeWave >= 0 && activeWave < waves.length - 1) {
+      const elapsed = state.time - state.waveStartTimes[activeWave]
+
+      if (elapsed >= WAVE_MIN_TIME) {
+        const wave = waves[activeWave]
+
+        let totalHp = 0
+
+        for (const s of wave.spawns) totalHp += zombies[s.kind].hp
+
+        let remainingHp = 0
+
+        for (const z of state.zombies.values()) {
+          if (z.waveIndex === activeWave) remainingHp += z.hp
+        }
+
+        const lostHp = totalHp - remainingHp
+
+        if (lostHp >= totalHp * WAVE_HP_THRESHOLD) {
+          const next = activeWave + 1
+          const accelTime = state.time + WAVE_ACCEL_DELAY
+
+          if (accelTime < state.waveStartTimes[next]) {
+            state.waveStartTimes[next] = accelTime
+
+            log(`waveAccelerated ${next} ${accelTime.toFixed(1)}`)
+          }
+        }
+      }
+    }
   }
 
   const getRowPlants = (row: number) => {

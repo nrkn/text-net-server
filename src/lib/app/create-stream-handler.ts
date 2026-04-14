@@ -64,7 +64,7 @@ export const createStreamHandler = (
 
     const cmd = splitCommand(input)
 
-    // blank → re-render
+    // blank -> re-render
     if (!cmd) {
       sendScreenLines(stream, renderText(currentScreen))
       return

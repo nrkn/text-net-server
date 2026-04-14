@@ -81,6 +81,8 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
 
   state.sun = level.initialSun
 
+  state.waveStartTimes = level.waves.map(w => w.startTime)
+
   // done!
 
   return state

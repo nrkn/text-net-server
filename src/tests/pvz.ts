@@ -4,8 +4,8 @@ import assert from 'node:assert/strict'
 import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
-import { PVZ_CURR_VERSION, SUN_DROP } from '../sims/pvz/pvz-const.js'
-import { levels, plants } from '../sims/pvz/data/pvz-defs.js'
+import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY } from '../sims/pvz/pvz-const.js'
+import { levels, plants, zombies } from '../sims/pvz/data/pvz-defs.js'
 
 // helpers
 
@@ -27,7 +27,8 @@ const level = levels[0]
 const pea = plants['peashooter']
 
 const mowerRow = level.initialMowers.findIndex(m => m)
-const firstSpawnTime = Math.min(...level.spawns.map(s => s.absTime))
+const firstSpawnTime = level.waves[0].startTime +
+  Math.min(...level.waves[0].spawns.map(s => s.spawnTime))
 
 describe('new', () => {
   it('initializes a playing state', () => {
@@ -299,11 +300,12 @@ describe('advanceUntil', () => {
   })
 })
 
-// --- level 1-2 ---
+// level 1-2
 
 const level2 = levels[1]
 const sun = plants['sunflower']
-const level2FirstSpawn = Math.min(...level2.spawns.map(s => s.absTime))
+const level2FirstSpawn = level2.waves[0].startTime +
+  Math.min(...level2.waves[0].spawns.map(s => s.spawnTime))
 
 const newGame2 = () => send(
   newState(SEED),
@@ -352,5 +354,46 @@ describe('level 1-2: mower auto-trigger', () => {
 
     assert.ok(mowerTriggered || mowersConsumed,
       'expected at least one mower to auto-trigger')
+  })
+})
+
+// wave acceleration
+
+describe('wave acceleration', () => {
+  it('accelerates next wave when current wave HP threshold met', () => {
+    const wave1Start = level.waves[0].startTime
+    const wave2OrigStart = level.waves[1].startTime
+
+    // place peashooter that will kill wave 1 zombie quickly
+    const s = send(newGame(),
+      { type: 'place', plantName: 'peashooter', row: mowerRow, col: 3 },
+      // advance past wave 1 start + WAVE_MIN_TIME + enough to kill
+      { type: 'advance', seconds: wave1Start + WAVE_MIN_TIME + 1 }
+    )
+
+    // wave 2 should have been accelerated
+    assert.ok(
+      s.waveStartTimes[1] < wave2OrigStart,
+      `wave 2 should be accelerated: got ${s.waveStartTimes[1]}, ` +
+      `original was ${wave2OrigStart}`
+    )
+
+    // should be scheduled at roughly:
+    // wave1Start + WAVE_MIN_TIME + WAVE_ACCEL_DELAY
+    // (the exact tick depends on when the zombie died)
+    assert.ok(hasEvent(s, 'waveAccelerated'))
+  })
+
+  it('does not accelerate if threshold not met', () => {
+    const wave2OrigStart = level.waves[1].startTime
+
+    // advance past wave 1 start + WAVE_MIN_TIME but with no peashooter
+    // zombie is still alive, 0% hp lost
+    const s = send(newGame(),
+      { type: 'advance', seconds: level.waves[0].startTime + WAVE_MIN_TIME + 1 }
+    )
+
+    assert.equal(s.waveStartTimes[1], wave2OrigStart)
+    assert.ok(!hasEvent(s, 'waveAccelerated'))
   })
 })

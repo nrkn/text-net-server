@@ -6,8 +6,8 @@ syntax reference for `.txt` screen files used by the static middleware
 
 files are auto-discovered in the static directory and routed by path:
 
-- `static/welcome.txt` → routes as `/welcome`
-- `static/cool-game/start.txt` → routes as `/cool-game/start`
+- `static/welcome.txt` -> routes as `/welcome`
+- `static/cool-game/start.txt` -> routes as `/cool-game/start`
 
 filenames starting with `_` are not routed - reserved for includes, partials,
 wip views etc
