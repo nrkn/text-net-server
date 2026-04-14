@@ -13,6 +13,18 @@ pvz sim from definitely
 
 things we definitely want, but maybe not just yet
 
+### src/modules
+
+currently, even though they mount as sub-apps, notes and guessing game are 
+hard coded into test-app; if we create a second app we would have to copy them
+over. they are theoretically standalone if passed eg STATIC_DIR and LOGS_DIR,
+we should move them to src/modules using something like:
+
+`createGuessingGame( staticDir, logsDir )`
+
+the impending pvz sim sub-app should also use this system, but we'll build it
+inside test-app first so we can shake out any additional complexity
+
 ### frag
 
 ```
@@ -147,6 +159,20 @@ gracefully)
 allow a route to send a message to the next screen, cleared after display
 
 shown at the top before the normal screen render
+
+### structured command response
+
+do we need an additional response type for structured commands? it's not 
+strictly necessary, as the existing freeform input can handle it well enough, 
+but having it as a screen part would mean that clients that take raw json can 
+produce better UX if they know the command structure, eg you could actually 
+display a palette of plants, click one, click the board tile to plant, then the 
+client sends the appropriate structured command
+
+but we could also use the existing meta part to decorate this data for rich
+clients 
+
+think about it!
 
 ## future
 

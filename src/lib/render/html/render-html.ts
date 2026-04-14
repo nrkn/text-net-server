@@ -4,6 +4,10 @@ import { menuToLines } from '../text/render-menu.js'
 import { tableToLines } from '../text/render-table.js'
 import { wrapText } from '../text/text-util.js'
 
+// nb - we are targeting HTML 2 (accesskey is fine, unknown attributes are 
+// safely ignored) for retro machines
+// modern browsers should use the json transport
+
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
