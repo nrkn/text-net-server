@@ -5,46 +5,18 @@ export const level3 = createLevel({
   plantWhitelist: ['peashooter', 'sunflower', 'cherryBomb'],
   canShovel: false,
   waves: [
-    {
-      startTime: 50,
-      fixed: ['normal'],
-      pool: ['cone']
-    },
-    {
-      startTime: 78,
-      fixed: ['normal'],
-      pool: ['cone']
-    },
-    {
-      startTime: 106,
-      fixed: ['normal', 'normal'],
-      pool: ['cone']
-    },
-    {
-      startTime: 134,
-      fixed: ['normal', 'normal'],
-      pool: ['cone', 'bucket']
-    },
-    {
-      startTime: 162,
-      fixed: ['normal', 'normal'],
-      pool: ['cone', 'bucket']
-    },
-    {
-      startTime: 190,
-      fixed: ['normal', 'normal', 'normal'],
-      pool: ['cone', 'bucket']
-    },
-    {
-      startTime: 218,
-      fixed: ['normal', 'normal', 'normal'],
-      pool: ['cone', 'bucket']
-    },
+    { startTime: 18, fixed: [], pool: ['cone'] },
+    { startTime: 46, fixed: [], pool: ['cone'] },
+    { startTime: 74, fixed: [], pool: ['cone'] },
+    { startTime: 102, fixed: [], pool: ['cone'] },
+    { startTime: 130, fixed: ['cone'], pool: ['cone'] },
+    { startTime: 158, fixed: [], pool: ['cone'] },
+    { startTime: 186, fixed: [], pool: ['cone'] },
     // flag wave
     {
-      startTime: 246,
-      fixed: ['cone', 'normal', 'normal', 'normal'],
-      pool: ['cone', 'bucket'],
+      startTime: 214,
+      fixed: ['cone'],
+      pool: ['cone'],
       pointMultiplier: 2.5
     }
   ]

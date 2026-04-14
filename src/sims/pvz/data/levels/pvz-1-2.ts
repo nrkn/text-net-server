@@ -37,7 +37,7 @@ export const level2 = createLevel({
     // flag wave
     {
       startTime: 190,
-      fixed: repeat(8, 'normal')
+      fixed: repeat(5, 'normal')
     }
   ],
   spawnRows: [1, 2, 3]

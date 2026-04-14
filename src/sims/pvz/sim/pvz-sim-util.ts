@@ -3,13 +3,11 @@ import { levels } from '../data/pvz-defs.js'
 import { PvzEventType, PvzActionFailed } from '../pvz-types.js'
 
 export const getLevel = (levelId: number) => {
-  // level 1 is in levels[ 0 ] etc
-
-  const level = levels[levelId - 1]
+  const level = levels.find(l => l.id === levelId)
 
   if (maybe(level)) return level
 
-  throw Error(`Level out of range: "${levelId}"`)
+  throw Error(`Level not found: "${levelId}"`)
 }
 
 export const actionFail = (

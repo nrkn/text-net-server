@@ -8,6 +8,7 @@ import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY } from '../
 import { levels, plants, zombies } from '../sims/pvz/data/pvz-defs.js'
 import { resolveWave, deriveWaveSeed } from '../sims/pvz/sim/pvz-query.js'
 import { WaveDef } from '../sims/pvz/data/pvz-def-types.js'
+import { createLevel } from '../sims/pvz/data/pvz-def-util.js'
 
 // helpers
 
@@ -589,14 +590,31 @@ describe('level 1-3: basics', () => {
 
 // cherry bomb
 
+// test fixture level — decoupled from real level defs
+const testLevel = createLevel({
+  id: 999,
+  initialSun: 1000,
+  plantWhitelist: ['sunflower', 'peashooter', 'cherryBomb'],
+  waves: [
+    { startTime: 10, fixed: ['normal', 'normal'], pool: ['cone'] }
+  ]
+})
+
+levels.push(testLevel)
+
+const testFirstSpawn = testLevel.waves[0].startTime
+
+const newGameTest = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 999, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
 const cherry = plants['cherryBomb']
 
 describe('cherry bomb', () => {
   it('deducts sun and sets buy cooldown', () => {
-    // need enough sun for cherry bomb (150)
-    const s = send(newGame3(),
-      // collect some sun first
-      { type: 'advance', seconds: 25 },
+    const s = send(newGameTest(),
+      { type: 'advance', seconds: 1 },
       { type: 'place', plantName: 'cherryBomb', row: 2, col: 5 }
     )
 
@@ -605,14 +623,12 @@ describe('cherry bomb', () => {
   })
 
   it('explodes after 1s fuse and self-destructs', () => {
-    // spawn zombies then cherry bomb them
-    const s = send(newGame3(),
-      { type: 'advance', seconds: level3FirstSpawn + 1 },
+    const s = send(newGameTest(),
+      { type: 'advance', seconds: testFirstSpawn + 1 },
       { type: 'place', plantName: 'cherryBomb', row: 2, col: 8 },
       { type: 'advance', seconds: cherry.actionCd + 0.1 }
     )
 
-    // cherry bomb should be gone
     const hasCherryBomb = [...s.plants.values()].some(
       p => p.kind === 'cherryBomb'
     )
@@ -621,9 +637,8 @@ describe('cherry bomb', () => {
   })
 
   it('kills zombies in 3x3 area', () => {
-    // place cherry bomb where zombies are approaching
-    const s = send(newGame3(),
-      { type: 'advance', seconds: level3FirstSpawn + 1 },
+    const s = send(newGameTest(),
+      { type: 'advance', seconds: testFirstSpawn + 1 },
       { type: 'place', plantName: 'cherryBomb', row: 2, col: 8 },
       { type: 'advance', seconds: cherry.actionCd + 0.1 }
     )
@@ -632,23 +647,20 @@ describe('cherry bomb', () => {
   })
 
   it('does not kill zombies outside 3x3 range', () => {
-    // place peashooter col 1 to avoid interfering, cherry bomb col 1
-    // zombies spawn at col ~10.5, cherry at col 1 can't reach them
-    const s = send(newGame3(),
-      { type: 'advance', seconds: level3FirstSpawn + 1 },
+    const s = send(newGameTest(),
+      { type: 'advance', seconds: testFirstSpawn + 1 },
       { type: 'place', plantName: 'cherryBomb', row: 2, col: 1 },
       { type: 'advance', seconds: cherry.actionCd + 0.1 }
     )
 
-    // zombies should still be alive — they're at x ~10 and cherry was at col 1
     assert.ok(s.zombies.size > 0, 'zombies outside 3x3 should survive')
     assert.ok(hasEvent(s, 'exploded selfDestruct'))
   })
 
   it('does not destroy other plants in blast radius', () => {
-    const s = send(newGame3(),
+    const s = send(newGameTest(),
       { type: 'place', plantName: 'sunflower', row: 2, col: 4 },
-      { type: 'advance', seconds: 25 },
+      { type: 'advance', seconds: 1 },
       { type: 'place', plantName: 'cherryBomb', row: 2, col: 5 },
       { type: 'advance', seconds: cherry.actionCd + 0.1 }
     )
