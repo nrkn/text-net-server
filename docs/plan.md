@@ -125,14 +125,14 @@ URL-encoded and sent as the query on a follow-up request to the same URI;
 status 11 hides input (for tokens etc)
 
 session tokens go in the URL path like the http transport; output is gemtext 
-(line-oriented format with links, headings, lists) — needs a gemtext renderer 
+(line-oriented format with links, headings, lists) - needs a gemtext renderer 
 alongside html and text
 
 mandatory TLS; one connection per request; port 1965
 
 ### websocket transport
 
-persistent bidirectional stream like telnet — fits the existing line-based 
+persistent bidirectional stream like telnet - fits the existing line-based 
 `CreateHandler` pattern directly; client sends lines, server writes to the 
 stream
 

@@ -5,6 +5,7 @@ import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
 import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY } from '../sims/pvz/pvz-const.js'
+import { replayPvzLog } from '../sims/pvz/pvz-replay.js'
 import { levels, plants, zombies } from '../sims/pvz/data/pvz-defs.js'
 import { resolveWave, deriveWaveSeed, currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
 import { WaveDef } from '../sims/pvz/data/pvz-def-types.js'
@@ -591,7 +592,7 @@ describe('level 1-3: basics', () => {
 
 // cherry bomb
 
-// test fixture level — decoupled from real level defs
+// test fixture level - decoupled from real level defs
 const testLevel = createLevel({
   id: 999,
   initialSun: 1000,
@@ -795,5 +796,85 @@ describe('mower row deprioritization', () => {
       onMowedRow <= 2,
       `mowed row ${mowedRow} got ${onMowedRow}/${total} zombies, expected very few`
     )
+  })
+})
+
+// replay
+
+const newEvent: PvzEvent = {
+  type: 'new', levelId: 1, seed: SEED, version: PVZ_CURR_VERSION
+}
+
+describe('replay', () => {
+  it('returns empty for no events', () => {
+    const lines = replayPvzLog([])
+
+    assert.equal(lines.length, 0)
+  })
+
+  it('produces req line for new game', () => {
+    const lines = replayPvzLog([newEvent])
+
+    assert.equal(lines.length, 1)
+    assert.match(lines[0], /^0\.00 req 1 new 1/)
+  })
+
+  it('produces req + res lines for place and advance', () => {
+    const lines = replayPvzLog([
+      newEvent,
+      { type: 'place', plantName: 'peashooter', row: mowerRow, col: 1 },
+      { type: 'advance', seconds: firstSpawnTime + 1 }
+    ])
+
+    // req 1 = new, req 2 = place, req 3 = advance
+    const req1 = lines.find(l => l.includes('req 1'))!
+    const req2 = lines.find(l => l.includes('req 2'))!
+    const req3 = lines.find(l => l.includes('req 3'))!
+
+    assert.ok(req1, 'should have req 1')
+    assert.ok(req2.includes('place peashooter'), 'req 2 should be place')
+    assert.ok(req3.includes('advance'), 'req 3 should be advance')
+
+    // advance should produce res lines (sun drops, zombie spawns, etc)
+    const res3 = lines.filter(l => l.includes('res 3'))
+    assert.ok(res3.length > 0, 'advance should produce tick events')
+  })
+
+  it('produces error res line on failure', () => {
+    const blockedRow = level.initialMowers.findIndex(m => !m)
+
+    const lines = replayPvzLog([
+      newEvent,
+      { type: 'place', plantName: 'peashooter', row: blockedRow, col: 1 }
+    ])
+
+    const res2 = lines.filter(l => l.includes('res 2'))
+    assert.equal(res2.length, 1)
+    assert.ok(res2[0].includes('tileBlocked'), 'error res should include reason')
+  })
+
+  it('uses .toFixed(2) for time', () => {
+    const lines = replayPvzLog([
+      newEvent,
+      { type: 'advance', seconds: 10.5 }
+    ])
+
+    const req2 = lines.find(l => l.includes('req 2'))!
+    assert.ok(req2.startsWith('10.50 '), `expected 10.50, got: ${req2}`)
+  })
+
+  it('increments reqid per event', () => {
+    const lines = replayPvzLog([
+      newEvent,
+      { type: 'place', plantName: 'peashooter', row: mowerRow, col: 1 },
+      { type: 'advanceUntil', condition: 'sunIncrease' },
+    ])
+
+    const reqIds = lines.filter(l => l.includes('req')).map(l => {
+      const m = l.match(/req (\d+)/)
+      return m ? Number(m[1]) : 0
+    })
+
+    assert.deepEqual(reqIds, [1, 2, 3])
   })
 })

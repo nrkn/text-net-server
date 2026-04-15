@@ -12,6 +12,15 @@ produce a combined log which is like:
 {time} res { reqid } { simEventLine[ 1 ] } //etc
 ```
 
+where time is state.time
+
+if an error (state.error) occurs then it will be:
+
+```
+{time} req { reqid } { playerLogLine } 
+{time} res { reqid } { error } 
+```
+
 towers should have optional ranges (puff/chomper etc) and infinite if not set,
 but can wait til we have those plants
 

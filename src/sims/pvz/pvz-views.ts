@@ -1,8 +1,10 @@
 import { maybe, seq } from '../../lib/util.js'
 import { BOARD_COLS, BOARD_ROWS } from './pvz-const.js'
+import { nameToKey } from './pvz-keys.js'
 import { formatPos, formatRow, getIdx } from './pvz-util.js'
-import { PlantName, PvzState, ZombieName } from './pvz-types.js'
+import { PvzState } from './pvz-types.js'
 import { stateToGrid } from './sim/pvz-state.js'
+import { getLevel } from './sim/pvz-sim-util.js'
 
 /*
    0 1 2 3 4 5 6 7 8 9 
@@ -19,29 +21,7 @@ E  L S . . . . . .:2:Z
 
 const header = `  ${seq(BOARD_COLS, i => ` ${i}`).join('')}`
 
-const plantKeys: Record<PlantName, string> = {
-  sunflower: 'S',
-  peashooter: 'P',
-  cherryBomb: 'X'
-}
-
-const zombieKeys: Record<ZombieName, string> = {
-  normal: 'Z',
-  cone: 'C',
-  bucket: 'B'
-}
-
-const mowerKey = 'L'
-const projectileKey = 'O'
 const grassKey = '.'
-
-const nameToKey: Record<string, string> = {
-  ...plantKeys,
-  ...zombieKeys,
-  mower: mowerKey,
-  pea: projectileKey,
-  grass: grassKey
-}
 
 type SingleKey = {
   kind: 'single'
@@ -64,6 +44,7 @@ type Key = SingleKey | MultiKey
 
 export const pvzBoardView = (state: PvzState) => {
   const grid = stateToGrid(state)
+  const level = getLevel(state.levelId)
 
   const lines: string[] = [
     header,
@@ -75,7 +56,11 @@ export const pvzBoardView = (state: PvzState) => {
   let nextMultiKey = 1
 
   for (let row = 0; row < BOARD_ROWS; row++) {
-    let line = `${formatRow(row)} `
+    const levelHasRow = (
+      maybe(level.spawnRows) ? level.spawnRows.includes(row) : true
+    )
+
+    let line = levelHasRow ? `${formatRow(row)} ` : '  '
     let prevMulti = false
 
     for (let col = 0; col < BOARD_COLS; col++) {
@@ -87,7 +72,9 @@ export const pvzBoardView = (state: PvzState) => {
       if (maybe(tile.mower)) contents.push('mower')
       if (maybe(tile.plant)) contents.push(state.plants.get(tile.plant)!.kind)
 
-      contents.push(...tile.projectiles.map(id => state.projectiles.get(id)!.kind))
+      contents.push(
+        ...tile.projectiles.map(id => state.projectiles.get(id)!.kind)
+      )
       contents.push(...tile.zombies.map(id => state.zombies.get(id)!.kind))
 
       const isMulti = contents.length > 1
@@ -116,7 +103,7 @@ export const pvzBoardView = (state: PvzState) => {
       } else if (contents.length) {
         line += nameToKey[contents[0]]
       } else {
-        line += grassKey
+        line += (levelHasRow ? grassKey : ' ')
       }
 
       prevMulti = isMulti

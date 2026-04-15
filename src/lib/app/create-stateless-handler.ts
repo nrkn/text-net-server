@@ -91,7 +91,11 @@ export const createStatelessHandler = (
           if (!captured) return 'ERROR'
 
           // chain: menu led to input screen with remaining args
-          if (cmd.args.length > 0 && captured.response.type === 'input') {
+          if (
+            response.type === 'menu' &&
+            cmd.args.length > 0 &&
+            captured.response.type === 'input'
+          ) {
             const fill = sanitizeInput(cmd.args.join(' ')).trim()
             if (fill) {
               await dispatchTo(captured.response.path.replace(/:(\w+)/, fill))

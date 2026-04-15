@@ -2,5 +2,6 @@
 N Set Name /setname
 O Notes /notes/main
 G Guessing Game /game/main
+Z Plants vs Zombies /pvz/main
 H Help /help
 ==
