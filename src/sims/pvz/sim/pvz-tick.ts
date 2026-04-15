@@ -41,7 +41,7 @@ const winHandler = (state: PvzState, log: Log) => {
 export const tick = (state: PvzState, dt: number) => {
   const random = createRandom(state.rng)
 
-  const log = (entry: string) => { state.tickEvents.push(entry) }
+  const log = (entry: string) => { state.tickEvents.push(`${state.time.toFixed(2)} ${entry}`) }
 
   const maybeWin = winHandler(state, log)
 
@@ -98,7 +98,7 @@ export const tickUntil = (state: PvzState, condition: AdvanceCondition) => {
   let doneTicking = false
 
   const log = (entry: string) => {
-    state.tickEvents.push(entry)
+    state.tickEvents.push(`${state.time.toFixed(2)} ${entry}`)
 
     doneTicking = doneTicking || test(entry)
   }
@@ -217,7 +217,11 @@ const tickFixed = (
         state.projectiles.set(id, proj)
         plant.nextAction += def.actionCd
 
-        plog(`fired ${projDef.kind}`)
+        plog(`fired ${projSlug(proj)}`)
+      } else {
+        // no target - keep nextAction current so we don't accumulate
+        // stale debt that fires in a burst when a target appears
+        plant.nextAction = state.time
       }
 
       continue
@@ -273,7 +277,9 @@ const tickFixed = (
     const newX = projectile.x + projectile.speed * FIXED_TICK
 
     const zombies = getRowZombies(projectile.row)
-    const target = zombies.find(z => z.x >= currX && z.x < newX)
+    const target = zombies.find(z =>
+      z.x >= currX && z.x < newX + z.speed * FIXED_TICK
+    )
 
     projectile.x = newX
 
@@ -304,7 +310,9 @@ const tickFixed = (
     const zombies = getRowZombies(row)
 
     if (mower.active) {
-      const targets = zombies.filter(z => z.x >= currX && z.x < newX)
+      const targets = zombies.filter(z =>
+        z.x >= currX && z.x < newX + z.speed * FIXED_TICK
+      )
 
       mower.x = newX
 

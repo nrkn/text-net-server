@@ -12,7 +12,8 @@ import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { pvzBoardView } from '../sims/pvz/pvz-views.js'
 import { PVZ_CURR_VERSION } from '../sims/pvz/pvz-const.js'
 import { levels } from '../sims/pvz/data/pvz-defs.js'
-import { keyToPlant, plantKeys, nameToKey } from '../sims/pvz/pvz-keys.js'
+import { keyToPlant, plantKeys, zombieKeys, mowerKey, projectileKey } from '../sims/pvz/pvz-keys.js'
+import { LevelDef } from '../sims/pvz/data/pvz-def-types.js'
 import { currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
 import { isPlantName } from '../sims/pvz/pvz-guards.js'
 import { parsePos, parseRow } from '../sims/pvz/pvz-util.js'
@@ -229,11 +230,37 @@ const keyLegendLines = (boardView: ReturnType<typeof pvzBoardView>) => {
   return lines
 }
 
-const singleKeyLegend = () => {
-  return Object.entries(nameToKey)
-    .filter(([name]) => name !== 'grass')
-    .map(([name, key]) => `${key} ${name}`)
-    .join('  ')
+const levelZombieKinds = (level: LevelDef) => {
+  const kinds = new Set<string>(['normal'])
+
+  for (const wave of level.waves) {
+    if (wave.fixed) for (const k of wave.fixed) kinds.add(k)
+    if (wave.pool) for (const k of wave.pool) kinds.add(k)
+  }
+
+  return kinds
+}
+
+const singleKeyLegend = (level: LevelDef) => {
+  const entries: [string, string][] = []
+
+  const wl = level.plantWhitelist ?? Object.keys(plantKeys)
+  for (const name of wl) {
+    const key = plantKeys[name as keyof typeof plantKeys]
+    if (key) entries.push([name, key])
+  }
+
+  const zk = levelZombieKinds(level)
+  for (const name of zk) {
+    const key = zombieKeys[name as keyof typeof zombieKeys]
+    if (key) entries.push([name, key])
+  }
+
+  if (level.initialMowers.some(Boolean)) entries.push(['mower', mowerKey])
+
+  entries.push(['pea', projectileKey])
+
+  return entries.map(([name, key]) => `${key} ${name}`).join('  ')
 }
 
 const commandHelp = (state: PvzState) => {
@@ -292,7 +319,7 @@ const playScreen = (state: PvzState): TextScreen => {
   ]
 
   // key legend
-  screenParts.push(p(singleKeyLegend()))
+  screenParts.push(p(singleKeyLegend(level!)))
 
   if (multiLines.length > 0) {
     screenParts.push(p(...multiLines))

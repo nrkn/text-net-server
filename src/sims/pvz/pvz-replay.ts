@@ -10,20 +10,23 @@ export const replayPvzLog = (events: PvzEvent[]): string[] => {
   for (let i = 0; i < events.length; i++) {
     const event = events[i]
     const reqId = i + 1
+    const reqTime = state.time.toFixed(2)
 
     state = pvzSim(state, event)
 
-    const time = state.time.toFixed(2)
     const playerLine = formatPvzEvent(event)
 
-    lines.push(`${time} req ${reqId} ${playerLine}`)
+    lines.push(`${reqTime} req ${reqId} ${playerLine}`)
 
     if (state.error) {
       const msg = state.error.message ?? state.error.reason
-      lines.push(`${time} res ${reqId} ${msg}`)
+      lines.push(`${reqTime} res ${reqId} ${msg}`)
     } else {
       for (const tickEvent of state.tickEvents) {
-        lines.push(`${time} res ${reqId} ${tickEvent}`)
+        const sp = tickEvent.indexOf(' ')
+        const eventTime = tickEvent.slice(0, sp)
+        const eventMsg = tickEvent.slice(sp + 1)
+        lines.push(`${eventTime} res ${reqId} ${eventMsg}`)
       }
     }
   }

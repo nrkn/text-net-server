@@ -13,6 +13,16 @@ pvz sim from definitely
 
 things we definitely want, but maybe not just yet
 
+### pre screenpart
+
+even though we are trying to avoid any assumptions about eg monospaced fonts
+(some terminals either use proportionate fonts or allow user to choose
+fonts), the pvz game really does need the ascii grid to align to make sense
+
+so in the json client, we changed paragraph screen parts to render as pre
+elements - this is fine, but really it should distinguish between whitespace 
+matters (pre) and whitespace isn't important (p)
+
 ### src/modules
 
 currently, even though they mount as sub-apps, notes and guessing game are 

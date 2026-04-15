@@ -23,6 +23,10 @@ export type PlantDef = {
 
   hp: number
 
+  // we don't need widths on plants at this stage, because even though they're
+  // smaller than 1 tile, the amount of overlap a zombie needs to bite them
+  // effectively makes them 1 tile wide!
+
   buyCost: number // how much sun
   buyCd: number // how often can plant  
 

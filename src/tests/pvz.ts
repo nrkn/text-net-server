@@ -4,10 +4,12 @@ import assert from 'node:assert/strict'
 import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
-import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY } from '../sims/pvz/pvz-const.js'
+import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY, FIXED_TICK } from '../sims/pvz/pvz-const.js'
 import { replayPvzLog } from '../sims/pvz/pvz-replay.js'
-import { levels, plants, zombies } from '../sims/pvz/data/pvz-defs.js'
+import { levels, plants, zombies, projectiles } from '../sims/pvz/data/pvz-defs.js'
 import { resolveWave, deriveWaveSeed, currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
+import { tick } from '../sims/pvz/sim/pvz-tick.js'
+import { spawnZombie } from '../sims/pvz/sim/pvz-mutate.js'
 import { WaveDef } from '../sims/pvz/data/pvz-def-types.js'
 import { createLevel } from '../sims/pvz/data/pvz-def-util.js'
 import { createRandom } from '../sims/random.js'
@@ -153,6 +155,54 @@ describe('advance', () => {
 
     // zombie spawns, peashooter should fire
     assert.ok(hasEvent(s, 'fired pea'))
+  })
+
+  it('does not burst-fire after idling without a target', () => {
+    // place peashooter, idle well past its cooldown with no zombies,
+    // then advance just past first spawn - should fire exactly once
+    // per plant (no stale cooldown debt)
+    const idleTime = firstSpawnTime - 0.5
+
+    const s = send(newGame(),
+      { type: 'place', plantName: 'peashooter', row: mowerRow, col: 5 },
+      { type: 'advance', seconds: idleTime },
+      // now advance just past spawn - enough for one fire, not two
+      { type: 'advance', seconds: 1 }
+    )
+
+    const fireCount = s.tickEvents.filter(e => e.includes('fired')).length
+
+    assert.equal(fireCount, 1, `expected 1 fire, got ${fireCount}`)
+  })
+
+  it('pea does not pass through a zombie', () => {
+    // place pea just behind a zombie such that the old sweep [currX, newX)
+    // would miss because the zombie is barely past newX - but within
+    // the zombie's own per-tick movement
+    const s = newGame()
+    const peaDef = projectiles['pea']
+    const zDef = zombies['normal']
+    const zSpeed = zDef.speed[0]
+
+    // pea at col 5.5, zombie placed so z.x = peaNewX + half zombie tick move
+    const peaX = 5.5
+    const peaNewX = peaX + peaDef.speed * FIXED_TICK
+    const zombieX = peaNewX + zSpeed * FIXED_TICK * 0.5
+
+    // inject a projectile and a zombie directly
+    const projId = s.nextId++
+    s.projectiles.set(projId, {
+      kind: 'pea', id: projId, row: mowerRow,
+      x: peaX, speed: peaDef.speed, damage: peaDef.damage
+    })
+
+    spawnZombie(s, 'normal', mowerRow, 0, zombieX, zSpeed)
+
+    s.tickEvents = []
+    tick(s, FIXED_TICK)
+
+    assert.ok(hasEvent(s, 'hit'), 'pea should hit the zombie')
+    assert.equal(s.projectiles.size, 0, 'pea should be consumed')
   })
 })
 
@@ -367,11 +417,11 @@ describe('wave acceleration', () => {
     const wave1Start = level.waves[0].startTime
     const wave2OrigStart = level.waves[1].startTime
 
-    // place peashooter that will kill wave 1 zombie quickly
+    // place peashooter that will kill wave 1 zombie
+    // need enough time for ~9 hits at 1.425s cooldown + travel time
     const s = send(newGame(),
       { type: 'place', plantName: 'peashooter', row: mowerRow, col: 3 },
-      // advance past wave 1 start + WAVE_MIN_TIME + enough to kill
-      { type: 'advance', seconds: wave1Start + WAVE_MIN_TIME + 1 }
+      { type: 'advance', seconds: wave1Start + WAVE_MIN_TIME + 15 }
     )
 
     // wave 2 should have been accelerated
@@ -859,8 +909,18 @@ describe('replay', () => {
       { type: 'advance', seconds: 10.5 }
     ])
 
+    // req uses pre-reduce time (when command was issued)
     const req2 = lines.find(l => l.includes('req 2'))!
-    assert.ok(req2.startsWith('10.50 '), `expected 10.50, got: ${req2}`)
+    assert.ok(req2.startsWith('0.00 '), `expected 0.00, got: ${req2}`)
+
+    // res lines have per-event timestamps from the sim
+    const res2 = lines.filter(l => l.includes('res 2'))
+    assert.ok(res2.length > 0, 'advance should produce res lines')
+
+    // first sun drop is at level.firstSun, verify it has its own timestamp
+    const sunRes = res2.find(l => l.includes('sunDropped'))
+    assert.ok(sunRes, 'should have a sunDropped res')
+    assert.ok(!sunRes!.startsWith('0.00 '), 'sun res should not be at time 0')
   })
 
   it('increments reqid per event', () => {

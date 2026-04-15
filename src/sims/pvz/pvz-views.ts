@@ -60,7 +60,9 @@ export const pvzBoardView = (state: PvzState) => {
       maybe(level.spawnRows) ? level.spawnRows.includes(row) : true
     )
 
-    let line = levelHasRow ? `${formatRow(row)} ` : '  '
+    if (!levelHasRow) continue
+
+    let line = `${formatRow(row)} `
     let prevMulti = false
 
     for (let col = 0; col < BOARD_COLS; col++) {
@@ -103,7 +105,7 @@ export const pvzBoardView = (state: PvzState) => {
       } else if (contents.length) {
         line += nameToKey[contents[0]]
       } else {
-        line += (levelHasRow ? grassKey : ' ')
+        line += grassKey
       }
 
       prevMulti = isMulti

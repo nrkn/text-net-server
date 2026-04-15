@@ -107,6 +107,10 @@
       text-decoration: none;
     }
 
+    #screen pre {
+      white-space: pre-wrap;
+    }
+
     #screen table {
       border-collapse: collapse;
       white-space: pre-wrap;
@@ -161,17 +165,17 @@
 
       for (const part of data.parts) {
         if (part.type === 'paragraph') {
-          const p = $('p')
+          const pre = $('pre')
 
           for (let i = 0; i < part.lines.length; i++) {
-            p.append(part.lines[i])
+            pre.append(part.lines[i])
 
             if (i < part.lines.length - 1) {
-              p.append($('br'))
+              pre.append($('br'))
             }
           }
 
-          screenEl.append(p)
+          screenEl.append(pre)
         } else if (part.type === 'heading') {
           const el = $('h' + part.level)
 
