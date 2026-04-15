@@ -10,10 +10,18 @@ import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { parsePvzEvent, formatPvzEvent } from '../sims/pvz/pvz-serialize.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { pvzBoardView } from '../sims/pvz/pvz-views.js'
-import { PVZ_CURR_VERSION, pvzLogLevels, PvzLogLevel, PVZ_DEFAULT_LOG_LEVEL } from '../sims/pvz/pvz-const.js'
+
+import {
+  PVZ_CURR_VERSION, pvzLogLevels, PvzLogLevel, PVZ_DEFAULT_LOG_LEVEL
+} from '../sims/pvz/pvz-const.js'
+
 import { filterTickEvents } from '../sims/pvz/pvz-log-filter.js'
 import { levels } from '../sims/pvz/data/pvz-defs.js'
-import { keyToPlant, plantKeys, zombieKeys, mowerKey, projectileKey } from '../sims/pvz/pvz-keys.js'
+
+import {
+  keyToPlant, plantKeys, zombieKeys, mowerKey, projectileKey
+} from '../sims/pvz/pvz-keys.js'
+
 import { LevelDef } from '../sims/pvz/data/pvz-def-types.js'
 import { currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
 import { isPlantName } from '../sims/pvz/pvz-guards.js'
@@ -160,7 +168,9 @@ const resolveCommand = (
       if (pvzLogLevels.includes(arg as PvzLogLevel)) {
         return { logLevel: arg as PvzLogLevel }
       }
-      return { error: `Unknown log level "${args[0]}" (none,minimal,detailed,verbose)` }
+      return {
+        error: `Unknown log level "${args[0]}" (none,minimal,detailed,verbose)`
+      }
     }
 
     // cycle to next level
@@ -501,8 +511,10 @@ export const setupPvzRoutes = (
 
     try {
       await store.dispatch(result.event)
-    } catch {
+    } catch (err: unknown) {
       // sim threw - redirect to play, state unchanged
+      console.warn('PvZ sim threw error')
+      console.error(err)
     }
 
     return res.redirect('/play')
