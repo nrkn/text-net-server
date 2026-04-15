@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
-import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY, FIXED_TICK } from '../sims/pvz/pvz-const.js'
+import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY, FIXED_TICK, SPAWN_X_MAX } from '../sims/pvz/pvz-const.js'
 import { replayPvzLog } from '../sims/pvz/pvz-replay.js'
 import { levels, plants, zombies, projectiles } from '../sims/pvz/data/pvz-defs.js'
 import { resolveWave, deriveWaveSeed, currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
@@ -726,6 +726,68 @@ describe('cherry bomb', () => {
   })
 })
 
+// wallnut
+
+const wallnutLevel = createLevel({
+  id: 997,
+  initialSun: 1000,
+  plantWhitelist: ['peashooter', 'sunflower', 'wallnut'],
+  spawnRows: [2],
+  waves: [
+    { startTime: 10, fixed: ['normal', 'normal'] }
+  ]
+})
+
+levels.push(wallnutLevel)
+
+const wallnutFirstSpawn = wallnutLevel.waves[0].startTime
+
+const newWallnutGame = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 997, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
+const wallnut = plants['wallnut']
+
+describe('wallnut', () => {
+  it('places and survives advance without error', () => {
+    const s = send(newWallnutGame(),
+      { type: 'place', plantName: 'wallnut', row: 2, col: 5 },
+      { type: 'advance', seconds: 5 }
+    )
+
+    assert.equal(s.error, undefined)
+    assert.equal(s.plants.size, 1)
+
+    const plant = [...s.plants.values()][0]
+    assert.equal(plant.kind, 'wallnut')
+    assert.equal(plant.hp, wallnut.hp)
+  })
+
+  it('never performs an action', () => {
+    const s = send(newWallnutGame(),
+      { type: 'place', plantName: 'wallnut', row: 2, col: 5 },
+      { type: 'advance', seconds: 30 }
+    )
+
+    const wallnutEvents = s.tickEvents.filter(e => e.includes('wallnut'))
+    assert.equal(wallnutEvents.length, 0, 'wallnut should never act')
+  })
+
+  it('absorbs zombie bites', () => {
+    const s = send(newWallnutGame(),
+      { type: 'place', plantName: 'wallnut', row: 2, col: 8 },
+      { type: 'advance', seconds: wallnutFirstSpawn + 15 }
+    )
+
+    const plant = [...s.plants.values()].find(p => p.kind === 'wallnut')
+
+    // wallnut should still exist but have taken damage
+    assert.ok(plant, 'wallnut should still be on the board')
+    assert.ok(plant!.hp < wallnut.hp, 'wallnut should have taken bite damage')
+  })
+})
+
 // weightedPick
 
 describe('weightedPick', () => {
@@ -787,13 +849,20 @@ describe('currentWaveIndex', () => {
 // mower row deprioritization
 
 describe('mower row deprioritization', () => {
-  // fixture: 2 waves, wave 0 at t=5 (single normal), wave 1 at t=15 (many normals)
+  // derive walk time from defs so rebalancing doesn't break this test
+  // worst case: zombie spawns at SPAWN_X_MAX, walks at slowest speed to x < 1
+  const slowestWalkTime = Math.ceil((SPAWN_X_MAX - 1) / zombies['normal'].speed[0])
+  const wave0Start = 5
+  const mowerDeadline = wave0Start + slowestWalkTime + 2
+  const wave1Start = mowerDeadline + 5
+
+  // fixture: wave 0 = single normal (triggers mower), wave 1 = many normals (tests deprio)
   const mowerLevel = createLevel({
     id: 998,
     initialSun: 0,
     waves: [
-      { startTime: 5, fixed: ['normal'] },
-      { startTime: 15, fixed: [
+      { startTime: wave0Start, fixed: ['normal'] },
+      { startTime: wave1Start, fixed: [
         'normal', 'normal', 'normal', 'normal', 'normal',
         'normal', 'normal', 'normal', 'normal', 'normal',
         'normal', 'normal', 'normal', 'normal', 'normal',
@@ -810,18 +879,18 @@ describe('mower row deprioritization', () => {
   )
 
   it('records mowerFiredWave on auto-trigger', () => {
-    // advance past wave 0 spawn, let zombie walk to mower
+    // advance past mower trigger deadline
     const s = send(newMowerGame(),
-      { type: 'advance', seconds: 40 }
+      { type: 'advance', seconds: mowerDeadline }
     )
 
     assert.ok(s.mowerFiredWave.size > 0, 'should have recorded a mower fire')
   })
 
   it('deprioritizes mowed row in next wave', () => {
-    // advance enough for mower to fire and wave 1 to spawn
+    // advance past wave 1 spawn so mower has fired and deprio applies
     const s = send(newMowerGame(),
-      { type: 'advance', seconds: 40 }
+      { type: 'advance', seconds: wave1Start + 2 }
     )
 
     // find which row the mower fired on

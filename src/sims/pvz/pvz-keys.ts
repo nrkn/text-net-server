@@ -3,7 +3,8 @@ import { PlantName, ZombieName } from './pvz-types.js'
 export const plantKeys: Record<PlantName, string> = {
   sunflower: 'S',
   peashooter: 'P',
-  cherryBomb: 'X'
+  cherryBomb: 'X',
+  wallnut: 'W'
 }
 
 export const zombieKeys: Record<ZombieName, string> = {
@@ -24,6 +25,9 @@ export const nameToKey: Record<string, string> = {
   pea: projectileKey,
   grass: grassKey
 }
+
+// todo - iterate over nameToKey and throw if duplicate keys were found, so
+// we don't accidentally reuse a key
 
 // key -> plant name (for command parsing)
 export const keyToPlant = new Map<string, PlantName>(

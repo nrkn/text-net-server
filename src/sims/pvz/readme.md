@@ -1,25 +1,27 @@
 # todo
 
-make the current event log first class - at the moment, if you borrow the 
-terminology from text-net-server, the player event log is requests - the event 
-log is responses, but only advancing generates a response; you could also say 
-more strictly that the reduced state is the response, but I'm thinking you can 
-produce a combined log which is like: 
+when playing, the sim log is overwhelming - especially zombies biting 
 
-```
-{time} req { reqid } { playerLogLine } 
-{time} res { reqid } { simEventLine[ 0 ] } 
-{time} res { reqid } { simEventLine[ 1 ] } //etc
-```
+we need to add:
 
-where time is state.time
+a setting to the test-app sub app, can be configured from either the main game
+menu or while playing, that sets the logging level
 
-if an error (state.error) occurs then it will be:
+we should also extend the logging to log every single event however small - 
+these include plant buy cooldowns becoming available, and anything else useful
+we can think of 
 
-```
-{time} req { reqid } { playerLogLine } 
-{time} res { reqid } { error } 
-```
+the log levels should be (initial, we will refine):
+
+- none
+- minimal; wave spawned (we don't have currently), plant died, zombie started 
+  biting, zombie died
+- detailed; everything except `proj fired`, `proj hit` and `zombie biting`
+- verbose; everything
+
+we will need a data def to define what gets logged at which level
+
+---
 
 towers should have optional ranges (puff/chomper etc) and infinite if not set,
 but can wait til we have those plants
@@ -150,3 +152,22 @@ since fired/chance
 ```
 
 so we will need to add weighted to random
+
+---
+
+replay log:
+
+```
+{time} req { reqid } { playerLogLine } 
+{time} res { reqid } { simEventLine[ 0 ] } 
+{time} res { reqid } { simEventLine[ 1 ] } //etc
+```
+
+where time is state.time
+
+if an error (state.error) occurs then it will be:
+
+```
+{time} req { reqid } { playerLogLine } 
+{time} res { reqid } { error } 
+```

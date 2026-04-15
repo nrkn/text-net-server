@@ -2,6 +2,7 @@ import { PlantName, ProjectileName, ZombieName } from '../pvz-types.js'
 import { level1 } from './levels/pvz-1-1.js'
 import { level2 } from './levels/pvz-1-2.js'
 import { level3 } from './levels/pvz-1-3.js'
+import { level4 } from './levels/pvz-1-4.js'
 import { LevelDef, PlantDef, ProjectileDef, ZombieDef } from './pvz-def-types.js'
 
 // times are all in seconds, cd = cooldown
@@ -64,6 +65,13 @@ export const plants: Record<PlantName, PlantDef> = {
     buyCd: 50,
     actionCd: 1,
     explodes: '3x3'
+  },
+  wallnut: {
+    kind: 'wallnut',
+    hp: 4000,
+    buyCost: 50,
+    buyCd: 30,
+    actionCd: Number.MAX_SAFE_INTEGER
   }
 }
 
@@ -73,5 +81,7 @@ export const levels: LevelDef[] = [
   // tutorial 1-2: three strips, adds sunflower
   level2,
   // 1-3: all rows, introduces cone via wave pool, adds cherry bomb
-  level3
+  level3,
+  // 1-4: adds wallnut
+  level4
 ]
