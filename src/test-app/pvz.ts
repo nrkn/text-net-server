@@ -10,13 +10,15 @@ import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { parsePvzEvent, formatPvzEvent } from '../sims/pvz/pvz-serialize.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { pvzBoardView } from '../sims/pvz/pvz-views.js'
-import { PVZ_CURR_VERSION } from '../sims/pvz/pvz-const.js'
+import { PVZ_CURR_VERSION, pvzLogLevels, PvzLogLevel, PVZ_DEFAULT_LOG_LEVEL } from '../sims/pvz/pvz-const.js'
+import { filterTickEvents } from '../sims/pvz/pvz-log-filter.js'
 import { levels } from '../sims/pvz/data/pvz-defs.js'
 import { keyToPlant, plantKeys, zombieKeys, mowerKey, projectileKey } from '../sims/pvz/pvz-keys.js'
 import { LevelDef } from '../sims/pvz/data/pvz-def-types.js'
 import { currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
 import { isPlantName } from '../sims/pvz/pvz-guards.js'
 import { parsePos, parseRow } from '../sims/pvz/pvz-util.js'
+import { Session } from '../lib/types.js'
 import { existsSync } from 'node:fs'
 import { screen } from '../lib/view/screen.js'
 import { input } from '../lib/view/input-path.js'
@@ -50,6 +52,20 @@ const getOrCreateStore = (token: string) => {
 const isInProgress = (state: PvzState) =>
   state.levelId !== 0 && state.status === 'playing'
 
+const getPvzLogLevel = (session: Session): PvzLogLevel => {
+  const v = session.data.pvzLogLevel
+
+  if (typeof v === 'string' && pvzLogLevels.includes(v as PvzLogLevel))
+    return v as PvzLogLevel
+
+  return PVZ_DEFAULT_LOG_LEVEL
+}
+
+const setPvzLogLevel = (session: Session, level: PvzLogLevel) => {
+  session.data.pvzLogLevel = level
+  session.dirty = true
+}
+
 const formatTime = (t: number) => {
   const s = Math.floor(t)
   const m = Math.floor(s / 60)
@@ -67,9 +83,15 @@ const conditionShorts: Record<string, string> = {
   PLANT: 'plantReady',
 }
 
+type CommandResult =
+  | { event: PvzEvent }
+  | { redirect: string }
+  | { error: string }
+  | { logLevel: PvzLogLevel }
+
 const resolveCommand = (
   raw: string, state: PvzState
-): { event: PvzEvent } | { redirect: string } | { error: string } => {
+): CommandResult => {
   const parts = raw.trim().toUpperCase().split(/\s+/)
   const cmd = parts[0]
   const args = parts.slice(1)
@@ -129,6 +151,25 @@ const resolveCommand = (
   // Place - P {pos} or P {plant} {pos}
   if (cmd === 'P' || cmd === 'PLACE') {
     return resolvePlaceCommand(args, state)
+  }
+
+  // Verbosity - V cycles, V {level} sets directly
+  if (cmd === 'V' || cmd === 'LOG') {
+    if (args[0]) {
+      const arg = args[0].toLowerCase()
+      if (pvzLogLevels.includes(arg as PvzLogLevel)) {
+        return { logLevel: arg as PvzLogLevel }
+      }
+      return { error: `Unknown log level "${args[0]}" (none,minimal,detailed,verbose)` }
+    }
+
+    // cycle to next level
+    const current = pvzLogLevels.indexOf(
+      // we don't have the session here, so return a sentinel
+      // the route handler will resolve the current level and cycle
+      'minimal' // placeholder - route handler overrides
+    )
+    return { logLevel: '__cycle' as PvzLogLevel }
   }
 
   // S could be shovel or sunflower shorthand place
@@ -263,7 +304,7 @@ const singleKeyLegend = (level: LevelDef) => {
   return entries.map(([name, key]) => `${key} ${name}`).join('  ')
 }
 
-const commandHelp = (state: PvzState) => {
+const commandHelp = (state: PvzState, logLevel: PvzLogLevel) => {
   const level = levels.find(l => l.id === state.levelId)
   const lines: string[] = []
 
@@ -295,13 +336,16 @@ const commandHelp = (state: PvzState) => {
   // wait
   lines.push('W S,Z,P - wait for sun,zombie,plant')
 
+  // verbosity
+  lines.push(`V {level} - log level (${logLevel})`)
+
   // leave
   lines.push('L - leave')
 
   return lines
 }
 
-const playScreen = (state: PvzState): TextScreen => {
+const playScreen = (state: PvzState, logLevel: PvzLogLevel): TextScreen => {
   const level = levels.find(l => l.id === state.levelId)
   const waveCount = level?.waves.length ?? 0
   const curWave = currentWaveIndex(state)
@@ -325,9 +369,11 @@ const playScreen = (state: PvzState): TextScreen => {
     screenParts.push(p(...multiLines))
   }
 
-  // tick events from last action
-  if (state.tickEvents.length > 0) {
-    screenParts.push(p(...state.tickEvents))
+  // tick events from last action, filtered by log level
+  const filtered = filterTickEvents(state.tickEvents, logLevel)
+
+  if (filtered.length > 0) {
+    screenParts.push(p(...filtered))
   }
 
   // error from last action
@@ -336,7 +382,7 @@ const playScreen = (state: PvzState): TextScreen => {
     screenParts.push(p(`Error: ${msg}`))
   }
 
-  screenParts.push(p(...commandHelp(state)))
+  screenParts.push(p(...commandHelp(state, logLevel)))
   screenParts.push(input('/cmd/:command'))
 
   return screen(...screenParts)
@@ -412,7 +458,9 @@ export const setupPvzRoutes = (
       return res.send(endScreen(gameState))
     }
 
-    res.send(playScreen(gameState))
+    const logLevel = getPvzLogLevel(state.session!)
+
+    res.send(playScreen(gameState, logLevel))
   })
 
   app.on('/cmd/:command', async (req, res) => {
@@ -433,6 +481,21 @@ export const setupPvzRoutes = (
       // store the error in a way the play screen can show it
       // we can't easily flash, so just redirect - the sim state 
       // already has error handling for invalid dispatches
+      return res.redirect('/play')
+    }
+
+    if ('logLevel' in result) {
+      const session = state.session!
+
+      if (result.logLevel === '__cycle' as PvzLogLevel) {
+        const current = getPvzLogLevel(session)
+        const idx = pvzLogLevels.indexOf(current)
+        const next = pvzLogLevels[(idx + 1) % pvzLogLevels.length]
+        setPvzLogLevel(session, next)
+      } else {
+        setPvzLogLevel(session, result.logLevel)
+      }
+
       return res.redirect('/play')
     }
 

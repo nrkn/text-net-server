@@ -58,3 +58,11 @@ export const WAVE_ACCEL_DELAY = 2
 // zombie spawn x range - they appear spread out on the right edge
 export const SPAWN_X_MIN = BOARD_COLS + 0.25
 export const SPAWN_X_MAX = BOARD_COLS + 0.75
+
+export const pvzLogLevels = [
+  'none', 'minimal', 'detailed', 'verbose'
+] as const
+
+export type PvzLogLevel = typeof pvzLogLevels[number]
+
+export const PVZ_DEFAULT_LOG_LEVEL: PvzLogLevel = 'minimal'

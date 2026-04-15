@@ -1,28 +1,5 @@
 # todo
 
-when playing, the sim log is overwhelming - especially zombies biting 
-
-we need to add:
-
-a setting to the test-app sub app, can be configured from either the main game
-menu or while playing, that sets the logging level
-
-we should also extend the logging to log every single event however small - 
-these include plant buy cooldowns becoming available, and anything else useful
-we can think of 
-
-the log levels should be (initial, we will refine):
-
-- none
-- minimal; wave spawned (we don't have currently), plant died, zombie started 
-  biting, zombie died
-- detailed; everything except `proj fired`, `proj hit` and `zombie biting`
-- verbose; everything
-
-we will need a data def to define what gets logged at which level
-
----
-
 towers should have optional ranges (puff/chomper etc) and infinite if not set,
 but can wait til we have those plants
 
@@ -171,3 +148,26 @@ if an error (state.error) occurs then it will be:
 {time} req { reqid } { playerLogLine } 
 {time} res { reqid } { error } 
 ```
+
+---
+
+when playing, the sim log is overwhelming - especially zombies biting 
+
+we need to add:
+
+a setting to the test-app sub app, can be configured from either the main game
+menu or while playing, that sets the logging level
+
+we should also extend the logging to log every single event however small - 
+these include plant buy cooldowns becoming available, and anything else useful
+we can think of 
+
+the log levels should be (initial, we will refine):
+
+- none
+- minimal; wave spawned (we don't have currently), plant died, zombie started 
+  biting, zombie died
+- detailed; everything except `proj fired`, `proj hit` and `zombie biting`
+- verbose; everything
+
+we will need a data def to define what gets logged at which level

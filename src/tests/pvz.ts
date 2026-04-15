@@ -6,6 +6,7 @@ import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
 import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY, FIXED_TICK, SPAWN_X_MAX } from '../sims/pvz/pvz-const.js'
 import { replayPvzLog } from '../sims/pvz/pvz-replay.js'
+import { filterTickEvents } from '../sims/pvz/pvz-log-filter.js'
 import { levels, plants, zombies, projectiles } from '../sims/pvz/data/pvz-defs.js'
 import { resolveWave, deriveWaveSeed, currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
 import { tick } from '../sims/pvz/sim/pvz-tick.js'
@@ -1005,5 +1006,79 @@ describe('replay', () => {
     })
 
     assert.deepEqual(reqIds, [1, 2, 3])
+  })
+})
+
+// filterTickEvents
+
+const sampleEvents = [
+  '5.00 sunDropped 25',
+  '5.01 sunflower 3 C1 spawnedSun 25',
+  '10.00 normal 7 D10.500 zombieSpawned',
+  '10.50 peashooter 2 C5 fired pea 4 C5.500',
+  '10.51 pea 4 C5.540 hit normal 7 D9.800',
+  '10.60 normal 7 D1.200 attacking peashooter 2 C1',
+  '10.70 normal 7 D1.200 biting peashooter 2 C1',
+  '11.00 peashooter 2 C1 died',
+  '12.00 normal 7 D0.500 died',
+  '13.00 mower E0.000 triggeredBy normal 8 E0.900',
+  '13.01 mower E0.040 hit normal 8 E0.800',
+  '13.50 mower E10.000 exitStageRight',
+  '14.00 cherryBomb 5 C5 exploded normal 9 D5.200',
+  '14.00 cherryBomb 5 C5 exploded selfDestruct',
+  '15.00 waveAccelerated 2 17.00',
+  '20.00 normal 10 C0.100 reachedHouse',
+  '25.00 won',
+]
+
+describe('filterTickEvents', () => {
+  it('verbose returns all events', () => {
+    assert.equal(filterTickEvents(sampleEvents, 'verbose').length, sampleEvents.length)
+  })
+
+  it('none returns nothing', () => {
+    assert.equal(filterTickEvents(sampleEvents, 'none').length, 0)
+  })
+
+  it('minimal includes significant events only', () => {
+    const result = filterTickEvents(sampleEvents, 'minimal')
+
+    // should include: sunDropped, spawnedSun, zombieSpawned, died x2,
+    // triggeredBy, waveAccelerated, reachedHouse, won
+    assert.ok(result.some(e => e.includes('sunDropped')))
+    assert.ok(result.some(e => e.includes('spawnedSun')))
+    assert.ok(result.some(e => e.includes('zombieSpawned')))
+    assert.ok(result.some(e => e.includes('died')))
+    assert.ok(result.some(e => e.includes('triggeredBy')))
+    assert.ok(result.some(e => e.includes('waveAccelerated')))
+    assert.ok(result.some(e => e.includes('reachedHouse')))
+    assert.ok(result.some(e => e.includes('won')))
+
+    // should exclude: fired, hit, biting, attacking, exploded, exitStageRight
+    assert.ok(!result.some(e => e.includes('fired')))
+    assert.ok(!result.some(e => e.includes('biting')))
+    assert.ok(!result.some(e => e.includes('attacking')))
+    assert.ok(!result.some(e => e.includes('exploded')))
+    assert.ok(!result.some(e => e.includes('exitStageRight')))
+  })
+
+  it('detailed adds tactical events', () => {
+    const result = filterTickEvents(sampleEvents, 'detailed')
+
+    // detailed should include everything minimal has plus:
+    assert.ok(result.some(e => e.includes('attacking')))
+    assert.ok(result.some(e => e.includes('exploded selfDestruct')))
+    assert.ok(result.some(e => e.includes('exitStageRight')))
+
+    // but still exclude per-tick noise
+    assert.ok(!result.some(e => e.includes('fired')))
+    assert.ok(!result.some(e => e.includes('biting')))
+  })
+
+  it('defaults unrecognized events to verbose', () => {
+    const events = ['1.00 someNewEvent happened']
+
+    assert.equal(filterTickEvents(events, 'verbose').length, 1)
+    assert.equal(filterTickEvents(events, 'detailed').length, 0)
   })
 })
