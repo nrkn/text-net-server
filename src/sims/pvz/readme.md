@@ -33,7 +33,7 @@ we need to implement logical board per above - peas and mowers can go there,
 can't plant, and the views can ignore oob - I think we throw an error somewhere
 currently which we shouldn't do
 we also need to update zombie defs to have a range instead of fixed speed, as 
-a tuple [ 0.29, 0.4 ] then use random.rangeInt when we spawn the zombie
+a tuple [ from, to ] then use random.range when we spawn the zombie
 
 ---
 
@@ -171,3 +171,12 @@ the log levels should be (initial, we will refine):
 - verbose; everything
 
 we will need a data def to define what gets logged at which level
+
+---
+
+the multi-per tile approach in view is pretty good, but could be better:
+
+if a plant and a projectile are on the same tile, just show the plant
+if a projectile and a zombie are on the same tile, just show the zombie
+
+otherwise, behave as normal

@@ -1,10 +1,11 @@
 import { maybe, seq } from '../../lib/util.js'
-import { BOARD_COLS, BOARD_ROWS } from './pvz-const.js'
+import { BOARD_COLS, BOARD_ROWS, projectileNames } from './pvz-const.js'
 import { nameToKey } from './pvz-keys.js'
 import { formatPos, formatRow, getIdx } from './pvz-util.js'
 import { PvzState } from './pvz-types.js'
 import { stateToGrid } from './sim/pvz-state.js'
 import { getLevel } from './sim/pvz-sim-util.js'
+import { getZombieCountForRow } from './sim/pvz-query.js'
 
 /*
    0 1 2 3 4 5 6 7 8 9 
@@ -42,6 +43,9 @@ type MultiKey = {
 
 type Key = SingleKey | MultiKey
 
+const isProjectile = (name: string) =>
+  (projectileNames as readonly string[]).includes(name)
+
 export const pvzBoardView = (state: PvzState) => {
   const grid = stateToGrid(state)
   const level = getLevel(state.levelId)
@@ -77,9 +81,23 @@ export const pvzBoardView = (state: PvzState) => {
       contents.push(
         ...tile.projectiles.map(id => state.projectiles.get(id)!.kind)
       )
+
       contents.push(...tile.zombies.map(id => state.zombies.get(id)!.kind))
 
-      const isMulti = contents.length > 1
+      // collapse projectile overlaps - projectiles are transient and add
+      // noise when sharing a tile with a plant or zombie
+      const hasProjectile = contents.some(isProjectile)
+      const nonProjectiles = hasProjectile
+        ? contents.filter(n => !isProjectile(n))
+        : contents
+
+      // only collapse if there's something else to show
+      // if only projectiles, dedupe 'em to unique types
+      const resolved = nonProjectiles.length > 0
+        ? nonProjectiles
+        : [...new Set(contents)]
+
+      const isMulti = resolved.length > 1
 
       line += (isMulti || prevMulti) ? ':' : ' '
 
@@ -98,17 +116,23 @@ export const pvzBoardView = (state: PvzState) => {
           kind: 'multi',
           key: nextMultiKey,
           pos,
-          names: contents
+          names: resolved
         })
 
         nextMultiKey++
-      } else if (contents.length) {
-        line += nameToKey[contents[0]]
+      } else if (resolved.length) {
+        line += nameToKey[resolved[0]]
       } else {
         line += grassKey
       }
 
       prevMulti = isMulti
+    }
+
+    const zombieCount = getZombieCountForRow(state, row)
+
+    if( zombieCount > 0 ){
+      line += `  ${zombieCount}`
     }
 
     lines.push(line)

@@ -1,5 +1,5 @@
 import { plants, zombies } from '../data/pvz-defs.js'
-import { SUN_DROP } from '../pvz-const.js'
+import { BOARD_COLS, SUN_DROP } from '../pvz-const.js'
 import { isPos, getIdx, getPlantableIdx } from '../pvz-util.js'
 import { PvzState, PlantName, ZombieName } from '../pvz-types.js'
 import { getLevel } from './pvz-sim-util.js'
@@ -230,4 +230,20 @@ export const plantHasTarget = (state: PvzState, plantId: number) => {
   }
 
   return false
+}
+
+export const getZombiesStillEntering = (state: PvzState) => {
+  const allZombies = [...state.zombies.values()]
+
+  return allZombies.filter(z => z.x >= BOARD_COLS).sort((a, b) => a.x - b.x)
+}
+
+export const getZombieCountForRow = (state: PvzState, row: number) => {
+  let count = 0
+
+  for (const zombie of state.zombies.values()) {
+    if (zombie.row === row) count++
+  }
+
+  return count
 }

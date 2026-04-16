@@ -7,6 +7,8 @@ import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
 import { PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, WAVE_ACCEL_DELAY, FIXED_TICK, SPAWN_X_MAX } from '../sims/pvz/pvz-const.js'
 import { replayPvzLog } from '../sims/pvz/pvz-replay.js'
 import { filterTickEvents } from '../sims/pvz/pvz-log-filter.js'
+import { pvzBoardView } from '../sims/pvz/pvz-views.js'
+import { formatRow } from '../sims/pvz/pvz-util.js'
 import { levels, plants, zombies, projectiles } from '../sims/pvz/data/pvz-defs.js'
 import { resolveWave, deriveWaveSeed, currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
 import { tick } from '../sims/pvz/sim/pvz-tick.js'
@@ -1080,5 +1082,121 @@ describe('filterTickEvents', () => {
 
     assert.equal(filterTickEvents(events, 'verbose').length, 1)
     assert.equal(filterTickEvents(events, 'detailed').length, 0)
+  })
+})
+
+// board view - projectile collapse
+
+describe('board view: projectile collapse', () => {
+  const peaDef = projectiles['pea']
+
+  const viewGame = () => send(
+    newState(SEED),
+    { type: 'new', levelId: 1, seed: SEED, version: PVZ_CURR_VERSION }
+  )
+
+  it('plant + projectile shows plant, no multi-key', () => {
+    const s = viewGame()
+
+    // place peashooter at mowerRow col 5
+    s.nextId++
+    s.plants.set(s.nextId, {
+      kind: 'peashooter', id: s.nextId, row: mowerRow, col: 5,
+      hp: 300, nextAction: 999
+    })
+
+    // inject a pea at same tile (x = 5.5, within col 5)
+    s.nextId++
+    s.projectiles.set(s.nextId, {
+      kind: 'pea', id: s.nextId, row: mowerRow, x: 5.5,
+      speed: peaDef.speed, damage: peaDef.damage
+    })
+
+    const view = pvzBoardView(s)
+    const multiKeys = view.keys.filter(k => k.kind === 'multi')
+
+    assert.equal(multiKeys.length, 0, 'should have no multi-keys')
+
+    // the board line for mowerRow should contain P at col 5
+    const rowLine = view.lines.find(l => l.startsWith(formatRow(mowerRow)))!
+    assert.ok(rowLine, 'should have a row line')
+    // col 5 should be P not a multi-key digit
+    assert.ok(!rowLine.includes(':1:'), 'should not have :1: multi-key')
+  })
+
+  it('projectile + zombie shows zombie, no multi-key', () => {
+    const s = viewGame()
+
+    const zDef = zombies['normal']
+
+    // inject a zombie at col 7 (x = 7.3)
+    spawnZombie(s, 'normal', mowerRow, 0, 7.3, zDef.speed[0])
+
+    // inject a pea at same col (x = 7.5)
+    s.nextId++
+    s.projectiles.set(s.nextId, {
+      kind: 'pea', id: s.nextId, row: mowerRow, x: 7.5,
+      speed: peaDef.speed, damage: peaDef.damage
+    })
+
+    const view = pvzBoardView(s)
+    const multiKeys = view.keys.filter(k => k.kind === 'multi')
+
+    assert.equal(multiKeys.length, 0, 'should have no multi-keys')
+  })
+
+  it('plant + zombie still shows multi-key', () => {
+    const s = viewGame()
+
+    const zDef = zombies['normal']
+
+    // place peashooter at col 5
+    s.nextId++
+    s.plants.set(s.nextId, {
+      kind: 'peashooter', id: s.nextId, row: mowerRow, col: 5,
+      hp: 300, nextAction: 999
+    })
+
+    // inject zombie at same col
+    spawnZombie(s, 'normal', mowerRow, 0, 5.3, zDef.speed[0])
+
+    const view = pvzBoardView(s)
+    const multiKeys = view.keys.filter(k => k.kind === 'multi')
+
+    assert.ok(multiKeys.length > 0, 'should have a multi-key for plant+zombie')
+  })
+
+  it('projectile-only tile still shows projectile', () => {
+    const s = viewGame()
+
+    // inject just a pea at col 6
+    s.nextId++
+    s.projectiles.set(s.nextId, {
+      kind: 'pea', id: s.nextId, row: mowerRow, x: 6.5,
+      speed: peaDef.speed, damage: peaDef.damage
+    })
+
+    const view = pvzBoardView(s)
+    const multiKeys = view.keys.filter(k => k.kind === 'multi')
+
+    assert.equal(multiKeys.length, 0, 'should have no multi-keys')
+  })
+
+  it('multiple same-type projectiles collapse to one', () => {
+    const s = viewGame()
+
+    // inject two peas at the same col
+    for (const x of [6.3, 6.7]) {
+      s.nextId++
+      s.projectiles.set(s.nextId, {
+        kind: 'pea', id: s.nextId, row: mowerRow, x,
+        speed: peaDef.speed, damage: peaDef.damage
+      })
+    }
+
+    const view = pvzBoardView(s)
+    const multiKeys = view.keys.filter(k => k.kind === 'multi')
+
+    assert.equal(multiKeys.length, 0, 'should have no multi-keys for same-type projectiles')
   })
 })
