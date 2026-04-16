@@ -1,4 +1,30 @@
+# goal
+
+not to perfectly simulate pvz - but to be close enough that the levels play out
+much the same - a second difference here and there is no big deal, though as
+levels and waves get more complex we might have to tighten it up a bit to 
+maintain cadence
+
 # todo
+
+wave timing (again lol)
+
+in real game, there are a few exceptions in early game, but for the most part:
+
+first wave - 18 seconds
+subsequent waves - 28 seconds later (actually 25-31)
+
+we currently hard code (excepting wave acceleration mechanic) the wave start
+times
+
+---
+
+place a plant on a zombie - at the moment it pushes the zombie to the right as 
+a side effect of the "is zombie coming into range to bite a plant" mechanic
+
+in real game, zombie stops walking and starts biting, but stays where they are
+
+---
 
 towers should have optional ranges (puff/chomper etc) and infinite if not set,
 but can wait til we have those plants
@@ -95,6 +121,8 @@ How does state store spawns now that they're random?
 
 2. store the spawns directly in state, on new state calculate them once,
    pros, easy and fast, cons, bloats state, inconsistent with other decisions
+
+(note from future Nik - we used 1)
 
 ---
 
