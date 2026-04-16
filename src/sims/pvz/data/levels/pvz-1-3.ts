@@ -1,8 +1,16 @@
-import { createLevel } from '../pvz-def-util.js'
+import { b, createLevel } from '../pvz-def-util.js'
 
 export const level3 = createLevel({
   id: 3,
+  plantableTiles: b(
+    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0,
+  ),
   plantWhitelist: ['peashooter', 'sunflower', 'cherryBomb'],
+  initialMowers: b(0, 1, 1, 1, 0),
   canShovel: false,
   waves: [
     { startTime: 18, pool: ['cone'] },
@@ -19,5 +27,6 @@ export const level3 = createLevel({
       pool: ['cone'],
       pointMultiplier: 2.5
     }
-  ]
+  ],
+  spawnRows: [1, 2, 3]
 })

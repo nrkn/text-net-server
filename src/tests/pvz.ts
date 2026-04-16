@@ -589,11 +589,11 @@ const newGame3 = () => send(
 )
 
 describe('level 1-3: basics', () => {
-  it('initializes with all 5 mowers', () => {
+  it('initializes with 3 mowers', () => {
     const s = newGame3()
 
     assert.equal(s.status, 'playing')
-    assert.equal(s.mowers.size, 5)
+    assert.equal(s.mowers.size, 3)
     assert.equal(s.sun, level3.initialSun)
     assert.ok(s.levelRng !== 0, 'levelRng should be initialized')
   })
