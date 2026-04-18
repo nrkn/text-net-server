@@ -18,6 +18,8 @@ export type ZombieDef = {
   waveCost: number // point cost when spawned from pool
 }
 
+export type ExplodeType = '3x3' | '1x1'
+
 export type PlantDef = {
   kind: PlantName
 
@@ -33,7 +35,7 @@ export type PlantDef = {
   actionCd: number // time between shots/sun production etc
 
   projectile?: ProjectileName // undefined = doesn't fire (eg sunflower)
-  explodes?: '3x3' // area damage on actionCd, self-destructs
+  explodes?: ExplodeType // area damage on actionCd, self-destructs
 }
 
 export type ProjectileDef = {

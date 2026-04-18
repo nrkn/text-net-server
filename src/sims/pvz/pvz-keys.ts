@@ -4,13 +4,15 @@ export const plantKeys: Record<PlantName, string> = {
   sunflower: 'S',
   peashooter: 'P',
   cherryBomb: 'X',
-  wallnut: 'W'
+  wallnut: 'W',
+  potatoMine: 'M'
 }
 
 export const zombieKeys: Record<ZombieName, string> = {
   normal: 'Z',
   cone: 'C',
-  bucket: 'B'
+  bucket: 'B',
+  poleVaulter: 'V'
 }
 
 export const mowerKey = 'L'

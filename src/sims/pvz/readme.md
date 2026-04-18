@@ -1,7 +1,7 @@
 # goal
 
 not to perfectly simulate pvz - but to be close enough that the levels play out
-much the same - a second difference here and there is no big deal, though as
+much the same - slight differences here and there are no big deal, though as
 levels and waves get more complex we might have to tighten it up a bit to 
 maintain cadence
 
@@ -16,6 +16,18 @@ subsequent waves - 28 seconds later (actually 25-31)
 
 we currently hard code (excepting wave acceleration mechanic) the wave start
 times
+
+---
+
+we have a lot of places where instead of using a random range for a number, we
+simplified by just picking a midpoint number - it would be nice for replays
+to play out slightly differently so look into adding ranges to more things
+
+---
+
+in the real game it seems that at the beginning of the level, only some plants
+are available immediately (sunflowers and ...?), especially once seed packets 
+are available - other plants have to wait out their buy cooldown
 
 ---
 

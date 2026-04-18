@@ -7,11 +7,11 @@ import { LevelDef, PlantDef, ProjectileDef, ZombieDef } from './pvz-def-types.js
 
 // times are all in seconds, cd = cooldown
 
-const baseZombie = {
+export const baseZombie = {
   speed: [0.14, 0.19] as [number, number], // tiles per second
   biteDamage: 4,
   biteCd: 0.04
-}
+} as const
 
 export const zombies: Record<ZombieName, ZombieDef> = {
   normal: {
@@ -31,6 +31,13 @@ export const zombies: Record<ZombieName, ZombieDef> = {
     hp: 1370,
     waveCost: 4,
     ...baseZombie
+  },
+  poleVaulter: {
+    kind: 'poleVaulter',
+    hp: 500,
+    waveCost: 2,
+    ...baseZombie,
+    speed: [0.37, 0.41]
   }
 }
 
@@ -72,6 +79,14 @@ export const plants: Record<PlantName, PlantDef> = {
     buyCost: 50,
     buyCd: 30,
     actionCd: Number.MAX_SAFE_INTEGER
+  },
+  potatoMine: {
+    kind: 'potatoMine',
+    hp: 300,
+    buyCost: 25,
+    buyCd: 30,
+    actionCd: 15,
+    explodes: '1x1'
   }
 }
 

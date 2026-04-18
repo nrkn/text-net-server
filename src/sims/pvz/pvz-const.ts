@@ -1,9 +1,9 @@
 export const plantNames = [
-  'sunflower', 'peashooter', 'cherryBomb', 'wallnut'
+  'sunflower', 'peashooter', 'cherryBomb', 'wallnut', 'potatoMine'
 ] as const
 
 export const zombieNames = [
-  'normal', 'cone', 'bucket'
+  'normal', 'cone', 'bucket', 'poleVaulter'
 ] as const
 
 export const projectileNames = [
