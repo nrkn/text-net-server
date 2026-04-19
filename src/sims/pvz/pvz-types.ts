@@ -132,12 +132,8 @@ export type PvzState = {
 
   status: PvzGameStatus
   error?: PvzActionFailed
-  // we can make it a more complex type later
   tickEvents: string[]
-
-  // not needed, can be derived from entity maps below
-  // grid: Tile[] // rows * cols
-
+  
   mowers: Map<number, Mower> // row -> mower
   plants: Map<number, Plant> // id -> plant
   projectiles: Map<number, Projectile> // id -> projectile
@@ -162,6 +158,9 @@ export type PvzState = {
 
   // row -> waveIndex when mower fired, for deprioritizing recently mowed rows
   mowerFiredWave: Map<number, number>
+  // last picked rows, to combat clumping
+  lastPicked: number[]
+  secondLastPicked: number[]
 
   nextId: number
 

@@ -78,3 +78,7 @@ export const PVZ_DEFAULT_LOG_LEVEL: PvzLogLevel = 'minimal'
 
 export const PLANT_ARMED = 1
 export const ZOMBIE_VAULTED = 1
+
+// plants whose buyCd is <= this should be available to buy immediately at 
+// start of level
+export const INSTANT_BUY_THRESHOLD = 10

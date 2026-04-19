@@ -1,8 +1,9 @@
-import { maybe } from '../../../../lib/util.js'
+import { maybe, repeat } from '../../../../lib/util.js'
 
 import {
   PVZ_CURR_VERSION, BOARD_ROWS, BOARD_COLS, plantNames,
-  FIRST_WAVE_TIME, WAVE_INTERVAL
+  FIRST_WAVE_TIME, WAVE_INTERVAL,
+  INSTANT_BUY_THRESHOLD
 } from '../../pvz-const.js'
 
 import { getPlantableIdx } from '../../pvz-util.js'
@@ -12,6 +13,7 @@ import { newState } from '../pvz-state.js'
 import { placePlant } from '../pvz-mutate.js'
 import { actionFail, getLevel } from '../pvz-sim-util.js'
 import { createRandom } from '../../../random.js'
+import { plants } from '../../data/pvz-defs.js'
 
 export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
   const { levelId, seed, version } = event
@@ -77,8 +79,18 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
     }
   }
 
+  // set initial cooldown
+  // starter plants ready immediately, shorter delay than usual on others
   for (const plant of plantNames) {
-    state.nextBuy.set(plant, 0)
+    const def = plants[plant]
+
+    const cd = (
+      def.buyCd <= INSTANT_BUY_THRESHOLD ?
+        0 :
+        Math.max(0, def.buyCd * 0.75 - 2.5)
+    )
+
+    state.nextBuy.set(plant, cd)
   }
 
   state.sun = level.initialSun
@@ -95,11 +107,14 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
 
   state.waveStartTimes = waveStartTimes
 
+  state.lastPicked = repeat(BOARD_ROWS, 0)
+  state.secondLastPicked = repeat(BOARD_ROWS, 0)
+
   // derive levelRng from seed - separate stream from main rng
   const levelRandom = createRandom(seed)
-  
+
   levelRandom.consume(levelId + 1)
-  
+
   state.levelRng = levelRandom.peek()
 
   // done!

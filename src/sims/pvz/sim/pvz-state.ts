@@ -90,6 +90,8 @@ export const newState = (rng = Date.now()) => {
     waveStartTimes: [],
     levelRng: 0,
     mowerFiredWave: new Map<number, number>(),
+    lastPicked: [],
+    secondLastPicked: [],
 
     rng
   }
@@ -115,7 +117,9 @@ export const cloneState = (
 
   waveStartTimes: [...state.waveStartTimes],
   levelRng: state.levelRng,
-  mowerFiredWave: cloneMap(state.mowerFiredWave)
+  mowerFiredWave: cloneMap(state.mowerFiredWave),
+  lastPicked: [ ...state.lastPicked ],
+  secondLastPicked: [ ...state.secondLastPicked ]
 })
 
 // on new event, clone and reset error

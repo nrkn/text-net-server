@@ -7,34 +7,9 @@ maintain cadence
 
 # todo
 
-wave timing (again lol)
-
-in real game, there are a few exceptions in early game, but for the most part:
-
-first wave - 18 seconds
-subsequent waves - 28 seconds later (actually 25-31)
-
-we currently hard code (excepting wave acceleration mechanic) the wave start
-times
-
----
-
 we have a lot of places where instead of using a random range for a number, we
 simplified by just picking a midpoint number - it would be nice for replays
 to play out slightly differently so look into adding ranges to more things
-
----
-
-in the real game it seems that at the beginning of the level, only some plants
-are available immediately (sunflowers and ...?), especially once seed packets 
-are available - other plants have to wait out their buy cooldown
-
----
-
-place a plant on a zombie - at the moment it pushes the zombie to the right as 
-a side effect of the "is zombie coming into range to bite a plant" mechanic
-
-in real game, zombie stops walking and starts biting, but stays where they are
 
 ---
 
@@ -220,3 +195,33 @@ if a plant and a projectile are on the same tile, just show the plant
 if a projectile and a zombie are on the same tile, just show the zombie
 
 otherwise, behave as normal
+
+---
+
+wave timing (again lol)
+
+in real game, there are a few exceptions in early game, but for the most part:
+
+first wave - 18 seconds
+subsequent waves - 28 seconds later (actually 25-31)
+
+we currently hard code (excepting wave acceleration mechanic) the wave start
+times
+
+---
+
+place a plant on a zombie - at the moment it pushes the zombie to the right as 
+a side effect of the "is zombie coming into range to bite a plant" mechanic
+
+in real game, zombie stops walking and starts biting, but stays where they are
+
+---
+
+real game has anti-clumping - we are seeing RNG produce most or all zombies in
+one lane on wave spawn - find the rough weighting used by real game and apply
+
+---
+
+in the real game it seems that at the beginning of the level, only some plants
+are available immediately (sunflowers and ...?), especially once seed packets 
+are available - other plants have to wait out their buy cooldown

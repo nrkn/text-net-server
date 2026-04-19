@@ -1,4 +1,4 @@
-import { maybe, seq } from '../../../lib/util.js'
+import { clamp, maybe, seq } from '../../../lib/util.js'
 import { createRandom, Random } from '../../random.js'
 
 import {
@@ -431,7 +431,9 @@ const tickFixed = (
       ? level.spawnRows
       : seq(BOARD_ROWS, i => i)
 
-    const weights = candidates.map(r => {
+    // first, deprioritize recent mowers
+
+    let weights: number[] = candidates.map(r => {
       const firedWave = state.mowerFiredWave.get(r)
 
       if (firedWave === undefined) return 1
@@ -444,7 +446,37 @@ const tickFixed = (
       return 1
     })
 
+    // next, weight according to lastPicked and secondLastPicked
+
+    const totalWeight = weights.reduce((a, b) => a + b, 0)
+
+    weights = weights.map((baseWeight, i) => {
+      const r = candidates[i]
+
+      const w = baseWeight / totalWeight
+
+      const l1 = state.lastPicked[r] ?? 0
+      const l2 = state.secondLastPicked[r] ?? 0
+
+      const f1 = 2 * w * l1 + 2 * w - 1
+      const f2 = w * l2 + w - 1
+
+      let f = 0.75 * f1 + 0.25 * f2
+
+      f = clamp(f, 0.01, 100)
+
+      return w * f
+    })
+
     const row = random.weightedPick(candidates, weights)
+
+    for (const r of candidates) {
+      state.lastPicked[r]++
+      state.secondLastPicked[r]++
+    }
+
+    state.secondLastPicked[row] = state.lastPicked[row]
+    state.lastPicked[row] = 0
 
     const x = random.range(SPAWN_X_MIN, SPAWN_X_MAX)
     const def = zombies[kind]

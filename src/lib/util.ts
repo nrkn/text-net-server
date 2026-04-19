@@ -80,3 +80,6 @@ export const seq = <T>(length: number, map: (index: number) => T) =>
 export const cloneMap = <K, V>(map: Map<K, V>) => new Map<K, V>(map)
 
 export const repeat = <T>(times: number, value: T) => seq(times, () => value)
+
+export const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value))
