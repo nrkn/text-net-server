@@ -81,7 +81,10 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
 
   // set initial cooldown
   // starter plants ready immediately, shorter delay than usual on others
-  for (const plant of plantNames) {
+  
+  const pnames = level.plantWhitelist || plantNames
+
+  for (const plant of pnames) {
     const def = plants[plant]
 
     const cd = (

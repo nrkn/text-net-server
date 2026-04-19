@@ -16,10 +16,14 @@ to play out slightly differently so look into adding ranges to more things
 towers should have optional ranges (puff/chomper etc) and infinite if not set,
 but can wait til we have those plants
 
+---
+
+armour - we currently just roll it into hp - we will need this later though
+
 ## done
 
-nb - these are just sketches, didn't necessarily implement them exactly 
-like this
+nb - these are just sketches, it's important to note that we didn't necessarily 
+implement them exactly like the sketch, we just followed the general intent
 
 ---
 

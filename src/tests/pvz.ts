@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
-import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
+import { PlantName, PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
 
 import {
   PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, FIXED_TICK, SPAWN_X_MAX,
@@ -40,6 +40,9 @@ const newGame = () => send(
 
 const hasEvent = (state: PvzState, substring: string) =>
   state.tickEvents.some(e => e.includes(substring))
+
+const readyCd = (state: PvzState, name: PlantName) =>
+  state.nextBuy.get(name) || 0
 
 // derive test constants from level/plant defs
 const level = levels[0]
@@ -330,7 +333,10 @@ describe('advanceUntil', () => {
   })
 
   it('plantReady returns immediately when no cooldowns active', () => {
-    const before = newGame()
+    const s0 = newGame()
+    // advance past all initial buy cooldowns first
+    const maxCd = Math.max(...[...s0.nextBuy.values()])
+    const before = send(s0, { type: 'advance', seconds: maxCd })
     const timeBefore = before.time
 
     const s = send(before,
@@ -683,7 +689,7 @@ const testLevel = createLevel({
   initialSun: 1000,
   plantWhitelist: ['sunflower', 'peashooter', 'cherryBomb'],
   waves: [
-    { startTime: 10, fixed: ['normal', 'normal'], pool: ['cone'] }
+    { startTime: 40, fixed: ['normal', 'normal'], pool: ['cone'] }
   ]
 })
 
@@ -700,8 +706,9 @@ const cherry = plants['cherryBomb']
 
 describe('cherry bomb', () => {
   it('deducts sun and sets buy cooldown', () => {
-    const s = send(newGameTest(),
-      { type: 'advance', seconds: 1 },
+    const s0 = newGameTest()
+    const s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'cherryBomb') },
       { type: 'place', plantName: 'cherryBomb', row: 2, col: 5 }
     )
 
@@ -745,9 +752,10 @@ describe('cherry bomb', () => {
   })
 
   it('does not destroy other plants in blast radius', () => {
-    const s = send(newGameTest(),
+    const s0 = newGameTest()
+    const s = send(s0,
       { type: 'place', plantName: 'sunflower', row: 2, col: 4 },
-      { type: 'advance', seconds: 1 },
+      { type: 'advance', seconds: readyCd(s0, 'cherryBomb') },
       { type: 'place', plantName: 'cherryBomb', row: 2, col: 5 },
       { type: 'advance', seconds: cherry.actionCd + 0.1 }
     )
@@ -769,7 +777,7 @@ const wallnutLevel = createLevel({
   plantWhitelist: ['peashooter', 'sunflower', 'wallnut'],
   spawnRows: [2],
   waves: [
-    { startTime: 10, fixed: ['normal', 'normal'] }
+    { startTime: 30, fixed: ['normal', 'normal'] }
   ]
 })
 
@@ -786,7 +794,9 @@ const wallnut = plants['wallnut']
 
 describe('wallnut', () => {
   it('places and survives advance without error', () => {
-    const s = send(newWallnutGame(),
+    const s0 = newWallnutGame()
+    const s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'wallnut') },
       { type: 'place', plantName: 'wallnut', row: 2, col: 5 },
       { type: 'advance', seconds: 5 }
     )
@@ -800,7 +810,9 @@ describe('wallnut', () => {
   })
 
   it('never performs an action', () => {
-    const s = send(newWallnutGame(),
+    const s0 = newWallnutGame()
+    const s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'wallnut') },
       { type: 'place', plantName: 'wallnut', row: 2, col: 5 },
       { type: 'advance', seconds: 30 }
     )
@@ -810,9 +822,12 @@ describe('wallnut', () => {
   })
 
   it('absorbs zombie bites', () => {
-    const s = send(newWallnutGame(),
+    const s0 = newWallnutGame()
+    const wallCd = readyCd(s0, 'wallnut')
+    const s = send(s0,
+      { type: 'advance', seconds: wallCd },
       { type: 'place', plantName: 'wallnut', row: 2, col: 8 },
-      { type: 'advance', seconds: wallnutFirstSpawn + 15 }
+      { type: 'advance', seconds: wallnutFirstSpawn - wallCd + 15 }
     )
 
     const plant = [...s.plants.values()].find(p => p.kind === 'wallnut')
@@ -1264,7 +1279,9 @@ const newMineGame = () => send(
 
 describe('potato mine', () => {
   it('arms after actionCd', () => {
-    const s = send(newMineGame(),
+    const s0 = newMineGame()
+    const s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'potatoMine') },
       { type: 'place', plantName: 'potatoMine', row: 2, col: 5 },
       { type: 'advance', seconds: mineDef.actionCd + 0.1 }
     )
@@ -1277,7 +1294,9 @@ describe('potato mine', () => {
   })
 
   it('does not arm before actionCd', () => {
-    const s = send(newMineGame(),
+    const s0 = newMineGame()
+    const s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'potatoMine') },
       { type: 'place', plantName: 'potatoMine', row: 2, col: 5 },
       { type: 'advance', seconds: mineDef.actionCd - 1 }
     )
@@ -1289,7 +1308,9 @@ describe('potato mine', () => {
   })
 
   it('explodes on zombie contact when armed', () => {
-    let s = send(newMineGame(),
+    const s0 = newMineGame()
+    let s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'potatoMine') },
       { type: 'place', plantName: 'potatoMine', row: 2, col: 5 },
       { type: 'advance', seconds: mineDef.actionCd + 0.1 }
     )
@@ -1311,7 +1332,9 @@ describe('potato mine', () => {
   })
 
   it('is vulnerable while arming (zombie eats it)', () => {
-    let s = send(newMineGame(),
+    const s0 = newMineGame()
+    let s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'potatoMine') },
       { type: 'place', plantName: 'potatoMine', row: 2, col: 5 }
     )
 
@@ -1329,7 +1352,9 @@ describe('potato mine', () => {
   })
 
   it('kills only the triggering zombie', () => {
-    let s = send(newMineGame(),
+    const s0 = newMineGame()
+    let s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'potatoMine') },
       { type: 'place', plantName: 'potatoMine', row: 2, col: 5 },
       { type: 'advance', seconds: mineDef.actionCd + 0.1 }
     )
@@ -1370,7 +1395,9 @@ const newVaultGame = () => send(
 
 describe('pole vaulter', () => {
   it('vaults over first plant', () => {
-    let s = send(newVaultGame(),
+    const s0 = newVaultGame()
+    let s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'wallnut') },
       { type: 'place', plantName: 'wallnut', row: 2, col: 5 }
     )
 
@@ -1393,7 +1420,9 @@ describe('pole vaulter', () => {
   })
 
   it('speed changes after vaulting', () => {
-    let s = send(newVaultGame(),
+    const s0 = newVaultGame()
+    let s = send(s0,
+      { type: 'advance', seconds: readyCd(s0, 'wallnut') },
       { type: 'place', plantName: 'wallnut', row: 2, col: 5 }
     )
 
@@ -1415,9 +1444,12 @@ describe('pole vaulter', () => {
   })
 
   it('bites second plant normally after vaulting', () => {
-    let s = send(newVaultGame(),
+    const s0 = newVaultGame()
+    const wallCd = readyCd(s0, 'wallnut')
+    let s = send(s0,
+      { type: 'advance', seconds: wallCd },
       { type: 'place', plantName: 'wallnut', row: 2, col: 5 },
-      { type: 'advance', seconds: 31 },
+      { type: 'advance', seconds: wallnut.buyCd + 1 },
       { type: 'place', plantName: 'wallnut', row: 2, col: 3 }
     )
 
@@ -1448,6 +1480,9 @@ describe('pole vaulter', () => {
 describe('plant-on-zombie push fix', () => {
   it('zombie stays in place when plant placed on its tile', () => {
     let s = newVaultGame()
+
+    // advance past wallnut initial buy cooldown
+    s = send(s, { type: 'advance', seconds: readyCd(s, 'wallnut') })
 
     const zDef = zombies['normal']
     // place zombie at x = 5.3 (tile col 5)
@@ -1578,11 +1613,14 @@ describe('snow pea', () => {
   })
 
   it('frozen zombie bites at half rate', () => {
-    // place snowPea to freeze, then wallnut for zombie to bite
-    const s = send(newSnowGame(),
+    // place snowPea first (cd=0), advance to clear wallnut cd, then place wallnut
+    // keep second advance short so snowPea doesn't kill the zombie
+    const s0 = newSnowGame()
+    const s = send(s0,
       { type: 'place', plantName: 'snowPea', row: 2, col: 7 },
+      { type: 'advance', seconds: readyCd(s0, 'wallnut') },
       { type: 'place', plantName: 'wallnut', row: 2, col: 8 },
-      { type: 'advance', seconds: 15 }
+      { type: 'advance', seconds: 5 }
     )
 
     const zombie = [...s.zombies.values()][0]
