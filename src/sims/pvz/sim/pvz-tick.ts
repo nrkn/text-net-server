@@ -1,11 +1,12 @@
 import { maybe, seq } from '../../../lib/util.js'
 import { createRandom, Random } from '../../random.js'
-import { plants, projectiles, zombies } from '../data/pvz-defs.js'
+import { plants as plantDefs, projectiles, zombies } from '../data/pvz-defs.js'
 
 import {
   BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP,
   WAVE_MIN_TIME, WAVE_HP_THRESHOLD, WAVE_ACCEL_DELAY,
-  SPAWN_X_MIN, SPAWN_X_MAX
+  SPAWN_X_MIN, SPAWN_X_MAX,
+  PLANT_ARMED, ZOMBIE_VAULTED
 } from '../pvz-const.js'
 
 import {
@@ -187,7 +188,7 @@ const tickFixed = (
 
     if (!ready) continue
 
-    const def = plants[plant.kind]
+    const def = plantDefs[plant.kind]
 
     const { row, col } = plant
 
@@ -244,6 +245,15 @@ const tickFixed = (
       state.plants.delete(plantId)
 
       plog('exploded selfDestruct')
+
+      continue
+    }
+
+    if (def.explodes === 'mine') {
+      plant.currState = PLANT_ARMED
+      plant.nextAction = Number.MAX_SAFE_INTEGER
+
+      plog('armed')
 
       continue
     }
@@ -352,6 +362,13 @@ const tickFixed = (
   // zombies - spawn, move, bite, house
 
   const newZombies = zombiesSpawned(state, FIXED_TICK)
+
+  // log waveStarted for each new wave
+  const startedWaves = new Set(newZombies.map(z => z.waveIndex))
+
+  for (const w of startedWaves) {
+    log(`waveStarted ${w}`)
+  }
 
   for (const { kind, waveIndex } of newZombies) {
     const level = getLevel(state.levelId)
@@ -485,22 +502,60 @@ const tickFixed = (
       continue
     }
 
-    // if moving would land inside a plant tile, set zombie.x to plant.col + 1
-    // eg, just to the right of the plant
-    // no zombie can move fast enough to pass through a plant tile completely
-    // in 1 FIXED_TICK, but do keep this in mind in case you decide to add
-    // a super fast zombie
+    // if moving would land inside a plant tile, check for special
+    // interactions (mine, vault) before defaulting to bite
 
     const plants = getRowPlants(zombie.row)
     const target = plants.find(p => p.col === newCol)
 
     if (target) {
+      const targetDef = plantDefs[target.kind]
+
+      // mine contact - armed mine explodes on zombie, destroying both
+      if (targetDef.explodes === 'mine' && target.currState === PLANT_ARMED) {
+        plantLog(target)(`exploded ${zombieSlug(zombie)}`)
+
+        killZombie(zombie)
+
+        state.plants.delete(target.id)
+
+        plantLog(target)('exploded selfDestruct')
+
+        continue
+      }
+
+      // pole vault - first plant encountered, jump over it
+      if (
+        maybe(def.transitions) && maybe(def.transitions[ZOMBIE_VAULTED]) &&
+        (zombie.currState ?? 0) !== ZOMBIE_VAULTED
+      ) {
+        const landX = target.col - 0.5
+
+        zlog(`vaulted ${plantSlug(target)}`)
+
+        zombie.x = landX
+        zombie.currState = ZOMBIE_VAULTED
+
+        const transition = def.transitions[ZOMBIE_VAULTED]
+
+        if (maybe(transition.speed)) {
+          zombie.speed = random.range(transition.speed[0], transition.speed[1])
+        }
+
+        continue
+      }
+
+      // normal bite - only snap right if newly entering the tile
+      // (fixes bug where placing a plant on a zombie pushes it right)
+      const enteringTile = Math.floor(zombie.x) !== newCol
+
+      if (enteringTile) {
+        zombie.x = target.col + 1
+      }
+
       zlog(`attacking ${plantSlug(target)}`)
 
-      zombie.x = target.col + 1
       zombie.biteTarget = target.id
-      // do they bite immediately or does one bite cooldown happen first?
-      // let's assume immediately (well, next tick)
       zombie.nextBite = state.time + FIXED_TICK
 
       continue

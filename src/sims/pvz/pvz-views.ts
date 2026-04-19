@@ -9,7 +9,6 @@ import { getZombieCountForRow } from './sim/pvz-query.js'
 
 /*
    0 1 2 3 4 5 6 7 8 9 
-
 A  L S . . . . . . Z .  
 B  L S . . . . . . . Z 
 C  L . . P . .:1:. . . 
@@ -51,8 +50,7 @@ export const pvzBoardView = (state: PvzState) => {
   const level = getLevel(state.levelId)
 
   const lines: string[] = [
-    header,
-    ''
+    header
   ]
 
   const keys: Key[] = [...singleKeys]
@@ -131,7 +129,7 @@ export const pvzBoardView = (state: PvzState) => {
 
     const zombieCount = getZombieCountForRow(state, row)
 
-    if( zombieCount > 0 ){
+    if (zombieCount > 0) {
       line += `  ${zombieCount}`
     }
 

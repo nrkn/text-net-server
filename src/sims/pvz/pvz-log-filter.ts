@@ -5,15 +5,16 @@ import { PvzLogLevel } from './pvz-const.js'
 const eventLevels: { match: string, level: PvzLogLevel }[] = [
   // minimal - significant game events
   { match: 'won', level: 'minimal' },
-  { match: 'sunDropped', level: 'minimal' },
-  { match: 'spawnedSun', level: 'minimal' },
-  { match: 'zombieSpawned', level: 'minimal' },
   { match: 'died', level: 'minimal' },
   { match: 'reachedHouse', level: 'minimal' },
   { match: 'triggeredBy', level: 'minimal' },
-  { match: 'waveAccelerated', level: 'minimal' },
+  { match: 'waveStarted', level: 'minimal' },
 
   // detailed - tactical events
+  { match: 'sunDropped', level: 'detailed' },
+  { match: 'spawnedSun', level: 'detailed' },
+  { match: 'zombieSpawned', level: 'detailed' },
+  { match: 'waveAccelerated', level: 'detailed' },
   { match: 'exploded selfDestruct', level: 'detailed' },
   { match: 'exploded', level: 'detailed' },
   { match: 'attacking', level: 'detailed' },

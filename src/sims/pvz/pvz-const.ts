@@ -48,6 +48,11 @@ export const FIXED_TICK = 0.01
 
 export const mowerSpeed = 4.16
 
+// default wave timing - wave[0] starts at FIRST_WAVE_TIME, subsequent
+// waves start WAVE_INTERVAL seconds after previous wave
+export const FIRST_WAVE_TIME = 18
+export const WAVE_INTERVAL = 28
+
 // wave acceleration - after WAVE_MIN_TIME seconds, if a wave has lost
 // WAVE_HP_THRESHOLD of its total hp, the next wave is rescheduled to 
 // start WAVE_ACCEL_DELAY seconds from now
@@ -66,3 +71,6 @@ export const pvzLogLevels = [
 export type PvzLogLevel = typeof pvzLogLevels[number]
 
 export const PVZ_DEFAULT_LOG_LEVEL: PvzLogLevel = 'minimal'
+
+export const PLANT_ARMED = 1
+export const ZOMBIE_VAULTED = 1

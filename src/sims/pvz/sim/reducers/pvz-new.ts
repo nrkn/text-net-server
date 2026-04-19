@@ -1,7 +1,8 @@
 import { maybe } from '../../../../lib/util.js'
 
 import {
-  PVZ_CURR_VERSION, BOARD_ROWS, BOARD_COLS, plantNames
+  PVZ_CURR_VERSION, BOARD_ROWS, BOARD_COLS, plantNames,
+  FIRST_WAVE_TIME, WAVE_INTERVAL
 } from '../../pvz-const.js'
 
 import { getPlantableIdx } from '../../pvz-util.js'
@@ -82,7 +83,17 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
 
   state.sun = level.initialSun
 
-  state.waveStartTimes = level.waves.map(w => w.startTime)
+  const waveStartTimes: number[] = []
+
+  for (let i = 0; i < level.waves.length; i++) {
+    const w = level.waves[i]
+
+    if (w.startTime !== undefined) waveStartTimes.push(w.startTime)
+    else if (i === 0) waveStartTimes.push(FIRST_WAVE_TIME)
+    else waveStartTimes.push(waveStartTimes[i - 1] + WAVE_INTERVAL)
+  }
+
+  state.waveStartTimes = waveStartTimes
 
   // derive levelRng from seed - separate stream from main rng
   const levelRandom = createRandom(seed)

@@ -3,6 +3,7 @@ import { level1 } from './levels/pvz-1-1.js'
 import { level2 } from './levels/pvz-1-2.js'
 import { level3 } from './levels/pvz-1-3.js'
 import { level4 } from './levels/pvz-1-4.js'
+import { level5 } from './levels/pvz-1-5.js'
 import { LevelDef, PlantDef, ProjectileDef, ZombieDef } from './pvz-def-types.js'
 
 // times are all in seconds, cd = cooldown
@@ -37,7 +38,8 @@ export const zombies: Record<ZombieName, ZombieDef> = {
     hp: 500,
     waveCost: 2,
     ...baseZombie,
-    speed: [0.37, 0.41]
+    speed: [0.37, 0.41],
+    transitions: { 1: { speed: baseZombie.speed } }
   }
 }
 
@@ -86,7 +88,7 @@ export const plants: Record<PlantName, PlantDef> = {
     buyCost: 25,
     buyCd: 30,
     actionCd: 15,
-    explodes: '1x1'
+    explodes: 'mine'
   }
 }
 
@@ -98,5 +100,8 @@ export const levels: LevelDef[] = [
   // 1-3: all rows, introduces cone via wave pool, adds cherry bomb
   level3,
   // 1-4: adds wallnut
-  level4
+  level4,
+  // 1-6: adds potatoMine, poleVaulter
+  // nb we skipped the minigame at 1-5, hence why 1-6 is level 5
+  level5
 ]

@@ -5,8 +5,9 @@ import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
 import { PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
 
-import { 
-  PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, FIXED_TICK, SPAWN_X_MAX 
+import {
+  PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, FIXED_TICK, SPAWN_X_MAX,
+  PLANT_ARMED, ZOMBIE_VAULTED, FIRST_WAVE_TIME, WAVE_INTERVAL
 } from '../sims/pvz/pvz-const.js'
 
 import { replayPvzLog } from '../sims/pvz/pvz-replay.js'
@@ -14,8 +15,8 @@ import { filterTickEvents } from '../sims/pvz/pvz-log-filter.js'
 import { pvzBoardView } from '../sims/pvz/pvz-views.js'
 import { formatRow } from '../sims/pvz/pvz-util.js'
 
-import { 
-  levels, plants, zombies, projectiles 
+import {
+  levels, plants, zombies, projectiles, baseZombie
 } from '../sims/pvz/data/pvz-defs.js'
 
 import { resolveWave, currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
@@ -45,7 +46,7 @@ const level = levels[0]
 const pea = plants['peashooter']
 
 const mowerRow = level.initialMowers.findIndex(m => m)
-const firstSpawnTime = level.waves[0].startTime
+const firstSpawnTime = FIRST_WAVE_TIME
 
 describe('new', () => {
   it('initializes a playing state', () => {
@@ -369,7 +370,7 @@ describe('advanceUntil', () => {
 
 const level2 = levels[1]
 const sun = plants['sunflower']
-const level2FirstSpawn = level2.waves[0].startTime
+const level2FirstSpawn = level2.waves[0].startTime!
 
 const newGame2 = () => send(
   newState(SEED),
@@ -425,8 +426,8 @@ describe('level 1-2: mower auto-trigger', () => {
 
 describe('wave acceleration', () => {
   it('accelerates next wave when current wave HP threshold met', () => {
-    const wave1Start = level.waves[0].startTime
-    const wave2OrigStart = level.waves[1].startTime
+    const wave1Start = FIRST_WAVE_TIME
+    const wave2OrigStart = FIRST_WAVE_TIME + WAVE_INTERVAL
 
     // place peashooter that will kill wave 1 zombie
     // need enough time for ~9 hits at 1.425s cooldown + travel time
@@ -449,16 +450,39 @@ describe('wave acceleration', () => {
   })
 
   it('does not accelerate if threshold not met', () => {
-    const wave2OrigStart = level.waves[1].startTime
+    const wave2OrigStart = FIRST_WAVE_TIME + WAVE_INTERVAL
 
     // advance past wave 1 start + WAVE_MIN_TIME but with no peashooter
     // zombie is still alive, 0% hp lost
     const s = send(newGame(),
-      { type: 'advance', seconds: level.waves[0].startTime + WAVE_MIN_TIME + 1 }
+      { type: 'advance', seconds: FIRST_WAVE_TIME + WAVE_MIN_TIME + 1 }
     )
 
     assert.equal(s.waveStartTimes[1], wave2OrigStart)
     assert.ok(!hasEvent(s, 'waveAccelerated'))
+  })
+})
+
+// wave start time defaults
+
+describe('wave startTime defaults', () => {
+  it('resolves missing startTimes using FIRST_WAVE_TIME and WAVE_INTERVAL', () => {
+    // level 1-1 has no explicit startTimes
+    const s = newGame()
+
+    assert.equal(s.waveStartTimes[0], FIRST_WAVE_TIME)
+    assert.equal(s.waveStartTimes[1], FIRST_WAVE_TIME + WAVE_INTERVAL)
+    assert.equal(s.waveStartTimes[2], FIRST_WAVE_TIME + 2 * WAVE_INTERVAL)
+    assert.equal(s.waveStartTimes[3], FIRST_WAVE_TIME + 3 * WAVE_INTERVAL)
+  })
+
+  it('uses explicit startTime and chains from it', () => {
+    // level 1-2 has startTime: 50 on wave 0, rest default
+    const s2 = newGame2()
+
+    assert.equal(s2.waveStartTimes[0], 50)
+    assert.equal(s2.waveStartTimes[1], 50 + WAVE_INTERVAL)
+    assert.equal(s2.waveStartTimes[2], 50 + 2 * WAVE_INTERVAL)
   })
 })
 
@@ -589,7 +613,7 @@ describe('resolveWave', () => {
 // level 1-3
 
 const level3 = levels[2]
-const level3FirstSpawn = level3.waves[0].startTime
+const level3FirstSpawn = FIRST_WAVE_TIME
 
 const newGame3 = () => send(
   newState(SEED),
@@ -620,7 +644,7 @@ describe('level 1-3: basics', () => {
     // waves 0-1 have budget 1 (only normals), wave 2+ has budget 2+
     // advance past wave 5 so several waves can afford cone (cost 2)
     const s = send(newGame3(),
-      { type: 'advance', seconds: level3.waves[5].startTime + 1 }
+      { type: 'advance', seconds: FIRST_WAVE_TIME + 5 * WAVE_INTERVAL + 1 }
     )
 
     const kinds = new Set<string>()
@@ -665,7 +689,7 @@ const testLevel = createLevel({
 
 levels.push(testLevel)
 
-const testFirstSpawn = testLevel.waves[0].startTime
+const testFirstSpawn = testLevel.waves[0].startTime!
 
 const newGameTest = () => send(
   newState(SEED),
@@ -751,7 +775,7 @@ const wallnutLevel = createLevel({
 
 levels.push(wallnutLevel)
 
-const wallnutFirstSpawn = wallnutLevel.waves[0].startTime
+const wallnutFirstSpawn = wallnutLevel.waves[0].startTime!
 
 const newWallnutGame = () => send(
   newState(SEED),
@@ -873,12 +897,14 @@ describe('mower row deprioritization', () => {
     initialSun: 0,
     waves: [
       { startTime: wave0Start, fixed: ['normal'] },
-      { startTime: wave1Start, fixed: [
-        'normal', 'normal', 'normal', 'normal', 'normal',
-        'normal', 'normal', 'normal', 'normal', 'normal',
-        'normal', 'normal', 'normal', 'normal', 'normal',
-        'normal', 'normal', 'normal', 'normal', 'normal'
-      ] }
+      {
+        startTime: wave1Start, fixed: [
+          'normal', 'normal', 'normal', 'normal', 'normal',
+          'normal', 'normal', 'normal', 'normal', 'normal',
+          'normal', 'normal', 'normal', 'normal', 'normal',
+          'normal', 'normal', 'normal', 'normal', 'normal'
+        ]
+      }
     ]
   })
 
@@ -1024,6 +1050,7 @@ describe('replay', () => {
 const sampleEvents = [
   '5.00 sunDropped 25',
   '5.01 sunflower 3 C1 spawnedSun 25',
+  '10.00 waveStarted 0',
   '10.00 normal 7 D10.500 zombieSpawned',
   '10.50 peashooter 2 C5 fired pea 4 C5.500',
   '10.51 pea 4 C5.540 hit normal 7 D9.800',
@@ -1053,18 +1080,19 @@ describe('filterTickEvents', () => {
   it('minimal includes significant events only', () => {
     const result = filterTickEvents(sampleEvents, 'minimal')
 
-    // should include: sunDropped, spawnedSun, zombieSpawned, died x2,
-    // triggeredBy, waveAccelerated, reachedHouse, won
-    assert.ok(result.some(e => e.includes('sunDropped')))
-    assert.ok(result.some(e => e.includes('spawnedSun')))
-    assert.ok(result.some(e => e.includes('zombieSpawned')))
+    // should include: died x2, triggeredBy, reachedHouse, won, waveStarted
     assert.ok(result.some(e => e.includes('died')))
     assert.ok(result.some(e => e.includes('triggeredBy')))
-    assert.ok(result.some(e => e.includes('waveAccelerated')))
     assert.ok(result.some(e => e.includes('reachedHouse')))
     assert.ok(result.some(e => e.includes('won')))
+    assert.ok(result.some(e => e.includes('waveStarted')))
 
-    // should exclude: fired, hit, biting, attacking, exploded, exitStageRight
+    // should exclude detailed: sunDropped, spawnedSun, zombieSpawned,
+    // waveAccelerated, attacking, exploded, exitStageRight
+    assert.ok(!result.some(e => e.includes('sunDropped')))
+    assert.ok(!result.some(e => e.includes('spawnedSun')))
+    assert.ok(!result.some(e => e.includes('zombieSpawned')))
+    assert.ok(!result.some(e => e.includes('waveAccelerated')))
     assert.ok(!result.some(e => e.includes('fired')))
     assert.ok(!result.some(e => e.includes('biting')))
     assert.ok(!result.some(e => e.includes('attacking')))
@@ -1076,6 +1104,10 @@ describe('filterTickEvents', () => {
     const result = filterTickEvents(sampleEvents, 'detailed')
 
     // detailed should include everything minimal has plus:
+    assert.ok(result.some(e => e.includes('sunDropped')))
+    assert.ok(result.some(e => e.includes('spawnedSun')))
+    assert.ok(result.some(e => e.includes('zombieSpawned')))
+    assert.ok(result.some(e => e.includes('waveAccelerated')))
     assert.ok(result.some(e => e.includes('attacking')))
     assert.ok(result.some(e => e.includes('exploded selfDestruct')))
     assert.ok(result.some(e => e.includes('exitStageRight')))
@@ -1206,5 +1238,235 @@ describe('board view: projectile collapse', () => {
     const multiKeys = view.keys.filter(k => k.kind === 'multi')
 
     assert.equal(multiKeys.length, 0, 'should have no multi-keys for same-type projectiles')
+  })
+})
+
+// potato mine
+
+const mineLevel = createLevel({
+  id: 996,
+  initialSun: 1000,
+  plantWhitelist: ['peashooter', 'sunflower', 'potatoMine'],
+  spawnRows: [2],
+  waves: [
+    { startTime: 100, fixed: ['normal'] }
+  ]
+})
+
+levels.push(mineLevel)
+
+const mineDef = plants['potatoMine']
+
+const newMineGame = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 996, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
+describe('potato mine', () => {
+  it('arms after actionCd', () => {
+    const s = send(newMineGame(),
+      { type: 'place', plantName: 'potatoMine', row: 2, col: 5 },
+      { type: 'advance', seconds: mineDef.actionCd + 0.1 }
+    )
+
+    const mine = [...s.plants.values()].find(p => p.kind === 'potatoMine')
+
+    assert.ok(mine, 'mine should still exist')
+    assert.equal(mine!.currState, PLANT_ARMED)
+    assert.ok(hasEvent(s, 'armed'))
+  })
+
+  it('does not arm before actionCd', () => {
+    const s = send(newMineGame(),
+      { type: 'place', plantName: 'potatoMine', row: 2, col: 5 },
+      { type: 'advance', seconds: mineDef.actionCd - 1 }
+    )
+
+    const mine = [...s.plants.values()].find(p => p.kind === 'potatoMine')
+
+    assert.ok(mine, 'mine should still exist')
+    assert.equal(mine!.currState ?? 0, 0, 'mine should not be armed yet')
+  })
+
+  it('explodes on zombie contact when armed', () => {
+    let s = send(newMineGame(),
+      { type: 'place', plantName: 'potatoMine', row: 2, col: 5 },
+      { type: 'advance', seconds: mineDef.actionCd + 0.1 }
+    )
+
+    // clear events so we can check for exploded
+    s.tickEvents = []
+
+    // spawn zombie just to the right of the mine
+    const zDef = zombies['normal']
+    spawnZombie(s, 'normal', 2, 0, 6.05, zDef.speed[0])
+
+    // advance enough for zombie to reach col 5
+    tick(s, 10)
+
+    const mine = [...s.plants.values()].find(p => p.kind === 'potatoMine')
+    assert.equal(mine, undefined, 'mine should self-destruct')
+    assert.ok(hasEvent(s, 'exploded'))
+    assert.ok(hasEvent(s, 'selfDestruct'))
+  })
+
+  it('is vulnerable while arming (zombie eats it)', () => {
+    let s = send(newMineGame(),
+      { type: 'place', plantName: 'potatoMine', row: 2, col: 5 }
+    )
+
+    // spawn zombie right next to mine so it starts biting immediately
+    const zDef = zombies['normal']
+    spawnZombie(s, 'normal', 2, 0, 6.0, zDef.speed[0])
+
+    // advance long enough for zombie to eat through 300 hp
+    // biteDamage=4, biteCd=0.04 => 100 dps => 3s to eat 300hp
+    tick(s, 5)
+
+    const mine = [...s.plants.values()].find(p => p.kind === 'potatoMine')
+    assert.equal(mine, undefined, 'mine should be eaten before arming')
+    assert.ok(s.zombies.size > 0, 'zombie should survive (mine was not armed)')
+  })
+
+  it('kills only the triggering zombie', () => {
+    let s = send(newMineGame(),
+      { type: 'place', plantName: 'potatoMine', row: 2, col: 5 },
+      { type: 'advance', seconds: mineDef.actionCd + 0.1 }
+    )
+
+    s.tickEvents = []
+
+    const zDef = zombies['normal']
+
+    // zombie that will trigger the mine
+    spawnZombie(s, 'normal', 2, 0, 6.05, zDef.speed[0])
+    // zombie further back
+    spawnZombie(s, 'normal', 2, 0, 8.0, zDef.speed[0])
+
+    tick(s, 10)
+
+    assert.equal(s.zombies.size, 1, 'only triggering zombie should die')
+  })
+})
+
+// pole vaulter
+
+const vaultLevel = createLevel({
+  id: 995,
+  initialSun: 1000,
+  plantWhitelist: ['peashooter', 'sunflower', 'wallnut'],
+  spawnRows: [2],
+  waves: [
+    { startTime: 100, fixed: ['normal'] }
+  ]
+})
+
+levels.push(vaultLevel)
+
+const newVaultGame = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 995, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
+describe('pole vaulter', () => {
+  it('vaults over first plant', () => {
+    let s = send(newVaultGame(),
+      { type: 'place', plantName: 'wallnut', row: 2, col: 5 }
+    )
+
+    const vDef = zombies['poleVaulter']
+    spawnZombie(s, 'poleVaulter', 2, 0, 6.5, vDef.speed[0])
+
+    tick(s, 10)
+
+    const zombie = [...s.zombies.values()].find(
+      z => z.kind === 'poleVaulter'
+    )
+
+    assert.ok(zombie, 'vaulter should still exist')
+    assert.equal(zombie!.currState, ZOMBIE_VAULTED)
+    assert.ok(hasEvent(s, 'vaulted'))
+
+    // should have landed at col - 0.5 = 4.5
+    // then continued walking, so x should be <= 4.5
+    assert.ok(zombie!.x <= 4.5, `vaulter should be at or past 4.5, was ${zombie!.x}`)
+  })
+
+  it('speed changes after vaulting', () => {
+    let s = send(newVaultGame(),
+      { type: 'place', plantName: 'wallnut', row: 2, col: 5 }
+    )
+
+    const vDef = zombies['poleVaulter']
+    const preVaultSpeed = vDef.speed[0]
+    spawnZombie(s, 'poleVaulter', 2, 0, 6.05, preVaultSpeed)
+
+    tick(s, 10)
+
+    const zombie = [...s.zombies.values()].find(
+      z => z.kind === 'poleVaulter'
+    )
+
+    assert.ok(zombie, 'vaulter should still exist')
+    assert.ok(
+      zombie!.speed >= baseZombie.speed[0] && zombie!.speed <= baseZombie.speed[1],
+      `speed should be in baseZombie range [${baseZombie.speed}], was ${zombie!.speed}`
+    )
+  })
+
+  it('bites second plant normally after vaulting', () => {
+    let s = send(newVaultGame(),
+      { type: 'place', plantName: 'wallnut', row: 2, col: 5 },
+      { type: 'advance', seconds: 31 },
+      { type: 'place', plantName: 'wallnut', row: 2, col: 3 }
+    )
+
+    const vDef = zombies['poleVaulter']
+    spawnZombie(s, 'poleVaulter', 2, 0, 6.05, vDef.speed[0])
+
+    // advance enough for vault + walk to second plant + start biting
+    tick(s, 20)
+
+    assert.ok(hasEvent(s, 'vaulted'), 'should vault first plant')
+    assert.ok(hasEvent(s, 'attacking'), 'should attack second plant')
+
+    // second wallnut should have taken damage
+    const secondWall = [...s.plants.values()].find(
+      p => p.kind === 'wallnut' && p.col === 3
+    )
+
+    assert.ok(secondWall, 'second wallnut should still exist')
+    assert.ok(
+      secondWall!.hp < plants['wallnut'].hp,
+      'second wallnut should have taken bite damage'
+    )
+  })
+})
+
+// push bug fix
+
+describe('plant-on-zombie push fix', () => {
+  it('zombie stays in place when plant placed on its tile', () => {
+    let s = newVaultGame()
+
+    const zDef = zombies['normal']
+    // place zombie at x = 5.3 (tile col 5)
+    spawnZombie(s, 'normal', 2, 0, 5.3, zDef.speed[0])
+
+    const zombieBefore = [...s.zombies.values()][0]
+    const xBefore = zombieBefore.x
+
+    // place plant on same tile
+    s = send(s, { type: 'place', plantName: 'wallnut', row: 2, col: 5 })
+
+    // advance one tick
+    tick(s, FIXED_TICK)
+
+    const zombie = [...s.zombies.values()][0]
+
+    // zombie should not have been pushed right (to col + 1 = 6)
+    assert.ok(zombie.x < 6, `zombie should not be pushed right, was ${zombie.x}`)
+    // zombie should be biting
+    assert.ok(zombie.biteTarget !== undefined, 'zombie should be biting the plant')
   })
 })

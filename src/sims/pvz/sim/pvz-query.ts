@@ -156,7 +156,8 @@ export const resolveWave = (
   wave: WaveDef, waveIndex: number, levelRng: number
 ): ZombieName[] => {
   const ptMult = wave.pointMultiplier ?? 1
-  const budget = (Math.floor((waveIndex + 1) / 3) + 1) * ptMult
+  const ptExtra = wave.pointsExtra ?? 0
+  const budget = (Math.floor((waveIndex + 1) / 3) + 1) * ptMult + ptExtra
 
   // fixed spawns always happen - subtract their cost from budget
   let remaining = budget
@@ -246,4 +247,14 @@ export const getZombieCountForRow = (state: PvzState, row: number) => {
   }
 
   return count
+}
+
+export const getPlantCds = (state: PvzState) => {
+  const result = {} as Record<PlantName, number>
+
+  for (const [name, nextTime] of state.nextBuy) {
+    result[name] = Math.max(0, nextTime - state.time)
+  }
+
+  return result
 }

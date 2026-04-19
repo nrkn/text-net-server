@@ -1,4 +1,7 @@
-import { b, createLevel } from '../pvz-def-util.js'
+import { WaveDef } from '../pvz-def-types.js'
+import { b, createLevel, repz } from '../pvz-def-util.js'
+
+const wave = (): WaveDef => ({ fixed: ['normal'] })
 
 export const level3 = createLevel({
   id: 3,
@@ -13,17 +16,23 @@ export const level3 = createLevel({
   initialMowers: b(0, 1, 1, 1, 0),
   canShovel: false,
   waves: [
-    { startTime: 18, pool: ['cone'] },
-    { startTime: 46, pool: ['cone'] },
-    { startTime: 74, pool: ['cone'] },
-    { startTime: 102, pool: ['cone'] },
-    { startTime: 130, fixed: ['cone'], pool: ['cone'] },
-    { startTime: 158, pool: ['cone'] },
-    { startTime: 186, pool: ['cone'] },
-    // flag wave
+    // 1
+    wave(), 
+    // 2
+    wave(),
+    // 3
+    wave(),
+    // 4
+    { pointsExtra: 2 },
+    // 5
+    { fixed: ['cone'] },
+    // 6
+    { pointsExtra: 2, pool: ['cone'] },
+    // 7
+    { pointsExtra: 2, fixed: ['normal'], pool: ['cone'] },
+    // 8 flag wave
     {
-      startTime: 214,
-      fixed: ['cone'],
+      fixed: [...repz(5, 'normal'), 'cone'],
       pool: ['cone'],
       pointMultiplier: 2.5
     }

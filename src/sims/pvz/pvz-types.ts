@@ -81,6 +81,8 @@ export type Zombie = {
   nextBite?: number // time can next bite, if biteTargetId set
 
   waveIndex: number
+
+  currState?: number // state machine - 0/undefined = initial
 }
 
 export type Plant = {
@@ -91,7 +93,9 @@ export type Plant = {
 
   hp: number
 
-  nextAction: number // time next sun or next projectile is ready    
+  nextAction: number // time next sun or next projectile is ready
+
+  currState?: number // state machine - 0/undefined = initial
 }
 
 export type Mower = {

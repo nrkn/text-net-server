@@ -1,11 +1,11 @@
-import { TextScreen } from '../lib/view/types.js'
+import { MenuItem, TextScreen } from '../lib/view/types.js'
 import { RtrApp } from '../lib/routing/types.js'
 import { ConnectionState } from '../lib/app/types.js'
 import { useStaticRoutes, loadStaticScreen } from '../lib/static/middleware.js'
 import { Store } from '../lib/log/types.js'
 import { createLog } from '../lib/log/create-log.js'
 import { createReducerStore } from '../lib/log/create-store.js'
-import { PvzState, PvzEvent } from '../sims/pvz/pvz-types.js'
+import { PvzState, PvzEvent, PlantName } from '../sims/pvz/pvz-types.js'
 import { pvzSim } from '../sims/pvz/sim/pvz-sim.js'
 import { parsePvzEvent, formatPvzEvent } from '../sims/pvz/pvz-serialize.js'
 import { newState } from '../sims/pvz/sim/pvz-state.js'
@@ -23,7 +23,7 @@ import {
 } from '../sims/pvz/pvz-keys.js'
 
 import { LevelDef } from '../sims/pvz/data/pvz-def-types.js'
-import { currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
+import { currentWaveIndex, getPlantCds } from '../sims/pvz/sim/pvz-query.js'
 import { isPlantName } from '../sims/pvz/pvz-guards.js'
 import { parsePos, parseRow } from '../sims/pvz/pvz-util.js'
 import { Session } from '../lib/types.js'
@@ -32,6 +32,7 @@ import { screen } from '../lib/view/screen.js'
 import { input } from '../lib/view/input-path.js'
 import { menu } from '../lib/view/menu.js'
 import { p, h1 } from '../lib/view/util.js'
+import { tab } from '../lib/view/table.js'
 
 const STATIC_DIR = 'data/test-app/pvz/static'
 const LOGS_DIR = 'data/test-app/pvz/logs'
@@ -173,12 +174,6 @@ const resolveCommand = (
       }
     }
 
-    // cycle to next level
-    const current = pvzLogLevels.indexOf(
-      // we don't have the session here, so return a sentinel
-      // the route handler will resolve the current level and cycle
-      'minimal' // placeholder - route handler overrides
-    )
     return { logLevel: '__cycle' as PvzLogLevel }
   }
 
@@ -311,48 +306,55 @@ const singleKeyLegend = (level: LevelDef) => {
 
   entries.push(['pea', projectileKey])
 
-  return entries.map(([name, key]) => `${key} ${name}`).join('  ')
+  return entries.map(([name, key]) => `${key}:${name}`).join(' ')
 }
 
 const commandHelp = (state: PvzState, logLevel: PvzLogLevel) => {
   const level = levels.find(l => l.id === state.levelId)
-  const lines: string[] = []
+  const rows: string[][] = []
 
   // place
   if (level?.plantWhitelist && level.plantWhitelist.length === 1) {
-    lines.push(`P {pos} - place ${level.plantWhitelist[0]}`)
+    rows.push([`P {pos}`, ` - place ${level.plantWhitelist[0]}`])
   } else {
-    const available = level?.plantWhitelist
-      ?? Object.keys(plantKeys)
-
-    const opts = available
-      .map(name => `${plantKeys[name as keyof typeof plantKeys]}=${name}`)
-      .join(' ')
-
-    lines.push(`P {plant} {pos} - place (${opts})`)
+    rows.push([`P {plant} {pos}`, ' - place plant'])
   }
 
   // shovel
   if (level?.canShovel) {
-    lines.push('S {pos} - shovel')
+    rows.push(['S {pos}', ' - shovel'])
   }
 
   // mower
-  lines.push('M {row} - launch mower')
+  rows.push(['M {row}', ' - launch mower'])
 
   // advance
-  lines.push('A {seconds} - advance time')
+  rows.push(['A {seconds}', ' - advance time'])
 
   // wait
-  lines.push('W S,Z,P - wait for sun,zombie,plant')
+  rows.push(['W S,Z,P', ' - wait for sun,zombie,plant'])
 
   // verbosity
-  lines.push(`V {level} - log level (${logLevel})`)
+  rows.push([`V {level}`, ` - log level (${logLevel})`])
 
   // leave
-  lines.push('L - leave')
+  rows.push(['L', ' - leave'])
 
-  return lines
+  return rows
+}
+
+const plantCdsDisplay = (state: PvzState) => {
+  const plantCds = getPlantCds(state)
+
+  const plantNames = (Object.keys(plantCds) as PlantName[]).filter(
+    p => plantCds[p] > 0
+  )
+
+  if (plantNames.length === 0) return 'CD: none'
+
+  return 'CD: ' + plantNames.map(
+    p => `${plantKeys[p]} ${plantCds[p].toFixed(2)}`
+  ).join(', ')
 }
 
 const playScreen = (state: PvzState, logLevel: PvzLogLevel): TextScreen => {
@@ -367,7 +369,8 @@ const playScreen = (state: PvzState, logLevel: PvzLogLevel): TextScreen => {
     h1(`PVZ - Level ${state.levelId}`),
     p(
       `Sun: ${state.sun}  Time: ${formatTime(state.time)}  ` +
-      `Wave: ${curWave + 1} of ${waveCount}`
+      `Wave: ${curWave + 1} of ${waveCount}`,
+      plantCdsDisplay(state)
     ),
     p(...boardView.lines),
   ]
@@ -392,7 +395,7 @@ const playScreen = (state: PvzState, logLevel: PvzLogLevel): TextScreen => {
     screenParts.push(p(`Error: ${msg}`))
   }
 
-  screenParts.push(p(...commandHelp(state, logLevel)))
+  screenParts.push(tab(...commandHelp(state, logLevel)))
   screenParts.push(input('/cmd/:command'))
 
   return screen(...screenParts)
@@ -401,17 +404,28 @@ const playScreen = (state: PvzState, logLevel: PvzLogLevel): TextScreen => {
 const endScreen = (state: PvzState): TextScreen => {
   const title = state.status === 'won' ? 'You Win!' : 'Game Over'
   const message = state.status === 'won'
-    ? `You survived all waves in ${formatTime(state.time)}.`
+    ? `You survived Level ${state.levelId} in ${formatTime(state.time)}.`
     : 'The zombies reached your house.'
+
+  const items: MenuItem[] = []
+
+  if (state.status === 'won') {
+    const nextLevel = levels.find(l => l.id === state.levelId + 1)
+
+    if (nextLevel) {
+      items.push(
+        ['C', `Continue to Level ${nextLevel.id}`, `/new/${nextLevel.id}`]
+      )
+    }
+  }
+
+  items.push(['N', 'New Game', '/main'])
+  items.push(['L', 'Leave', '/leave'])
 
   return screen(
     h1(title),
     p(message),
-    menu(
-      'Commands',
-      ['N', 'New Game', '/main'],
-      ['L', 'Leave', '/leave']
-    )
+    menu('Commands', ...items)
   )
 }
 
@@ -434,7 +448,16 @@ export const setupPvzRoutes = (
       }
     }
 
-    res.send(loadStaticScreen('main', STATIC_DIR, state.session))
+    res.send(screen(
+      h1('Plants vs Zombies'),
+      'Choose a level to play.',
+      menu('Levels',
+        ...levels.map(
+          (l, i) => [`${i + 1}`, `Level ${l.id}`, `/new/${l.id}`] as MenuItem
+        ),
+        ['L', 'Leave', '/leave']
+      )
+    ))
   })
 
   app.on('/new/:level', async (req, res) => {

@@ -1,5 +1,6 @@
 import { boolish, repeat } from '../../../lib/util.js'
 import { BOARD_COLS, BOARD_ROWS } from '../pvz-const.js'
+import { ZombieName } from '../pvz-types.js'
 import { defaultLevel } from './levels/pvz-default-level.js'
 import { LevelDef, LevelDefDesign } from './pvz-def-types.js'
 
@@ -13,3 +14,5 @@ export const createLevel = (level: LevelDefDesign): LevelDef => ({
   ...defaultLevel(),
   ...level
 })
+
+export const repz = (count: number, name: ZombieName) => repeat(count, name)

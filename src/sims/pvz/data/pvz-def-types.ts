@@ -16,9 +16,12 @@ export type ZombieDef = {
   biteCd: number // time between bites
 
   waveCost: number // point cost when spawned from pool
+
+  // stat overrides per currState - eg poleVaulter slows down after vaulting
+  transitions?: Partial<Record<number, Partial<ZombieDef>>>
 }
 
-export type ExplodeType = '3x3' | '1x1'
+export type ExplodeType = '3x3' | 'mine'
 
 export type PlantDef = {
   kind: PlantName
@@ -45,11 +48,12 @@ export type ProjectileDef = {
 }
 
 export type WaveDef = {
-  startTime: number // absolute time of the wave start
+  startTime?: number // absolute time; defaults to 18 for wave[0], prev+28 for later
 
   fixed?: ZombieName[] // always spawned
   pool?: ZombieName[] // if present, budget remaining after fixed spent on pool
   pointMultiplier?: number // scales budget for flag waves etc
+  pointsExtra?: number // after multipler, add extra points to budget
 }
 
 export type LevelDef = {

@@ -1,4 +1,7 @@
+import { WaveDef } from '../pvz-def-types.js'
 import { b, createLevel } from '../pvz-def-util.js'
+
+const wave = (): WaveDef => ({ fixed: ['normal'] })
 
 export const level1 = createLevel({
   id: 1,
@@ -15,23 +18,13 @@ export const level1 = createLevel({
   initialSun: 150,
   waves: [
     // wave 1
-    {
-      startTime: 18,
-      fixed: ['normal']
-    },
+    wave(),
     // wave 2
-    {
-      startTime: 46,
-      fixed: ['normal']
-    },
+    wave(),
     // wave 3
-    {
-      startTime: 74,
-      fixed: ['normal']
-    },
+    wave(),
     // wave 4
     {
-      startTime: 102,
       fixed: ['normal', 'normal']
     }
   ],
