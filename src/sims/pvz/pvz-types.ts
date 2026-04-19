@@ -1,5 +1,6 @@
-import { 
-  advanceConditions, pvzGameStatus, plantNames, projectileNames, zombieNames 
+import {
+  advanceConditions, pvzGameStatus, plantNames, projectileNames, zombieNames,
+  effectNames
 } from './pvz-const.js'
 
 /*
@@ -9,6 +10,7 @@ import {
 export type PlantName = typeof plantNames[number]
 export type ZombieName = typeof zombieNames[number]
 export type ProjectileName = typeof projectileNames[number]
+export type EffectName = typeof effectNames[number]
 export type AdvanceCondition = typeof advanceConditions[number]
 export type PvzGameStatus = typeof pvzGameStatus[number]
 
@@ -55,6 +57,13 @@ export type PvzEvent = (
 
 export type PvzEventType = PvzEvent['type']
 
+export type Effect = {
+  kind: EffectName
+  id: number
+  effectTarget: number // the zombie id
+  until: number // when it ends
+}
+
 export type Zombie = {
   kind: ZombieName
   id: number
@@ -67,10 +76,6 @@ export type Zombie = {
 
   // remaining hp, whereas ZombieDef.hp is initial hp
   hp: number
-
-  // don't need yet - but later
-  // an effect is something like { kind: 'frozen', until: number }
-  //effects: Effect[]
 
   // not sure that we need this to be a plant id, it could just be a boolean
   // because the zombie is always in the adjacent cell to whatever plant it's 
@@ -122,7 +127,7 @@ export type PvzActionFailed = {
 }
 
 export type PvzState = {
-  time: number  
+  time: number
   levelId: number
 
   status: PvzGameStatus
@@ -137,6 +142,7 @@ export type PvzState = {
   plants: Map<number, Plant> // id -> plant
   projectiles: Map<number, Projectile> // id -> projectile
   zombies: Map<number, Zombie> // id -> zombie
+  effects: Map<number, Effect> // id -> effect
 
   // time a plant can next be bought
   nextBuy: Map<PlantName, number>

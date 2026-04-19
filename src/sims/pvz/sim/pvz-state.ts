@@ -3,6 +3,7 @@ import { BOARD_COLS, BOARD_ROWS } from '../pvz-const.js'
 import { getIdx } from '../pvz-util.js'
 
 import {
+  Effect,
   Mower, Plant, PlantName, Projectile, PvzGrid, PvzState, Zombie
 } from '../pvz-types.js'
 
@@ -75,6 +76,7 @@ export const newState = (rng = Date.now()) => {
     plants: new Map<number, Plant>(),
     projectiles: new Map<number, Projectile>(),
     zombies: new Map<number, Zombie>(),
+    effects: new Map<number,Effect>(),
 
     nextBuy: new Map<PlantName, number>(),
 
@@ -107,6 +109,7 @@ export const cloneState = (
   plants: cloneMap(state.plants),
   projectiles: cloneMap(state.projectiles),
   zombies: cloneMap(state.zombies),
+  effects: cloneMap(state.effects),
 
   nextBuy: cloneMap(state.nextBuy),
 

@@ -1,4 +1,4 @@
-import { PlantName, ProjectileName, ZombieName } from '../pvz-types.js'
+import { EffectName, PlantName, ProjectileName, ZombieName } from '../pvz-types.js'
 
 // cd = cooldown
 // all times are in seconds
@@ -44,7 +44,16 @@ export type PlantDef = {
 export type ProjectileDef = {
   kind: ProjectileName
   speed: number // tiles per second
-  damage: number
+  damage: number  
+  effect?: EffectName
+}
+
+export type EffectDef = {
+  kind: EffectName
+  effectCd: number // time it lasts for  
+  // later, we should make sure that the string key is something that exists 
+  // on zombie eg speed
+  multiply?: Record<string,number>
 }
 
 export type WaveDef = {

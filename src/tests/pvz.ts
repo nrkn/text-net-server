@@ -19,7 +19,7 @@ import {
   levels, plants, zombies, projectiles, baseZombie
 } from '../sims/pvz/data/pvz-defs.js'
 
-import { resolveWave, currentWaveIndex } from '../sims/pvz/sim/pvz-query.js'
+import { resolveWave, currentWaveIndex, getZombieEffectiveStats } from '../sims/pvz/sim/pvz-query.js'
 import { tick } from '../sims/pvz/sim/pvz-tick.js'
 import { spawnZombie } from '../sims/pvz/sim/pvz-mutate.js'
 import { WaveDef } from '../sims/pvz/data/pvz-def-types.js'
@@ -1468,5 +1468,133 @@ describe('plant-on-zombie push fix', () => {
     assert.ok(zombie.x < 6, `zombie should not be pushed right, was ${zombie.x}`)
     // zombie should be biting
     assert.ok(zombie.biteTarget !== undefined, 'zombie should be biting the plant')
+  })
+})
+
+// snow pea
+
+const snowLevel = createLevel({
+  id: 994,
+  initialSun: 1000,
+  plantWhitelist: ['snowPea', 'wallnut'],
+  spawnRows: [2],
+  waves: [
+    { startTime: 10, fixed: ['normal'] }
+  ]
+})
+
+levels.push(snowLevel)
+
+const newSnowGame = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 994, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
+describe('snow pea', () => {
+  it('ice projectile applies freeze effect', () => {
+    const s = send(newSnowGame(),
+      { type: 'place', plantName: 'snowPea', row: 2, col: 3 },
+      { type: 'advance', seconds: 15 }
+    )
+
+    assert.ok(s.effects.size > 0, 'should have an active effect')
+
+    const effect = [...s.effects.values()][0]
+
+    assert.equal(effect.kind, 'freeze')
+    assert.ok(hasEvent(s, 'frozen'))
+  })
+
+  it('frozen zombie moves at half speed', () => {
+    // game with freeze
+    const frozen = send(newSnowGame(),
+      { type: 'place', plantName: 'snowPea', row: 2, col: 3 },
+      { type: 'advance', seconds: 15 }
+    )
+
+    const fz = [...frozen.zombies.values()][0]
+
+    assert.ok(fz, 'frozen zombie should exist')
+
+    const stats = getZombieEffectiveStats(frozen, fz.id)
+
+    assert.ok(
+      Math.abs(stats.speed - fz.speed * 0.5) < 0.001,
+      `effective speed should be half: got ${stats.speed}, base ${fz.speed}`
+    )
+  })
+
+  it('freeze effect expires', () => {
+    const s = send(newSnowGame(),
+      { type: 'place', plantName: 'snowPea', row: 2, col: 3 },
+      { type: 'advance', seconds: 15 },
+      // shovel the snowPea so it stops refreshing the effect
+      { type: 'shovel', row: 2, col: 3 },
+    )
+
+    assert.ok(s.effects.size > 0, 'should have effect before expiry')
+
+    // advance past the effect duration (10s)
+    const s2 = send(s, { type: 'advance', seconds: 12 })
+
+    assert.equal(s2.effects.size, 0, 'effect should have expired')
+    assert.ok(hasEvent(s2, 'expired'))
+  })
+
+  it('freeze refreshes timer on re-hit', () => {
+    const s = send(newSnowGame(),
+      { type: 'place', plantName: 'snowPea', row: 2, col: 3 },
+      { type: 'advance', seconds: 15 }
+    )
+
+    const effectBefore = [...s.effects.values()][0]
+    const untilBefore = effectBefore.until
+
+    // advance a bit more so another ice hits
+    const s2 = send(s, { type: 'advance', seconds: 2 })
+
+    // should still be exactly 1 effect (refreshed, not duplicated)
+    assert.equal(s2.effects.size, 1, 'should still be one effect')
+
+    const effectAfter = [...s2.effects.values()][0]
+
+    assert.ok(
+      effectAfter.until > untilBefore,
+      `timer should be refreshed: ${effectAfter.until} > ${untilBefore}`
+    )
+
+    assert.ok(hasEvent(s2, 'refreshed'))
+  })
+
+  it('effect cleaned up on zombie death', () => {
+    const s = send(newSnowGame(),
+      { type: 'place', plantName: 'snowPea', row: 2, col: 3 },
+      { type: 'advance', seconds: 40 }
+    )
+
+    // zombie should be dead by now (300 hp, 20 dmg per 1.425s + travel time)
+    assert.equal(s.zombies.size, 0, 'zombie should be dead')
+    assert.equal(s.effects.size, 0, 'effects should be cleaned up')
+  })
+
+  it('frozen zombie bites at half rate', () => {
+    // place snowPea to freeze, then wallnut for zombie to bite
+    const s = send(newSnowGame(),
+      { type: 'place', plantName: 'snowPea', row: 2, col: 7 },
+      { type: 'place', plantName: 'wallnut', row: 2, col: 8 },
+      { type: 'advance', seconds: 15 }
+    )
+
+    const zombie = [...s.zombies.values()][0]
+
+    assert.ok(zombie, 'zombie should exist')
+
+    const stats = getZombieEffectiveStats(s, zombie.id)
+    const def = zombies[zombie.kind]
+
+    assert.ok(
+      Math.abs(stats.biteCd - def.biteCd * 2) < 0.001,
+      `effective biteCd should be doubled: got ${stats.biteCd}, base ${def.biteCd}`
+    )
   })
 })

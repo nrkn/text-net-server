@@ -18,6 +18,8 @@ const eventLevels: { match: string, level: PvzLogLevel }[] = [
   { match: 'exploded selfDestruct', level: 'detailed' },
   { match: 'exploded', level: 'detailed' },
   { match: 'attacking', level: 'detailed' },
+  { match: 'frozen', level: 'detailed' },
+  { match: 'expired', level: 'detailed' },
   { match: 'exitStageRight', level: 'detailed' },
 
   // verbose - per-tick noise (fired, hit, biting)

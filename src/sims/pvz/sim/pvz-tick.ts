@@ -1,21 +1,28 @@
 import { maybe, seq } from '../../../lib/util.js'
 import { createRandom, Random } from '../../random.js'
-import { plants as plantDefs, projectiles, zombies } from '../data/pvz-defs.js'
 
 import {
-  BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP,
-  WAVE_MIN_TIME, WAVE_HP_THRESHOLD, WAVE_ACCEL_DELAY,
-  SPAWN_X_MIN, SPAWN_X_MAX,
-  PLANT_ARMED, ZOMBIE_VAULTED
+  plants as plantDefs, projectiles, zombies, effects as effectDefs
+} from '../data/pvz-defs.js'
+
+import {
+  BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP, WAVE_MIN_TIME,
+  WAVE_HP_THRESHOLD, WAVE_ACCEL_DELAY, SPAWN_X_MIN, SPAWN_X_MAX, PLANT_ARMED,
+  ZOMBIE_VAULTED
 } from '../pvz-const.js'
 
 import {
-  AdvanceCondition, Mower, Plant, Projectile, PvzState, Zombie
+  AdvanceCondition, Effect, Mower, Plant, Projectile, PvzState, Zombie
 } from '../pvz-types.js'
 
 import { formatPos, formatRow } from '../pvz-util.js'
 import { issueId, spawnZombie } from './pvz-mutate.js'
-import { levelSunSpawned, plantHasTarget, resolveWave, zombiesSpawned, currentWaveIndex } from './pvz-query.js'
+
+import {
+  levelSunSpawned, plantHasTarget, resolveWave, zombiesSpawned,
+  currentWaveIndex, getZombieEffectiveStats
+} from './pvz-query.js'
+
 import { actionFail, getLevel } from './pvz-sim-util.js'
 
 // tick!
@@ -42,7 +49,9 @@ const winHandler = (state: PvzState, log: Log) => {
 export const tick = (state: PvzState, dt: number) => {
   const random = createRandom(state.rng)
 
-  const log = (entry: string) => { state.tickEvents.push(`${state.time.toFixed(2)} ${entry}`) }
+  const log = (entry: string) => {
+    state.tickEvents.push(`${state.time.toFixed(2)} ${entry}`)
+  }
 
   const maybeWin = winHandler(state, log)
 
@@ -147,12 +156,6 @@ const tickFixed = (
     log(`sunDropped ${levelSun}`)
   }
 
-  // later consider adding time - 
-  // eg it happend between state.time and state.time + FIXED_TICK and the
-  // exact time is probably useful
-  // but we don't current use logs, they're just here because we *will* need
-  // them for the UI, to report what happened
-
   const plantSlug = ({ kind, id, row, col }: Plant) =>
     `${kind} ${id} ${formatPos(row, col)}`
 
@@ -180,6 +183,23 @@ const tickFixed = (
     zombieLog(zombie)('died')
 
     state.zombies.delete(zombie.id)
+
+    for (const [id, effect] of state.effects) {
+      if (effect.effectTarget === zombie.id) state.effects.delete(id)
+    }
+  }
+
+  // effects - expire
+  for (const [id, effect] of state.effects) {
+    if (state.time >= effect.until) {
+      const target = state.zombies.get(effect.effectTarget)
+
+      if (maybe(target)) {
+        log(`${effect.kind} expired on ${zombieSlug(target)}`)
+      }
+
+      state.effects.delete(id)
+    }
   }
 
   // plants - action (sun/fire)
@@ -288,7 +308,8 @@ const tickFixed = (
 
     const zombies = getRowZombies(projectile.row)
     const target = zombies.find(z =>
-      z.x >= currX && z.x < newX + z.speed * FIXED_TICK
+      z.x >= currX &&
+      z.x < newX + getZombieEffectiveStats(state, z.id).speed * FIXED_TICK
     )
 
     projectile.x = newX
@@ -302,6 +323,38 @@ const tickFixed = (
 
       if (target.hp <= 0) {
         killZombie(target)
+      } else {
+        // apply effect if projectile has one
+        const projDef = projectiles[projectile.kind]
+
+        if (maybe(projDef.effect)) {
+          const eDef = effectDefs[projDef.effect]
+          let refreshed = false
+
+          for (const effect of state.effects.values()) {
+            if (
+              effect.kind === projDef.effect &&
+              effect.effectTarget === target.id
+            ) {
+              effect.until = state.time + eDef.effectCd
+              refreshed = true
+              break
+            }
+          }
+
+          if (!refreshed) {
+            const effect: Effect = {
+              kind: projDef.effect,
+              id: issueId(state),
+              effectTarget: target.id,
+              until: state.time + eDef.effectCd
+            }
+
+            state.effects.set(effect.id, effect)
+          }
+
+          log(`${zombieSlug(target)} frozen${refreshed ? ' refreshed' : ''}`)
+        }
       }
 
       // no need to log proj going oob
@@ -321,7 +374,8 @@ const tickFixed = (
 
     if (mower.active) {
       const targets = zombies.filter(z =>
-        z.x >= currX && z.x < newX + z.speed * FIXED_TICK
+        z.x >= currX &&
+        z.x < newX + getZombieEffectiveStats(state, z.id).speed * FIXED_TICK
       )
 
       mower.x = newX
@@ -386,7 +440,7 @@ const tickFixed = (
 
       if (delta <= 1) return 0.01
       if (delta === 2) return 0.5
-      
+
       return 1
     })
 
@@ -463,8 +517,9 @@ const tickFixed = (
 
   for (const [_zombieId, zombie] of state.zombies) {
     const def = zombies[zombie.kind]
+    const effectiveStats = getZombieEffectiveStats(state, zombie.id)
 
-    const newX = zombie.x - zombie.speed * FIXED_TICK
+    const newX = zombie.x - effectiveStats.speed * FIXED_TICK
     const newCol = Math.floor(newX)
 
     const zlog = zombieLog(zombie)
@@ -496,7 +551,7 @@ const tickFixed = (
         zombie.biteTarget = undefined
         zombie.nextBite = undefined
       } else {
-        zombie.nextBite += def.biteCd
+        zombie.nextBite += effectiveStats.biteCd
       }
 
       continue

@@ -2,7 +2,7 @@ import { parsePvzEvent } from './sims/pvz/pvz-serialize.js'
 import { replayPvzLog } from './sims/pvz/pvz-replay.js'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
-const SESSION_ID = 'E5NY2GCHA78KJXPY'
+const SESSION_ID = '52KS7JZFEU9WHAP3'
 
 const start = async (sessionId = SESSION_ID) => {
   const logPath = `data/test-app/pvz/logs/${sessionId}/pvz.log`

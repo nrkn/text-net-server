@@ -1,10 +1,17 @@
-import { PlantName, ProjectileName, ZombieName } from '../pvz-types.js'
+import { 
+  EffectName, PlantName, ProjectileName, ZombieName 
+} from '../pvz-types.js'
+
 import { level1 } from './levels/pvz-1-1.js'
 import { level2 } from './levels/pvz-1-2.js'
 import { level3 } from './levels/pvz-1-3.js'
 import { level4 } from './levels/pvz-1-4.js'
-import { level5 } from './levels/pvz-1-5.js'
-import { LevelDef, PlantDef, ProjectileDef, ZombieDef } from './pvz-def-types.js'
+import { level5 } from './levels/pvz-1-6.js'
+import { level6 } from './levels/pvz-1-7.js'
+
+import { 
+  EffectDef, LevelDef, PlantDef, ProjectileDef, ZombieDef 
+} from './pvz-def-types.js'
 
 // times are all in seconds, cd = cooldown
 
@@ -48,6 +55,12 @@ export const projectiles: Record<ProjectileName, ProjectileDef> = {
     kind: 'pea',
     speed: 4.16,
     damage: 20
+  },
+  ice: {
+    kind: 'ice',
+    speed: 4.16,
+    damage: 20,
+    effect: 'freeze'
   }
 }
 
@@ -89,6 +102,25 @@ export const plants: Record<PlantName, PlantDef> = {
     buyCd: 30,
     actionCd: 15,
     explodes: 'mine'
+  },
+  snowPea: {
+    kind: 'snowPea',
+    hp: 300,
+    buyCost: 175,
+    buyCd: 7.5,
+    actionCd: 1.425,
+    projectile: 'ice'
+  }
+}
+
+export const effects: Record<EffectName, EffectDef> = {
+  'freeze': {
+    kind: 'freeze',
+    effectCd: 10,
+    multiply: {
+      speed: 0.5,
+      biteCd: 2
+    }
   }
 }
 
@@ -103,5 +135,7 @@ export const levels: LevelDef[] = [
   level4,
   // 1-6: adds potatoMine, poleVaulter
   // nb we skipped the minigame at 1-5, hence why 1-6 is level 5
-  level5
+  level5,
+  // 1-7: adds snowPea
+  level6
 ]

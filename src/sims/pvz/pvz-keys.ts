@@ -5,7 +5,8 @@ export const plantKeys: Record<PlantName, string> = {
   peashooter: 'P',
   cherryBomb: 'X',
   wallnut: 'W',
-  potatoMine: 'M'
+  potatoMine: 'M',
+  snowPea: 'I'
 }
 
 export const zombieKeys: Record<ZombieName, string> = {
@@ -25,6 +26,7 @@ export const nameToKey: Record<string, string> = {
   ...zombieKeys,
   mower: mowerKey,
   pea: projectileKey,
+  ice: projectileKey,
   grass: grassKey
 }
 

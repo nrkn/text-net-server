@@ -1,4 +1,4 @@
-import { plants, zombies } from '../data/pvz-defs.js'
+import { plants, zombies, effects as effectDefs } from '../data/pvz-defs.js'
 import { BOARD_COLS, SUN_DROP } from '../pvz-const.js'
 import { isPos, getIdx, getPlantableIdx } from '../pvz-util.js'
 import { PvzState, PlantName, ZombieName } from '../pvz-types.js'
@@ -257,4 +257,25 @@ export const getPlantCds = (state: PvzState) => {
   }
 
   return result
+}
+
+export const getZombieEffectiveStats = (state: PvzState, zombieId: number) => {
+  const zombie = state.zombies.get(zombieId)!
+  const def = zombies[zombie.kind]
+
+  let speed = zombie.speed
+  let biteCd = def.biteCd
+
+  for (const effect of state.effects.values()) {
+    if (effect.effectTarget !== zombieId) continue
+
+    const { multiply } = effectDefs[effect.kind]
+
+    if (!maybe(multiply)) continue
+
+    if (multiply.speed !== undefined) speed *= multiply.speed
+    if (multiply.biteCd !== undefined) biteCd *= multiply.biteCd
+  }
+
+  return { speed, biteCd }
 }

@@ -1,5 +1,5 @@
 export const plantNames = [
-  'sunflower', 'peashooter', 'cherryBomb', 'wallnut', 'potatoMine'
+  'sunflower', 'peashooter', 'cherryBomb', 'wallnut', 'potatoMine', 'snowPea'
 ] as const
 
 export const zombieNames = [
@@ -7,7 +7,11 @@ export const zombieNames = [
 ] as const
 
 export const projectileNames = [
-  'pea'
+  'pea', 'ice'
+] as const
+
+export const effectNames = [
+  'freeze'
 ] as const
 
 // later, these may be parameterized, but for now, still useful conditions
