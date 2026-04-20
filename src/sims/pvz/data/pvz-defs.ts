@@ -19,7 +19,8 @@ import {
 export const baseZombie = {
   speed: [0.14, 0.19] as [number, number], // tiles per second
   biteDamage: 4,
-  biteCd: 0.04
+  biteCd: 0.04,
+  earliestWave: 1
 } as const
 
 export const zombies: Record<ZombieName, ZombieDef> = {
@@ -27,27 +28,32 @@ export const zombies: Record<ZombieName, ZombieDef> = {
     kind: 'normal',
     hp: 270,
     waveCost: 1,
+    waveWeight: 4000,
     ...baseZombie
   },
   cone: {
     kind: 'cone',
     hp: 640,
     waveCost: 2,
-    ...baseZombie
-  },
-  bucket: {
-    kind: 'bucket',
-    hp: 1370,
-    waveCost: 4,
+    waveWeight: 4000,
     ...baseZombie
   },
   poleVaulter: {
     kind: 'poleVaulter',
     hp: 500,
     waveCost: 2,
+    waveWeight: 2000,
     ...baseZombie,
+    earliestWave: 5,
     speed: [0.37, 0.41],
     transitions: { 2: { speed: baseZombie.speed } }
+  },
+  bucket: {
+    kind: 'bucket',
+    hp: 1370,
+    waveCost: 4,
+    waveWeight: 3000,
+    ...baseZombie
   }
 }
 

@@ -18,6 +18,8 @@ export type ZombieDef = {
   biteCd: number // time between bites
 
   waveCost: number // point cost when spawned from pool
+  waveWeight: number // weighting when choosing zombies for wave
+  earliestWave: number // earliest wave it can appear
 
   // stat overrides per currState - eg poleVaulter slows down after vaulting
   transitions?: Partial<Record<number, Partial<ZombieDef>>>

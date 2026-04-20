@@ -174,7 +174,7 @@ export const resolveWave = (
   wave: WaveDef, waveIndex: number, levelRng: number
 ): ZombieName[] => {
   const ptMult = wave.pointMultiplier ?? 1
-  const budget = ((waveIndex + 1) / 3 + 1) * ptMult
+  const budget = Math.floor(((waveIndex + 1) / 3 + 1) * ptMult)
 
   // fixed spawns always happen - subtract their cost from budget
   let remaining = budget
@@ -201,7 +201,8 @@ export const resolveWave = (
 
     if (affordable.length === 0) break
 
-    const pick = random.pick(affordable)
+    const weights = affordable.map(k => zombies[k].waveWeight)
+    const pick = random.weightedPick(affordable, weights)
 
     remaining -= zombies[pick].waveCost
     poolResult.push(pick)
