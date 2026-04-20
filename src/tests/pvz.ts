@@ -598,10 +598,10 @@ describe('resolveWave', () => {
       pointMultiplier: 3
     }
 
-    // waveIndex 0: budget = (floor(1/3)+1)*3 = 3, all normals at cost 1
+    // waveIndex 0: budget = (1/3 + 1) * 3 = 4, all normals at cost 1
     const result = resolveWave(wave, 0, LEVEL_RNG)
 
-    assert.equal(result.length, 3)
+    assert.equal(result.length, 4)
   })
 
   it('is deterministic with same seed', () => {

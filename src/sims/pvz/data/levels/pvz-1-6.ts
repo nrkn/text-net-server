@@ -7,8 +7,8 @@ const poolA = (): WaveDef => ({ pool: ['cone'] })
 const poolB = (): WaveDef => ({ pool: ['cone', 'poleVaulter'] })
 
 const waveA = (): WaveDef => ({ fixed: ['normal'], ...poolA() })
-const waveB = (): WaveDef => ({ pointsExtra: 2, ...poolA() })
-const waveC = (): WaveDef => ({ pointsExtra: 2, fixed: ['normal'], ...poolB() })
+const waveB = (): WaveDef => ({ ...poolA() })
+const waveC = (): WaveDef => ({ fixed: ['normal'], ...poolB() })
 
 export const level5 = createLevel({
   id: 5,

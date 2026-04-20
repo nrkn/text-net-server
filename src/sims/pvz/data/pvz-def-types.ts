@@ -70,7 +70,6 @@ export type WaveDef = {
   fixed?: ZombieName[] // always spawned
   pool?: ZombieName[] // if present, budget remaining after fixed spent on pool
   pointMultiplier?: number // scales budget for flag waves etc
-  pointsExtra?: number // after multipler, add extra points to budget
 }
 
 export type LevelDef = {

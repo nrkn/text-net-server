@@ -5,12 +5,12 @@ const poolA = (): WaveDef => ({ pool: ['cone'] })
 const poolB = (): WaveDef => ({ pool: ['cone', 'poleVaulter'] })
 
 const waveA = (): WaveDef => ({ fixed: ['normal'], ...poolA() })
-const waveB = (): WaveDef => ({ pointsExtra: 2, ...poolA() })
-const waveC = (): WaveDef => ({ pointsExtra: 2, fixed: ['normal'], ...poolB() })
-const waveD = (): WaveDef => ({ pointsExtra: 4, ...poolB() })
-const waveE = (): WaveDef => ({ pointsExtra: 4, fixed: ['normal'], ...poolB() })
-const waveF = (): WaveDef => ({ pointsExtra: 6, ...poolB() })
-const waveG = (): WaveDef => ({ pointsExtra: 6, fixed: ['normal'], ...poolB() })
+const waveB = (): WaveDef => ({ ...poolA() })
+const waveC = (): WaveDef => ({ fixed: ['normal'], ...poolB() })
+const waveD = (): WaveDef => ({ ...poolB() })
+const waveE = (): WaveDef => ({ fixed: ['normal'], ...poolB() })
+const waveF = (): WaveDef => ({ ...poolB() })
+const waveG = (): WaveDef => ({ fixed: ['normal'], ...poolB() })
 
 // note level 1-7 in real game
 export const level6 = createLevel({
@@ -40,7 +40,6 @@ export const level6 = createLevel({
     // 10 flag
     {
       pointMultiplier: 2.5,
-      pointsExtra: 4,
       fixed: repz(6, 'normal'),
       ...poolB()
     },
@@ -65,11 +64,10 @@ export const level6 = createLevel({
     // 20 flag
     {
       pointMultiplier: 2.5,
-      pointsExtra: 5,
       fixed: [
-        ...repz( 8, 'normal'), 'cone', 'poleVaulter'
+        ...repz(8, 'normal'), 'cone', 'poleVaulter'
       ],
       ...poolB()
-    }    
+    }
   ]
 })

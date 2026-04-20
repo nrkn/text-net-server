@@ -3,7 +3,7 @@ import { createLevel, repz } from '../pvz-def-util.js'
 
 const pool = (): WaveDef => ({ pool: ['cone'] })
 const waveA = (): WaveDef => ({ fixed: ['normal'], ...pool() })
-const waveB = (): WaveDef => ({ pointsExtra: 2, ...pool() })
+const waveB = (): WaveDef => ({ ...pool() })
 const waveC = (): WaveDef => ({ fixed: ['normal'], ...waveB() })
 
 export const level4 = createLevel({
@@ -31,7 +31,6 @@ export const level4 = createLevel({
     waveC(),
     // 10 flag wave
     {
-      pointsExtra: 2,
       pointMultiplier: 2.5,
       fixed: [...repz(6, 'normal'), 'cone'],
       ...pool()

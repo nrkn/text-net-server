@@ -17,19 +17,19 @@ export const level3 = createLevel({
   canShovel: false,
   waves: [
     // 1
-    wave(), 
+    wave(),
     // 2
     wave(),
     // 3
     wave(),
     // 4
-    { pointsExtra: 2 },
+    wave(),
     // 5
     { fixed: ['cone'] },
     // 6
-    { pointsExtra: 2, pool: ['cone'] },
+    { pool: ['cone'] },
     // 7
-    { pointsExtra: 2, fixed: ['normal'], pool: ['cone'] },
+    { fixed: ['normal'], pool: ['cone'] },
     // 8 flag wave
     {
       fixed: [...repz(5, 'normal'), 'cone'],

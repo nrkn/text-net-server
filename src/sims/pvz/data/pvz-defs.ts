@@ -1,5 +1,5 @@
-import { 
-  EffectName, PlantName, ProjectileName, ZombieName 
+import {
+  EffectName, PlantName, ProjectileName, ZombieName
 } from '../pvz-types.js'
 
 import { level1 } from './levels/pvz-1-1.js'
@@ -10,8 +10,8 @@ import { level5 } from './levels/pvz-1-6.js'
 import { level6 } from './levels/pvz-1-7.js'
 import { level7 } from './levels/pvz-1-8.js'
 
-import { 
-  EffectDef, LevelDef, PlantDef, ProjectileDef, ZombieDef 
+import {
+  EffectDef, LevelDef, PlantDef, ProjectileDef, ZombieDef
 } from './pvz-def-types.js'
 
 // times are all in seconds, cd = cooldown
@@ -120,6 +120,17 @@ export const plants: Record<PlantName, PlantDef> = {
     actionCd: 0,
     range: 1,
     targetBlacklist: ['poleVaulter:0', 'poleVaulter:1']
+  },
+  repeater: {
+    kind: 'repeater',
+    hp: 300,
+    buyCost: 100,
+    buyCd: 7.5,
+    // in real game, it actually fires them close together, but good enough
+    // for government work, total DPS will be the same - if we want to make it 
+    // accurate, we could use the state machine system instead
+    actionCd: 0.7125,
+    projectile: 'pea'
   }
 }
 

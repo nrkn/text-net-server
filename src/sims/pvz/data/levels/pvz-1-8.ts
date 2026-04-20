@@ -5,9 +5,9 @@ const poolA = (): WaveDef => ({ pool: ['cone', 'bucket'] })
 const poolB = (): WaveDef => ({ pool: ['cone', 'bucket', 'poleVaulter'] })
 
 const waveA = (): WaveDef => ({ fixed: ['normal'], ...poolA() })
-const waveB = (): WaveDef => ({ pointsExtra: 2, ...poolA() })
+const waveB = (): WaveDef => ({ ...poolA() })
 const waveC = (): WaveDef => ({ fixed: ['bucket'], ...poolA })
-const waveD = (): WaveDef => ({ pointsExtra: 2, fixed: ['normal'], ...poolB() })
+const waveD = (): WaveDef => ({ fixed: ['normal'], ...poolB() })
 
 // note level 1-8 in real game
 export const level7 = createLevel({
@@ -39,7 +39,7 @@ export const level7 = createLevel({
     {
       pointMultiplier: 2.5,
       fixed: [
-        ...repz( 5, 'normal'), 'cone', 'bucket'
+        ...repz(5, 'normal'), 'cone', 'bucket'
       ],
       ...poolB()
     }
