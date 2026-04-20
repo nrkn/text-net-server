@@ -27,6 +27,12 @@ implement them exactly like the sketch, we just followed the general intent
 
 ---
 
+manual mower launch - we support it but it's actually from pvz2! we left it in
+behind canLaunch on the level def (defaults false). the ux filters the command
+out and canLaunchMower rejects with launchNotAllowed when disabled.
+
+---
+
 adaptive pacing - waves are currently fixed - pvz does something like, if all
 zombies cleared, send next wave early - we need this because stalling is an
 important strat

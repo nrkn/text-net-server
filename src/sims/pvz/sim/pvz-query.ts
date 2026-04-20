@@ -115,6 +115,11 @@ export const canLaunchMower = (
   if (launchType === 'auto')
     return { ok: true } as const
 
+  const level = getLevel(state.levelId)
+
+  if (!level.canLaunch)
+    return { ok: false, reason: 'launchNotAllowed' } as const
+
   if (state.launched)
     return { ok: false, reason: 'alreadyLaunched' } as const
 

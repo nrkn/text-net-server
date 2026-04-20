@@ -8,6 +8,7 @@ export const defaultLevel = (): LevelDefDefault => ({
   initialMowers: allMowers(),
   
   canShovel: true,
+  canLaunch: false,
 
   initialSun: 50,
   firstSun: 5.5,

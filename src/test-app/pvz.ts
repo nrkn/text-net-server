@@ -326,7 +326,9 @@ const commandHelp = (state: PvzState, logLevel: PvzLogLevel) => {
   }
 
   // mower
-  rows.push(['M {row}', ' - launch mower'])
+  if (level?.canLaunch) {
+    rows.push(['M {row}', ' - launch mower'])
+  }
 
   // advance
   rows.push(['A {seconds}', ' - advance time'])

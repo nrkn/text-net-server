@@ -221,6 +221,26 @@ describe('advance', () => {
   })
 })
 
+// manual mower launch fixture - canLaunch: true
+const mowerLaunchLevel = createLevel({
+  id: 993,
+  initialSun: 50,
+  canLaunch: true,
+  initialMowers: [false, false, true, false, false],
+  plantWhitelist: ['peashooter'],
+  spawnRows: [mowerRow],
+  waves: [
+    { startTime: 30, fixed: ['normal'] }
+  ]
+})
+
+levels.push(mowerLaunchLevel)
+
+const newMowerGame = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 993, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
 describe('win and loss', () => {
   // this relies on the current level design - if we rebalance, the test needs
   // to be updated or a more sophisticated test strategy designed
@@ -242,9 +262,9 @@ describe('win and loss', () => {
 
   // as per above
   it('loses when zombie reaches house', () => {
-    // launch mower early so it sweeps an empty board and exits,
-    // then zombies arrive with no defense
-    const s = send(newGame(),
+    // use a level where mowers can be launched, launch it early so it sweeps 
+    // an empty board and exits, then zombies arrive with no defense
+    const s = send(newMowerGame(),
       { type: 'launchMower', row: mowerRow },
       { type: 'advance', seconds: 300 }
     )
@@ -256,20 +276,20 @@ describe('win and loss', () => {
 
 describe('mower', () => {
   it('launches manually', () => {
-    const s = send(newGame(), { type: 'launchMower', row: mowerRow })
+    const s = send(newMowerGame(), { type: 'launchMower', row: mowerRow })
 
     assert.equal(s.mowers.get(mowerRow)!.active, true)
     assert.equal(s.error, undefined)
   })
 
   it('rejects launch on empty row', () => {
-    const s = send(newGame(), { type: 'launchMower', row: 0 })
+    const s = send(newMowerGame(), { type: 'launchMower', row: 0 })
 
     assert.equal(s.error?.reason, 'noMowerInRow')
   })
 
   it('rejects second manual launch', () => {
-    const s = send(newGame(),
+    const s = send(newMowerGame(),
       { type: 'launchMower', row: mowerRow },
       { type: 'launchMower', row: mowerRow }
     )
@@ -278,6 +298,12 @@ describe('mower', () => {
     // first launch sets state.launched = true, so even if re-added it 
     // would fail
     assert.ok(s.error !== undefined)
+  })
+
+  it('rejects launch when canLaunch is false', () => {
+    const s = send(newGame(), { type: 'launchMower', row: mowerRow })
+
+    assert.equal(s.error?.reason, 'launchNotAllowed')
   })
 })
 

@@ -88,6 +88,9 @@ export type LevelDef = {
   // can't shovel on some levels, or don't have shovel yet
   canShovel: boolean
 
+  // manual mower launch is a pvz2 feature - off by default
+  canLaunch: boolean
+
   initialSun: number // how much player starts with 
   firstSun: number // when first sun spawns
   // nb - in real game, this is somewhat random?
