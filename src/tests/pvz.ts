@@ -7,7 +7,8 @@ import { PlantName, PvzEvent, PvzState } from '../sims/pvz/pvz-types.js'
 
 import {
   PVZ_CURR_VERSION, SUN_DROP, WAVE_MIN_TIME, FIXED_TICK, SPAWN_X_MAX,
-  PLANT_ARMED, ZOMBIE_VAULTED, FIRST_WAVE_TIME, WAVE_INTERVAL
+  PLANT_ARMED, PV_VAULTED, FIRST_WAVE_TIME, WAVE_INTERVAL,
+  SEED_BANK_SLOTS, CH_EATING
 } from '../sims/pvz/pvz-const.js'
 
 import { replayPvzLog } from '../sims/pvz/pvz-replay.js'
@@ -19,7 +20,11 @@ import {
   levels, plants, zombies, projectiles, baseZombie
 } from '../sims/pvz/data/pvz-defs.js'
 
-import { resolveWave, currentWaveIndex, getZombieEffectiveStats } from '../sims/pvz/sim/pvz-query.js'
+import {
+  resolveWave, currentWaveIndex, getZombieEffectiveStats,
+  choosePlantsRequired
+} from '../sims/pvz/sim/pvz-query.js'
+
 import { tick } from '../sims/pvz/sim/pvz-tick.js'
 import { spawnZombie } from '../sims/pvz/sim/pvz-mutate.js'
 import { WaveDef } from '../sims/pvz/data/pvz-def-types.js'
@@ -116,7 +121,7 @@ describe('place', () => {
       type: 'place', plantName: 'sunflower', row: mowerRow, col: 1
     })
 
-    assert.equal(s.error?.reason, 'notInWhitelist')
+    assert.equal(s.error?.reason, 'notInSeedBank')
   })
 
   // relies on the level design - may need to be tweaked if rebalanced
@@ -936,6 +941,7 @@ describe('mower row deprioritization', () => {
   const mowerLevel = createLevel({
     id: 998,
     initialSun: 0,
+    plantWhitelist: ['peashooter'],
     waves: [
       { startTime: wave0Start, fixed: ['normal'] },
       {
@@ -1282,6 +1288,80 @@ describe('board view: projectile collapse', () => {
   })
 })
 
+// board view - plant state markers
+
+describe('board view: plant state markers', () => {
+  const viewGame = () => send(
+    newState(SEED),
+    { type: 'new', levelId: 1, seed: SEED, version: PVZ_CURR_VERSION }
+  )
+
+  it('unarmed potato mine renders with comma delimiters', () => {
+    const s = viewGame()
+
+    s.nextId++
+    s.plants.set(s.nextId, {
+      kind: 'potatoMine', id: s.nextId, row: mowerRow, col: 3,
+      hp: 300, nextAction: 999
+      // currState undefined = not armed
+    })
+
+    const view = pvzBoardView(s)
+    const rowLine = view.lines.find(l => l.startsWith(formatRow(mowerRow)))!
+
+    assert.ok(rowLine.includes(',M,'), `should contain ,M, but got: ${rowLine}`)
+  })
+
+  it('armed potato mine renders without comma delimiters', () => {
+    const s = viewGame()
+
+    s.nextId++
+    s.plants.set(s.nextId, {
+      kind: 'potatoMine', id: s.nextId, row: mowerRow, col: 3,
+      hp: 300, nextAction: 999,
+      currState: PLANT_ARMED
+    })
+
+    const view = pvzBoardView(s)
+    const rowLine = view.lines.find(l => l.startsWith(formatRow(mowerRow)))!
+
+    assert.ok(!rowLine.includes(',M,'), `should not contain ,M, but got: ${rowLine}`)
+    assert.ok(rowLine.includes(' M '), `should contain space-M-space but got: ${rowLine}`)
+  })
+
+  it('eating chomper renders with comma delimiters', () => {
+    const s = viewGame()
+
+    s.nextId++
+    s.plants.set(s.nextId, {
+      kind: 'chomper', id: s.nextId, row: mowerRow, col: 3,
+      hp: 300, nextAction: 999,
+      currState: CH_EATING
+    })
+
+    const view = pvzBoardView(s)
+    const rowLine = view.lines.find(l => l.startsWith(formatRow(mowerRow)))!
+
+    assert.ok(rowLine.includes(',H,'), `should contain ,H, but got: ${rowLine}`)
+  })
+
+  it('idle chomper renders without comma delimiters', () => {
+    const s = viewGame()
+
+    s.nextId++
+    s.plants.set(s.nextId, {
+      kind: 'chomper', id: s.nextId, row: mowerRow, col: 3,
+      hp: 300, nextAction: 999
+    })
+
+    const view = pvzBoardView(s)
+    const rowLine = view.lines.find(l => l.startsWith(formatRow(mowerRow)))!
+
+    assert.ok(!rowLine.includes(',H,'), `should not contain ,H, but got: ${rowLine}`)
+    assert.ok(rowLine.includes(' H '), `should contain space-H-space but got: ${rowLine}`)
+  })
+})
+
 // potato mine
 
 const mineLevel = createLevel({
@@ -1437,7 +1517,7 @@ describe('pole vaulter', () => {
     )
 
     assert.ok(zombie, 'vaulter should still exist')
-    assert.equal(zombie!.currState, ZOMBIE_VAULTED)
+    assert.equal(zombie!.currState, PV_VAULTED)
     assert.ok(hasEvent(s, 'vaulting'))
 
     // should have landed at col - 0.5 = 4.5
@@ -1529,6 +1609,52 @@ describe('plant-on-zombie push fix', () => {
     assert.ok(zombie.x < 6, `zombie should not be pushed right, was ${zombie.x}`)
     // zombie should be biting
     assert.ok(zombie.biteTarget !== undefined, 'zombie should be biting the plant')
+  })
+})
+
+// chomper through wallnut
+
+const chomperWallLevel = createLevel({
+  id: 991,
+  initialSun: 1000,
+  plantWhitelist: ['chomper', 'wallnut'],
+  spawnRows: [2],
+  waves: [
+    { startTime: 200, fixed: ['normal'] }
+  ]
+})
+
+levels.push(chomperWallLevel)
+
+const newChomperWallGame = () => send(
+  newState(SEED),
+  { type: 'new', levelId: 991, seed: SEED, version: PVZ_CURR_VERSION }
+)
+
+describe('chomper through wallnut', () => {
+  it('eats zombie biting a wallnut in front of it', () => {
+    let s = newChomperWallGame()
+
+    // place chomper at col 5, wallnut at col 6
+    s = send(s, { type: 'place', plantName: 'chomper', row: 2, col: 5 })
+    s = send(s, { type: 'advance', seconds: readyCd(s, 'wallnut') })
+    s = send(s, { type: 'place', plantName: 'wallnut', row: 2, col: 6 })
+
+    // spawn zombie just outside chomper range
+    const zDef = zombies['normal']
+    spawnZombie(s, 'normal', 2, 0, 7.1, zDef.speed[0])
+
+    // advance: zombie walks to wallnut, chomper locks on and eats it
+    // walk ~0.72s + CH_BITE_DELAY 0.7s = ~1.42s, give margin
+    tick(s, 2)
+
+    // zombie should have been eaten through the wallnut
+    assert.equal(s.zombies.size, 0, 'chomper should have eaten the zombie')
+    assert.ok(hasEvent(s, 'ate'), 'should have an ate event')
+
+    // wallnut should still be alive
+    const wallnut = [...s.plants.values()].find(p => p.kind === 'wallnut')
+    assert.ok(wallnut, 'wallnut should still exist')
   })
 })
 
@@ -1660,5 +1786,132 @@ describe('snow pea', () => {
       Math.abs(stats.biteCd - def.biteCd * 2) < 0.001,
       `effective biteCd should be doubled: got ${stats.biteCd}, base ${def.biteCd}`
     )
+  })
+})
+
+// seed bank
+
+describe('seed bank', () => {
+  // create a level with no whitelist so pool = all 7 plants > 6 slots
+  const chooseLevel = createLevel({
+    id: 900,
+    initialSun: 200,
+    waves: [
+      { startTime: 30, fixed: ['normal'] }
+    ]
+  })
+
+  levels.push(chooseLevel)
+
+  const newChooseGame = () => send(
+    newState(SEED),
+    { type: 'new', levelId: 900, seed: SEED, version: PVZ_CURR_VERSION }
+  )
+
+  const pick6: PlantName[] = [
+    'peashooter', 'sunflower', 'cherryBomb', 'wallnut', 'potatoMine', 'snowPea'
+  ]
+
+  it('auto-populates seedBank when pool fits slots', () => {
+    // level 1 has 1 plant in whitelist, fits in 6 slots
+    const s = newGame()
+
+    assert.ok(!choosePlantsRequired(s), 'should not require choosing')
+    assert.deepEqual(s.seedBank, ['peashooter'])
+  })
+
+  it('leaves seedBank empty when choosing is required', () => {
+    const s = newChooseGame()
+
+    assert.ok(choosePlantsRequired(s), 'should require choosing')
+    assert.deepEqual(s.seedBank, [])
+  })
+
+  it('accepts valid choosePlants event', () => {
+    const s = send(newChooseGame(), {
+      type: 'choosePlants', seedBank: pick6
+    })
+
+    assert.deepEqual(s.seedBank, pick6)
+    assert.equal(s.error, undefined)
+  })
+
+  it('gates other events until plants are chosen', () => {
+    const s = send(newChooseGame(), {
+      type: 'advance', seconds: 1
+    })
+
+    assert.equal(s.status, 'unplayable')
+    assert.equal(s.error?.reason, 'plantsNotChosen')
+  })
+
+  it('allows play after choosing', () => {
+    const s = send(newChooseGame(),
+      { type: 'choosePlants', seedBank: pick6 },
+      { type: 'place', plantName: 'peashooter', row: 2, col: 1 }
+    )
+
+    assert.equal(s.plants.size, 1)
+    assert.equal(s.error, undefined)
+  })
+
+  it('rejects plant not in seedBank', () => {
+    const s = send(newChooseGame(),
+      { type: 'choosePlants', seedBank: pick6 },
+      { type: 'place', plantName: 'chomper', row: 2, col: 1 }
+    )
+
+    assert.equal(s.error?.reason, 'notInSeedBank')
+  })
+
+  it('rejects wrong count', () => {
+    const s = send(newChooseGame(), {
+      type: 'choosePlants',
+      seedBank: ['peashooter', 'sunflower'] as PlantName[]
+    })
+
+    assert.equal(s.error?.reason, 'wrongCount')
+  })
+
+  it('rejects duplicates', () => {
+    const s = send(newChooseGame(), {
+      type: 'choosePlants',
+      seedBank: [
+        'peashooter', 'peashooter', 'sunflower',
+        'wallnut', 'potatoMine', 'snowPea'
+      ] as PlantName[]
+    })
+
+    assert.equal(s.error?.reason, 'duplicatePlants')
+  })
+
+  it('rejects choosing when not required', () => {
+    const s = send(newGame(), {
+      type: 'choosePlants',
+      seedBank: ['peashooter'] as PlantName[]
+    })
+
+    assert.equal(s.error?.reason, 'chooseNotRequired')
+  })
+
+  it('rejects choosing twice', () => {
+    const s = send(newChooseGame(),
+      { type: 'choosePlants', seedBank: pick6 },
+      { type: 'choosePlants', seedBank: pick6 }
+    )
+
+    assert.equal(s.error?.reason, 'alreadyChosen')
+  })
+
+  it('sets cooldowns for chosen plants', () => {
+    const s = send(newChooseGame(), {
+      type: 'choosePlants', seedBank: pick6
+    })
+
+    for (const name of pick6) {
+      assert.ok(s.nextBuy.has(name), `should have cd for ${name}`)
+    }
+
+    assert.ok(!s.nextBuy.has('chomper'), 'unchosen plant should have no cd')
   })
 })

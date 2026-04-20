@@ -1,5 +1,7 @@
 import { maybe, seq } from '../../lib/util.js'
-import { BOARD_COLS, BOARD_ROWS, projectileNames } from './pvz-const.js'
+import {
+  BOARD_COLS, BOARD_ROWS, PLANT_ARMED, CH_EATING
+} from './pvz-const.js'
 import { nameToKey } from './pvz-keys.js'
 import { formatPos, formatRow, getIdx } from './pvz-util.js'
 import { PvzState } from './pvz-types.js'
@@ -42,9 +44,6 @@ type MultiKey = {
 
 type Key = SingleKey | MultiKey
 
-const isProjectile = (name: string) =>
-  (projectileNames as readonly string[]).includes(name)
-
 export const pvzBoardView = (state: PvzState) => {
   const grid = stateToGrid(state)
   const level = getLevel(state.levelId)
@@ -66,6 +65,7 @@ export const pvzBoardView = (state: PvzState) => {
 
     let line = `${formatRow(row)} `
     let prevMulti = false
+    let prevState = false
 
     for (let col = 0; col < BOARD_COLS; col++) {
       const contents: string[] = []
@@ -74,19 +74,30 @@ export const pvzBoardView = (state: PvzState) => {
       const tile = grid.data[idx]
 
       if (maybe(tile.mower)) contents.push('mower')
-      if (maybe(tile.plant)) contents.push(state.plants.get(tile.plant)!.kind)
 
-      contents.push(
-        ...tile.projectiles.map(id => state.projectiles.get(id)!.kind)
-      )
+      if (maybe(tile.plant)) {
+        const plant = state.plants.get(tile.plant)!
+
+        if (plant.kind === 'potatoMine' && plant.currState !== PLANT_ARMED) {
+          contents.push('mine:arming')
+        } else if (plant.kind === 'chomper' && plant.currState === CH_EATING) {
+          contents.push('chomper:eating')
+        } else {
+          contents.push(plant.kind)
+        }
+      }
+
+      for (const id of tile.projectiles) {
+        contents.push('projectile')
+      }
 
       contents.push(...tile.zombies.map(id => state.zombies.get(id)!.kind))
 
       // collapse projectile overlaps - projectiles are transient and add
       // noise when sharing a tile with a plant or zombie
-      const hasProjectile = contents.some(isProjectile)
+      const hasProjectile = contents.includes('projectile')
       const nonProjectiles = hasProjectile
-        ? contents.filter(n => !isProjectile(n))
+        ? contents.filter(n => n !== 'projectile')
         : contents
 
       // only collapse if there's something else to show
@@ -96,8 +107,17 @@ export const pvzBoardView = (state: PvzState) => {
         : [...new Set(contents)]
 
       const isMulti = resolved.length > 1
+      const isState = (
+        resolved.length === 1 && resolved[0].includes(':')
+      )
 
-      line += (isMulti || prevMulti) ? ':' : ' '
+      const delim = (isMulti || prevMulti)
+        ? ':'
+        : (isState || prevState)
+          ? ','
+          : ' '
+
+      line += delim
 
       // todo - but no rush - when zombie biting plant P-Z
 
@@ -125,6 +145,7 @@ export const pvzBoardView = (state: PvzState) => {
       }
 
       prevMulti = isMulti
+      prevState = isState
     }
 
     const zombieCount = getZombieCountForRow(state, row)

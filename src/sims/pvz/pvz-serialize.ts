@@ -5,7 +5,7 @@ import {
 
 import { isAdvanceCondition, isPlantName } from './pvz-guards.js'
 import { formatPos, formatRow, parsePos, parseRow } from './pvz-util.js'
-import { PvzEvent } from './pvz-types.js'
+import { PlantName, PvzEvent } from './pvz-types.js'
 
 const dataToArgs = (data: string) =>
   data.split(' ').map(s => s.trim()).filter(s => s !== '')
@@ -74,6 +74,21 @@ export const parsePvzEvent = (data: string): PvzEvent => {
     return { type, condition }
   }
 
+  // eg 'choosePlants peashooter sunflower cherryBomb wallnut potatoMine snowPea'
+  if (type === 'choosePlants') {
+    if (args.length === 0) {
+      throw Error('choosePlants requires at least one plant name')
+    }
+
+    for (const name of args) {
+      if (!isPlantName(name)) {
+        throw Error(`Expected a plant name, saw "${name}"`)
+      }
+    }
+
+    return { type, seedBank: args as PlantName[] }
+  }
+
   throw Error(`Unexpected command "${data}"`)
 }
 
@@ -100,6 +115,10 @@ export const formatPvzEvent = (event: PvzEvent) => {
 
   if (event.type === 'advanceUntil') {
     return `advanceUntil ${event.condition}`
+  }
+
+  if (event.type === 'choosePlants') {
+    return `choosePlants ${event.seedBank.join(' ')}`
   }
 
   throw Error('Unexpected event')

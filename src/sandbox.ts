@@ -2,9 +2,11 @@ import { parsePvzEvent } from './sims/pvz/pvz-serialize.js'
 import { replayPvzLog } from './sims/pvz/pvz-replay.js'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
+let isGenerateReplay = true
+
 const SESSION_ID = '52KS7JZFEU9WHAP3'
 
-const start = async (sessionId = SESSION_ID) => {
+const generateReplay = async (sessionId = SESSION_ID) => {
   const logPath = `data/test-app/pvz/logs/${sessionId}/pvz.log`
 
   const raw = await readFile(logPath, 'utf8')
@@ -23,6 +25,12 @@ const start = async (sessionId = SESSION_ID) => {
   await writeFile(outPath, lines.join('\n') + '\n')
 
   console.log(`wrote ${lines.length} lines to ${outPath}`)
+}
+
+const start = async () => {
+  if( isGenerateReplay ){
+    await generateReplay()
+  }
 }
 
 start().catch(console.error)

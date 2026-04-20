@@ -81,16 +81,19 @@ export const PVZ_DEFAULT_LOG_LEVEL: PvzLogLevel = 'minimal'
 // start of level
 export const INSTANT_BUY_THRESHOLD = 10
 
+export const SEED_BANK_SLOTS = 6
+
 // states, used by currState
 
 export const PLANT_ARMED = 1
 
-export const ZOMBIE_VAULTING = 1
-export const ZOMBIE_VAULTED = 2
+export const PV_VAULTING = 1
+export const PV_VAULTED = 2
 
 export const CH_IDLE = 0
 export const CH_BITING = 1
 export const CH_EATING = 2
+
 export const CH_BITE_DELAY = 0.7
 export const CH_EAT_DURATION = 42
 export const CH_TOUGH_DAMAGE = 40

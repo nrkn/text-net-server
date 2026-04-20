@@ -52,9 +52,14 @@ export type PvzAdvanceUntilEvent = {
   condition: AdvanceCondition
 }
 
+export type PvzChoosePlantsEvent = {
+  type: 'choosePlants'
+  seedBank: PlantName[]
+}
+
 export type PvzEvent = (
   PvzNewEvent | PvzPlaceEvent | PvzShovelEvent | PvzLaunchMowerEvent |
-  PvzAdvanceEvent | PvzAdvanceUntilEvent
+  PvzAdvanceEvent | PvzAdvanceUntilEvent | PvzChoosePlantsEvent
 )
 
 export type PvzEventType = PvzEvent['type']
@@ -146,6 +151,10 @@ export type PvzState = {
 
   // time a plant can next be bought
   nextBuy: Map<PlantName, number>
+
+  // chosen plants for this level (auto-filled or via choosePlants event)
+  seedBank: PlantName[]
+  seedBankSlots: number
 
   // only one mower may be manually launched per level  
   // we could track which mowers have auto launched, but it can be derived

@@ -1,5 +1,5 @@
 import { cloneMap, maybe, seq } from '../../../lib/util.js'
-import { BOARD_COLS, BOARD_ROWS } from '../pvz-const.js'
+import { BOARD_COLS, BOARD_ROWS, SEED_BANK_SLOTS } from '../pvz-const.js'
 import { getIdx } from '../pvz-util.js'
 
 import {
@@ -80,6 +80,9 @@ export const newState = (rng = Date.now()) => {
 
     nextBuy: new Map<PlantName, number>(),
 
+    seedBank: [],
+    seedBankSlots: SEED_BANK_SLOTS,
+
     launched: false,
 
     // skip 0, someone somewhere might check an id for truthiness
@@ -114,6 +117,9 @@ export const cloneState = (
   effects: cloneMap(state.effects),
 
   nextBuy: cloneMap(state.nextBuy),
+
+  seedBank: [...state.seedBank],
+  seedBankSlots: state.seedBankSlots,
 
   waveStartTimes: [...state.waveStartTimes],
   levelRng: state.levelRng,

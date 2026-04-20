@@ -7,53 +7,60 @@ maintain cadence
 
 # todo
 
-chomper! this one gets complex
-
-it uses the state machine (currState on Plant instance)
-
-unlike proj based plants, it can only target its own tile and the next tile to 
-the right - we should add optional range to PlantDef, treat as infinite if not 
-set - should be used by plantHasTarget query
-
-we also need something like targetBlacklist?: ZombieName[] - it can't target 
-pole vaulters or pogo stick zombies - but it *can* target pogo zombies with no 
-stick or pole vaulters who have already vaulted - so ZombieName[] isn't enough, 
-we need to know their state! importantly though, it does *try* to bite but 
-counts as a miss
-
-0/undefined (initial) IDLE, waiting for a target - if found, sets a nextAction
-of 0.7, at which time it moves to CH_BITING
-
-1 CH_BITING 
-  if not tough flag (gargantuars etc - ZombieDef.isTough = true) insta kill and 
-  moves to CH_EATING
-  if tough, does 40 damage and moves to IDLE (0)
-  if miss (zombie died during 0.7, zombie moved out of range, is vaulting, is 
-  pogoing; we should have a  vaulting currState for pole vaulters so we can 
-  check this - also currently vaulters teleport - they should use their 
-  pre-vault speed to clear the plant instead, staying in vaulting state until 
-  they "land") go back to IDLE
-2 CH_EATING
-  can't attack, 40 second nextAction then back to IDLE
-
-state 2 is actually "got one", "chewing", "swallow", but those are only for anim
-purposes - we currently have no graphics/anim, so we'll just add 2 seconds to 
-CH_EATING to allow for those (rough estimate), 42 seconds total
-
----
-
 we have a lot of places where instead of using a random range for a number, we
 simplified by just picking a midpoint number - it would be nice for replays
 to play out slightly differently so look into adding ranges to more things
 
 ---
 
-towers should have optional ranges (puff/chomper etc) and infinite if not set,
-but can wait til we have those plants
+armour - we currently just roll it into hp - we will need this later though
 
 ---
 
-armour - we currently just roll it into hp - we will need this later though
+view 
+
+- treats pea/ice as separate, they should collapse on basis of both being proj
+- key should read O:projectile, not O:pea
+- use the same trick as :1: multi tiles to mark plant waiting state, but ,M,
+  - ,M, - sleeping potato mine (not armed yet)
+  - ,H, - chomper, digesting
+
+---
+
+chomper *can* target vaulter, pogostick if they are frozen or buttered
+
+---
+
+Seed bank! Now we have enough plants that the player has to choose
+
+We need a new player action event - PvzChoosePlantsEvent
+
+{
+  type: 'choosePlants',
+  seedBank: PlantName[]
+}
+
+We need State.maxPlants - set to 6 initially in pvz-new 
+We need State.seedBank: PlantName[]
+
+We shouldn't hard code 6 anywhere, as later you can unlock 8/9 slots
+
+If a level has no whitelist, then that level requires choosing plants (actually
+how do we handle no whitelist at present, do we fall back to plantNames or...?)
+
+If a level has a whitelist, it requires choosing plants if > 6 in whitelist
+
+The event fails if the plants aren't in the whitelist, if exactly maxPlants is 
+not chosen, if the seedBank contains dupes etc
+
+If pvz-sim detects that plants should have been chosen but they weren't, error
+and set unplayable
+
+Places that currently use the whitelist (UI etc) should use seedBank instead
+
+Player should only be able to place from the seedBank
+
+test-app needs a select plants step/menu when needed, go straight to play if not
 
 ## done
 
@@ -270,3 +277,38 @@ one lane on wave spawn - find the rough weighting used by real game and apply
 in the real game it seems that at the beginning of the level, only some plants
 are available immediately (sunflowers and ...?), especially once seed packets 
 are available - other plants have to wait out their buy cooldown
+
+---
+
+chomper! this one gets complex
+
+it uses the state machine (currState on Plant instance)
+
+unlike proj based plants, it can only target its own tile and the next tile to 
+the right - we should add optional range to PlantDef, treat as infinite if not 
+set - should be used by plantHasTarget query
+
+we also need something like targetBlacklist?: ZombieName[] - it can't target 
+pole vaulters or pogo stick zombies - but it *can* target pogo zombies with no 
+stick or pole vaulters who have already vaulted - so ZombieName[] isn't enough, 
+we need to know their state! importantly though, it does *try* to bite but 
+counts as a miss
+
+0/undefined (initial) IDLE, waiting for a target - if found, sets a nextAction
+of 0.7, at which time it moves to CH_BITING
+
+1 CH_BITING 
+  if not tough flag (gargantuars etc - ZombieDef.isTough = true) insta kill and 
+  moves to CH_EATING
+  if tough, does 40 damage and moves to IDLE (0)
+  if miss (zombie died during 0.7, zombie moved out of range, is vaulting, is 
+  pogoing; we should have a  vaulting currState for pole vaulters so we can 
+  check this - also currently vaulters teleport - they should use their 
+  pre-vault speed to clear the plant instead, staying in vaulting state until 
+  they "land") go back to IDLE
+2 CH_EATING
+  can't attack, 40 second nextAction then back to IDLE
+
+state 2 is actually "got one", "chewing", "swallow", but those are only for anim
+purposes - we currently have no graphics/anim, so we'll just add 2 seconds to 
+CH_EATING to allow for those (rough estimate), 42 seconds total

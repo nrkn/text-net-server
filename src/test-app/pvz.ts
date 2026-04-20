@@ -23,7 +23,9 @@ import {
 } from '../sims/pvz/pvz-keys.js'
 
 import { LevelDef } from '../sims/pvz/data/pvz-def-types.js'
-import { currentWaveIndex, getPlantCds } from '../sims/pvz/sim/pvz-query.js'
+import {
+  currentWaveIndex, getPlantCds, choosePlantsRequired, getPlantPool
+} from '../sims/pvz/sim/pvz-query.js'
 import { isPlantName } from '../sims/pvz/pvz-guards.js'
 import { parsePos, parseRow } from '../sims/pvz/pvz-util.js'
 import { Session } from '../lib/types.js'
@@ -204,11 +206,7 @@ const parsePlaceOrShovel = (
 const resolvePlaceCommand = (
   args: string[], state: PvzState
 ): { event: PvzEvent } | { error: string } => {
-  const level = levels.find(l => l.id === state.levelId)
-
-  if (!level) return { error: 'No level loaded' }
-
-  // P {pos} - infer plant when whitelist has one entry
+  // P {pos} - infer plant when seedBank has one entry
   // P {plant} {pos} - explicit plant
   if (args.length === 0) return { error: 'Place needs a position' }
 
@@ -217,13 +215,11 @@ const resolvePlaceCommand = (
 
   if (args.length === 1) {
     // infer plant
-    const wl = level.plantWhitelist
-
-    if (!wl || wl.length !== 1) {
+    if (state.seedBank.length !== 1) {
       return { error: 'Specify a plant (eg P S C3)' }
     }
 
-    plantName = wl[0]
+    plantName = state.seedBank[0]
     posStr = args[0]
   } else {
     const plantArg = args[0].toUpperCase()
@@ -287,11 +283,10 @@ const levelZombieKinds = (level: LevelDef) => {
   return kinds
 }
 
-const singleKeyLegend = (level: LevelDef) => {
+const singleKeyLegend = (state: PvzState, level: LevelDef) => {
   const entries: [string, string][] = []
 
-  const wl = level.plantWhitelist ?? Object.keys(plantKeys)
-  for (const name of wl) {
+  for (const name of state.seedBank) {
     const key = plantKeys[name as keyof typeof plantKeys]
     if (key) entries.push([name, key])
   }
@@ -304,7 +299,7 @@ const singleKeyLegend = (level: LevelDef) => {
 
   if (level.initialMowers.some(Boolean)) entries.push(['mower', mowerKey])
 
-  entries.push(['pea', projectileKey])
+  entries.push(['projectile', projectileKey])
 
   return entries.map(([name, key]) => `${key}:${name}`).join(' ')
 }
@@ -314,8 +309,8 @@ const commandHelp = (state: PvzState, logLevel: PvzLogLevel) => {
   const rows: string[][] = []
 
   // place
-  if (level?.plantWhitelist && level.plantWhitelist.length === 1) {
-    rows.push([`P {pos}`, ` - place ${level.plantWhitelist[0]}`])
+  if (state.seedBank.length === 1) {
+    rows.push([`P {pos}`, ` - place ${state.seedBank[0]}`])
   } else {
     rows.push([`P {plant} {pos}`, ' - place plant'])
   }
@@ -378,7 +373,7 @@ const playScreen = (state: PvzState, logLevel: PvzLogLevel): TextScreen => {
   ]
 
   // key legend
-  screenParts.push(p(singleKeyLegend(level!)))
+  screenParts.push(p(singleKeyLegend(state, level!)))
 
   if (multiLines.length > 0) {
     screenParts.push(p(...multiLines))
@@ -431,6 +426,132 @@ const endScreen = (state: PvzState): TextScreen => {
   )
 }
 
+// choose plants
+
+const getChooseSelection = (session: Session): PlantName[] => {
+  const v = session.data.pvzChooseSelection
+
+  if (Array.isArray(v)) return v as PlantName[]
+
+  return []
+}
+
+const setChooseSelection = (session: Session, selection: PlantName[]) => {
+  session.data.pvzChooseSelection = selection
+  session.dirty = true
+}
+
+type ChooseResult =
+  | { event: PvzEvent }
+  | { redirect: string }
+  | { selection: PlantName[] }
+
+const resolveChooseCommand = (
+  raw: string, state: PvzState, session: Session
+): ChooseResult => {
+  const parts = raw.trim().toUpperCase().split(/\s+/)
+  const cmd = parts[0]
+  const args = parts.slice(1)
+
+  if (!cmd) return { selection: getChooseSelection(session) }
+
+  const pool = getPlantPool(state.levelId)
+  const sel = getChooseSelection(session)
+
+  // Add plants
+  if (cmd === 'A' || cmd === 'ADD') {
+    const toAdd: PlantName[] = []
+
+    for (const arg of args) {
+      const name = keyToPlant.get(arg) ?? (
+        isPlantName(arg.toLowerCase()) ? arg.toLowerCase() as PlantName : undefined
+      )
+
+      if (!name) return { selection: sel }
+      if (!pool.includes(name)) return { selection: sel }
+      if (!sel.includes(name)) toAdd.push(name)
+    }
+
+    return { selection: [...sel, ...toAdd] }
+  }
+
+  // Remove plants
+  if (cmd === 'R' || cmd === 'REMOVE') {
+    const toRemove = new Set<PlantName>()
+
+    for (const arg of args) {
+      const name = keyToPlant.get(arg) ?? (
+        isPlantName(arg.toLowerCase()) ? arg.toLowerCase() as PlantName : undefined
+      )
+
+      if (name) toRemove.add(name)
+    }
+
+    return { selection: sel.filter(n => !toRemove.has(n)) }
+  }
+
+  // Clear
+  if (cmd === 'C' || cmd === 'CLEAR') {
+    return { selection: [] }
+  }
+
+  // Proceed
+  if (cmd === 'P' || cmd === 'PROCEED') {
+    if (sel.length !== state.seedBankSlots) {
+      return { selection: sel }
+    }
+
+    // clear session selection
+    setChooseSelection(session, [])
+
+    return {
+      event: { type: 'choosePlants', seedBank: sel }
+    }
+  }
+
+  // Leave
+  if (cmd === 'L' || cmd === 'LEAVE') {
+    setChooseSelection(session, [])
+    return { redirect: '/main' }
+  }
+
+  return { selection: sel }
+}
+
+const chooseScreen = (state: PvzState, session: Session): TextScreen => {
+  const pool = getPlantPool(state.levelId)
+  const sel = getChooseSelection(session)
+  const remaining = state.seedBankSlots - sel.length
+
+  const poolDisplay = pool.map(name => {
+    const key = plantKeys[name as keyof typeof plantKeys] ?? '?'
+    const mark = sel.includes(name) ? '*' : ' '
+    return `${mark}${key}:${name}`
+  }).join(' ')
+
+  const selDisplay = sel.length > 0
+    ? sel.map(n => plantKeys[n as keyof typeof plantKeys] ?? n).join(' ')
+    : '(empty)'
+
+  return screen(
+    h1(`Choose Plants - Level ${state.levelId}`),
+    p(
+      `Slots: ${state.seedBankSlots}  Selected: ${sel.length}  ` +
+      `Remaining: ${remaining}`
+    ),
+    p(poolDisplay),
+    p(`Selected: ${selDisplay}`),
+    tab(
+      ['A {plants}', ' - add (key or name)'],
+      ['R {plants}', ' - remove'],
+      ['C', ' - clear all'],
+      ['P', ` - proceed (need ${state.seedBankSlots})`],
+      ['L', ' - leave']
+    ),
+    input('/choose/cmd/:command')
+  )
+}
+
 export const setupPvzRoutes = (
   app: RtrApp<TextScreen>,
   state: ConnectionState
@@ -478,7 +599,56 @@ export const setupPvzRoutes = (
       version: PVZ_CURR_VERSION
     })
 
+    const gameState = store.getState()
+
+    if (choosePlantsRequired(gameState) && gameState.seedBank.length === 0) {
+      return res.redirect('/choose')
+    }
+
     return res.redirect('/play')
+  })
+
+  app.on('/choose', async (_req, res) => {
+    const store = await getOrCreateStore(state.session!.token)
+    const gameState = store.getState()
+
+    if (!choosePlantsRequired(gameState) || gameState.seedBank.length > 0) {
+      return res.redirect('/play')
+    }
+
+    res.send(chooseScreen(gameState, state.session!))
+  })
+
+  app.on('/choose/cmd/:command', async (req, res) => {
+    const store = await getOrCreateStore(state.session!.token)
+    const gameState = store.getState()
+
+    if (!choosePlantsRequired(gameState) || gameState.seedBank.length > 0) {
+      return res.redirect('/play')
+    }
+
+    const result = resolveChooseCommand(
+      req.params.command, gameState, state.session!
+    )
+
+    if ('redirect' in result) return res.redirect(result.redirect)
+
+    if ('event' in result) {
+      try {
+        await store.dispatch(result.event)
+      } catch (err: unknown) {
+        console.warn('PvZ sim threw error')
+        console.error(err)
+      }
+
+      return res.redirect('/play')
+    }
+
+    if ('selection' in result) {
+      setChooseSelection(state.session!, result.selection)
+    }
+
+    return res.redirect('/choose')
   })
 
   app.on('/play', async (_req, res) => {
@@ -487,6 +657,12 @@ export const setupPvzRoutes = (
 
     if (gameState.levelId === 0) {
       return res.redirect('/main')
+    }
+
+    if (
+      choosePlantsRequired(gameState) && gameState.seedBank.length === 0
+    ) {
+      return res.redirect('/choose')
     }
 
     if (gameState.status !== 'playing') {

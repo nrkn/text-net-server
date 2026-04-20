@@ -26,9 +26,10 @@ export const nameToKey: Record<string, string> = {
   ...plantKeys,
   ...zombieKeys,
   mower: mowerKey,
-  pea: projectileKey,
-  ice: projectileKey,
-  grass: grassKey
+  projectile: projectileKey,
+  grass: grassKey,
+  'mine:arming': 'M',
+  'chomper:eating': 'H'
 }
 
 // todo - iterate over nameToKey and throw if duplicate keys were found, so

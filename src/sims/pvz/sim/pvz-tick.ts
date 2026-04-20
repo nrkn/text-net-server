@@ -8,7 +8,7 @@ import {
 import {
   BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP, WAVE_MIN_TIME,
   WAVE_HP_THRESHOLD, WAVE_ACCEL_DELAY, SPAWN_X_MIN, SPAWN_X_MAX, PLANT_ARMED,
-  ZOMBIE_VAULTING, ZOMBIE_VAULTED, CH_IDLE, CH_BITING, CH_EATING, CH_BITE_DELAY,
+  PV_VAULTING, PV_VAULTED, CH_IDLE, CH_BITING, CH_EATING, CH_BITE_DELAY,
   CH_EAT_DURATION, CH_TOUGH_DAMAGE
 } from '../pvz-const.js'
 
@@ -679,14 +679,14 @@ const tickFixed = (
     }
 
     // mid-vault - skip all plant collision, just move
-    if ((zombie.currState ?? 0) === ZOMBIE_VAULTING) {
+    if ((zombie.currState ?? 0) === PV_VAULTING) {
       zombie.x = newX
 
       if (maybe(zombie.stateData) && zombie.x <= zombie.stateData) {
-        zombie.currState = ZOMBIE_VAULTED
+        zombie.currState = PV_VAULTED
         zombie.stateData = undefined
 
-        const transition = def.transitions?.[ZOMBIE_VAULTED]
+        const transition = def.transitions?.[PV_VAULTED]
 
         if (maybe(transition) && maybe(transition.speed)) {
           zombie.speed = random.range(transition.speed[0], transition.speed[1])
@@ -722,15 +722,15 @@ const tickFixed = (
 
       // pole vault - first plant encountered, enter vaulting state
       if (
-        maybe(def.transitions) && maybe(def.transitions[ZOMBIE_VAULTED]) &&
-        (zombie.currState ?? 0) !== ZOMBIE_VAULTING &&
-        (zombie.currState ?? 0) !== ZOMBIE_VAULTED
+        maybe(def.transitions) && maybe(def.transitions[PV_VAULTED]) &&
+        (zombie.currState ?? 0) !== PV_VAULTING &&
+        (zombie.currState ?? 0) !== PV_VAULTED
       ) {
         const landX = target.col - 0.5
 
         zlog(`vaulting ${plantSlug(target)}`)
 
-        zombie.currState = ZOMBIE_VAULTING
+        zombie.currState = PV_VAULTING
         zombie.stateData = landX
 
         // keep moving at current speed - don't snap

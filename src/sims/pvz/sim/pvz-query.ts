@@ -1,5 +1,5 @@
 import { plants, zombies, effects as effectDefs } from '../data/pvz-defs.js'
-import { BOARD_COLS, SUN_DROP } from '../pvz-const.js'
+import { BOARD_COLS, plantNames, SUN_DROP } from '../pvz-const.js'
 import { isPos, getIdx, getPlantableIdx } from '../pvz-util.js'
 
 import {
@@ -23,6 +23,15 @@ export const currentWaveIndex = (state: PvzState) => {
 
   return result
 }
+
+export const getPlantPool = (levelId: number): PlantName[] => {
+  const level = getLevel(levelId)
+
+  return level.plantWhitelist ?? [...plantNames]
+}
+
+export const choosePlantsRequired = (state: PvzState) =>
+  getPlantPool(state.levelId).length > state.seedBankSlots
 
 export const canPlant = (
   state: PvzState,
@@ -50,8 +59,8 @@ export const canPlant = (
   if (!level.plantableTiles[pIdx])
     return { ok: false, reason: 'tileBlocked' } as const
 
-  if (level.plantWhitelist && !level.plantWhitelist.includes(plantName))
-    return { ok: false, reason: 'notInWhitelist' } as const
+  if (!state.seedBank.includes(plantName))
+    return { ok: false, reason: 'notInSeedBank' } as const
 
   if (placeType === 'initial') return { ok: true } as const
 

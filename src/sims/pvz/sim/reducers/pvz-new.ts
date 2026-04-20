@@ -1,14 +1,14 @@
 import { maybe, repeat } from '../../../../lib/util.js'
 
 import {
-  PVZ_CURR_VERSION, BOARD_ROWS, BOARD_COLS, plantNames,
+  PVZ_CURR_VERSION, BOARD_ROWS, BOARD_COLS,
   FIRST_WAVE_TIME, WAVE_INTERVAL,
-  INSTANT_BUY_THRESHOLD
+  INSTANT_BUY_THRESHOLD, SEED_BANK_SLOTS
 } from '../../pvz-const.js'
 
 import { getPlantableIdx } from '../../pvz-util.js'
 import { PvzState, PvzNewEvent, Mower } from '../../pvz-types.js'
-import { canPlant } from '../pvz-query.js'
+import { canPlant, getPlantPool } from '../pvz-query.js'
 import { newState } from '../pvz-state.js'
 import { placePlant } from '../pvz-mutate.js'
 import { actionFail, getLevel } from '../pvz-sim-util.js'
@@ -36,6 +36,13 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
   // populate state with level data
 
   state.levelId = levelId
+
+  // auto-populate seedBank if pool fits in slots
+  const pool = getPlantPool(levelId)
+
+  if (pool.length <= SEED_BANK_SLOTS) {
+    state.seedBank = [...pool]
+  }
 
   for (let row = 0; row < BOARD_ROWS; row++) {
     if (level.initialMowers[row]) {
@@ -82,9 +89,7 @@ export const reducePvzNew = (state: PvzState, event: PvzNewEvent): PvzState => {
   // set initial cooldown
   // starter plants ready immediately, shorter delay than usual on others
   
-  const pnames = level.plantWhitelist || plantNames
-
-  for (const plant of pnames) {
+  for (const plant of pool) {
     const def = plants[plant]
 
     const cd = (
