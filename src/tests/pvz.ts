@@ -1438,7 +1438,7 @@ describe('pole vaulter', () => {
 
     assert.ok(zombie, 'vaulter should still exist')
     assert.equal(zombie!.currState, ZOMBIE_VAULTED)
-    assert.ok(hasEvent(s, 'vaulted'))
+    assert.ok(hasEvent(s, 'vaulting'))
 
     // should have landed at col - 0.5 = 4.5
     // then continued walking, so x should be <= 4.5
@@ -1485,7 +1485,7 @@ describe('pole vaulter', () => {
     // advance enough for vault + walk to second plant + start biting
     tick(s, 20)
 
-    assert.ok(hasEvent(s, 'vaulted'), 'should vault first plant')
+    assert.ok(hasEvent(s, 'vaulting'), 'should vault first plant')
     assert.ok(hasEvent(s, 'attacking'), 'should attack second plant')
 
     // second wallnut should have taken damage

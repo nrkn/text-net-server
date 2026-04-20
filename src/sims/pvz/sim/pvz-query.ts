@@ -1,7 +1,11 @@
 import { plants, zombies, effects as effectDefs } from '../data/pvz-defs.js'
 import { BOARD_COLS, SUN_DROP } from '../pvz-const.js'
 import { isPos, getIdx, getPlantableIdx } from '../pvz-util.js'
-import { PvzState, PlantName, ZombieName } from '../pvz-types.js'
+
+import {
+  PvzState, PlantName, Zombie, ZombieName, ZombieStateSlug
+} from '../pvz-types.js'
+
 import { getLevel } from './pvz-sim-util.js'
 import { stateToGrid } from './pvz-state.js'
 import { maybe } from '../../../lib/util.js'
@@ -227,12 +231,17 @@ export const plantHasTarget = (state: PvzState, plantId: number) => {
     throw Error(`No plant found for id "${plantId}"`)
   }
 
+  const def = plants[plant.kind]
   const { row, col } = plant
 
   for (const [_id, zombie] of state.zombies) {
     if (zombie.row !== row) continue
 
-    if (zombie.x > col) return true
+    if (zombie.x <= col) continue
+
+    if (def.range !== undefined && zombie.x > col + def.range + 1) continue
+
+    return true
   }
 
   return false
@@ -283,4 +292,43 @@ export const getZombieEffectiveStats = (state: PvzState, zombieId: number) => {
   }
 
   return { speed, biteCd }
+}
+
+export const zombieMatchesStateSlug = (
+  zombie: Zombie, slugs: ZombieStateSlug[]
+) => {
+  const zState = zombie.currState ?? 0
+
+  for (const slug of slugs) {
+    const sep = slug.lastIndexOf(':')
+    const kind = slug.slice(0, sep) as ZombieName
+    const state = Number(slug.slice(sep + 1))
+
+    if (zombie.kind === kind && zState === state) return true
+  }
+
+  return false
+}
+
+export const findChomperTarget = (
+  state: PvzState, plantId: number
+): number | undefined => {
+  const plant = state.plants.get(plantId)
+
+  if (!maybe(plant)) return undefined
+
+  const def = plants[plant.kind]
+  const { row, col } = plant
+  const maxX = maybe(def.range) ? col + def.range + 1 : Infinity
+
+  let closest: Zombie | undefined
+
+  for (const zombie of state.zombies.values()) {
+    if (zombie.row !== row) continue
+    if (zombie.x < col || zombie.x > maxX) continue
+
+    if (!closest || zombie.x < closest.x) closest = zombie
+  }
+
+  return closest?.id
 }

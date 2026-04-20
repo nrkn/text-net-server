@@ -7,6 +7,41 @@ maintain cadence
 
 # todo
 
+chomper! this one gets complex
+
+it uses the state machine (currState on Plant instance)
+
+unlike proj based plants, it can only target its own tile and the next tile to 
+the right - we should add optional range to PlantDef, treat as infinite if not 
+set - should be used by plantHasTarget query
+
+we also need something like targetBlacklist?: ZombieName[] - it can't target 
+pole vaulters or pogo stick zombies - but it *can* target pogo zombies with no 
+stick or pole vaulters who have already vaulted - so ZombieName[] isn't enough, 
+we need to know their state! importantly though, it does *try* to bite but 
+counts as a miss
+
+0/undefined (initial) IDLE, waiting for a target - if found, sets a nextAction
+of 0.7, at which time it moves to CH_BITING
+
+1 CH_BITING 
+  if not tough flag (gargantuars etc - ZombieDef.isTough = true) insta kill and 
+  moves to CH_EATING
+  if tough, does 40 damage and moves to IDLE (0)
+  if miss (zombie died during 0.7, zombie moved out of range, is vaulting, is 
+  pogoing; we should have a  vaulting currState for pole vaulters so we can 
+  check this - also currently vaulters teleport - they should use their 
+  pre-vault speed to clear the plant instead, staying in vaulting state until 
+  they "land") go back to IDLE
+2 CH_EATING
+  can't attack, 40 second nextAction then back to IDLE
+
+state 2 is actually "got one", "chewing", "swallow", but those are only for anim
+purposes - we currently have no graphics/anim, so we'll just add 2 seconds to 
+CH_EATING to allow for those (rough estimate), 42 seconds total
+
+---
+
 we have a lot of places where instead of using a random range for a number, we
 simplified by just picking a midpoint number - it would be nice for replays
 to play out slightly differently so look into adding ranges to more things

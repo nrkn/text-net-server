@@ -8,7 +8,8 @@ import {
 import {
   BOARD_COLS, BOARD_ROWS, FIXED_TICK, mowerSpeed, SUN_DROP, WAVE_MIN_TIME,
   WAVE_HP_THRESHOLD, WAVE_ACCEL_DELAY, SPAWN_X_MIN, SPAWN_X_MAX, PLANT_ARMED,
-  ZOMBIE_VAULTED
+  ZOMBIE_VAULTING, ZOMBIE_VAULTED, CH_IDLE, CH_BITING, CH_EATING, CH_BITE_DELAY,
+  CH_EAT_DURATION, CH_TOUGH_DAMAGE
 } from '../pvz-const.js'
 
 import {
@@ -20,7 +21,8 @@ import { issueId, spawnZombie } from './pvz-mutate.js'
 
 import {
   levelSunSpawned, plantHasTarget, resolveWave, zombiesSpawned,
-  currentWaveIndex, getZombieEffectiveStats
+  currentWaveIndex, getZombieEffectiveStats, findChomperTarget,
+  zombieMatchesStateSlug
 } from './pvz-query.js'
 
 import { actionFail, getLevel } from './pvz-sim-util.js'
@@ -276,6 +278,93 @@ const tickFixed = (
       plog('armed')
 
       continue
+    }
+
+    // chomper state machine
+    if (plant.kind === 'chomper') {
+      const plantState = plant.currState ?? CH_IDLE
+
+      if (plantState === CH_IDLE) {
+        const targetId = findChomperTarget(state, plantId)
+
+        if (maybe(targetId)) {
+          plant.biteTarget = targetId
+          plant.currState = CH_BITING
+          plant.nextAction = state.time + CH_BITE_DELAY
+
+          const target = state.zombies.get(targetId)!
+
+          plog(`targeting ${zombieSlug(target)}`)
+        } else {
+          plant.nextAction = state.time
+        }
+
+        continue
+      }
+
+      if (plantState === CH_BITING) {
+        const target = maybe(plant.biteTarget)
+          ? state.zombies.get(plant.biteTarget)
+          : undefined
+
+        // miss conditions: target gone, out of range, or blacklisted state
+        const inRange = maybe(target) &&
+          target.row === row &&
+          target.x >= col &&
+          (def.range === undefined || target.x <= col + def.range + 1)
+
+        const blacklisted = maybe(target) && maybe(def.targetBlacklist) &&
+          zombieMatchesStateSlug(target, def.targetBlacklist)
+
+        if (!maybe(target) || !inRange || blacklisted) {
+          plog('missed')
+
+          plant.currState = CH_IDLE
+          plant.biteTarget = undefined
+          plant.nextAction = state.time
+
+          continue
+        }
+
+        const zDef = zombies[target.kind]
+
+        if (zDef.isTough) {
+          target.hp -= CH_TOUGH_DAMAGE
+
+          plog(`bit ${zombieSlug(target)} tough ${CH_TOUGH_DAMAGE}`)
+
+          if (target.hp <= 0) {
+            killZombie(target)
+          }
+
+          plant.currState = CH_IDLE
+          plant.biteTarget = undefined
+          plant.nextAction = state.time
+
+          continue
+        }
+
+        plog(`ate ${zombieSlug(target)}`)
+
+        killZombie(target)
+
+        plant.currState = CH_EATING
+        plant.biteTarget = undefined
+        plant.nextAction = state.time + CH_EAT_DURATION
+
+        continue
+      }
+
+      if (plantState === CH_EATING) {
+        plog('doneEating')
+
+        plant.currState = CH_IDLE
+        plant.nextAction = state.time
+
+        continue
+      }
+
+      throw Error(`Unexpected chomper state "${plantState}"`)
     }
 
     throw Error(`Unexpected plant "${plant.kind}"`)
@@ -589,6 +678,26 @@ const tickFixed = (
       continue
     }
 
+    // mid-vault - skip all plant collision, just move
+    if ((zombie.currState ?? 0) === ZOMBIE_VAULTING) {
+      zombie.x = newX
+
+      if (maybe(zombie.stateData) && zombie.x <= zombie.stateData) {
+        zombie.currState = ZOMBIE_VAULTED
+        zombie.stateData = undefined
+
+        const transition = def.transitions?.[ZOMBIE_VAULTED]
+
+        if (maybe(transition) && maybe(transition.speed)) {
+          zombie.speed = random.range(transition.speed[0], transition.speed[1])
+        }
+
+        zlog('landed')
+      }
+
+      continue
+    }
+
     // if moving would land inside a plant tile, check for special
     // interactions (mine, vault) before defaulting to bite
 
@@ -611,23 +720,21 @@ const tickFixed = (
         continue
       }
 
-      // pole vault - first plant encountered, jump over it
+      // pole vault - first plant encountered, enter vaulting state
       if (
         maybe(def.transitions) && maybe(def.transitions[ZOMBIE_VAULTED]) &&
+        (zombie.currState ?? 0) !== ZOMBIE_VAULTING &&
         (zombie.currState ?? 0) !== ZOMBIE_VAULTED
       ) {
         const landX = target.col - 0.5
 
-        zlog(`vaulted ${plantSlug(target)}`)
+        zlog(`vaulting ${plantSlug(target)}`)
 
-        zombie.x = landX
-        zombie.currState = ZOMBIE_VAULTED
+        zombie.currState = ZOMBIE_VAULTING
+        zombie.stateData = landX
 
-        const transition = def.transitions[ZOMBIE_VAULTED]
-
-        if (maybe(transition.speed)) {
-          zombie.speed = random.range(transition.speed[0], transition.speed[1])
-        }
+        // keep moving at current speed - don't snap
+        zombie.x = newX
 
         continue
       }

@@ -46,7 +46,7 @@ export const zombies: Record<ZombieName, ZombieDef> = {
     waveCost: 2,
     ...baseZombie,
     speed: [0.37, 0.41],
-    transitions: { 1: { speed: baseZombie.speed } }
+    transitions: { 2: { speed: baseZombie.speed } }
   }
 }
 
@@ -110,6 +110,15 @@ export const plants: Record<PlantName, PlantDef> = {
     buyCd: 7.5,
     actionCd: 1.425,
     projectile: 'ice'
+  },
+  chomper: {
+    kind: 'chomper',
+    hp: 300,
+    buyCost: 150,
+    buyCd: 7.5,
+    actionCd: 0,
+    range: 1,
+    targetBlacklist: ['poleVaulter:0', 'poleVaulter:1']
   }
 }
 

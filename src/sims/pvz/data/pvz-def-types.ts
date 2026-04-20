@@ -1,4 +1,6 @@
-import { EffectName, PlantName, ProjectileName, ZombieName } from '../pvz-types.js'
+import { 
+  EffectName, PlantName, ProjectileName, ZombieName, ZombieStateSlug 
+} from '../pvz-types.js'
 
 // cd = cooldown
 // all times are in seconds
@@ -19,6 +21,9 @@ export type ZombieDef = {
 
   // stat overrides per currState - eg poleVaulter slows down after vaulting
   transitions?: Partial<Record<number, Partial<ZombieDef>>>
+
+  // prevents insta kill for some enemies, eg chomper bite
+  isTough?: boolean
 }
 
 export type ExplodeType = '3x3' | 'mine'
@@ -39,6 +44,9 @@ export type PlantDef = {
 
   projectile?: ProjectileName // undefined = doesn't fire (eg sunflower)
   explodes?: ExplodeType // area damage on actionCd, self-destructs
+
+  range?: number // tiles to right of plant; own tile always included; undefined = infinite
+  targetBlacklist?: ZombieStateSlug[] // zombie states that cause a miss (eg vaulting)
 }
 
 export type ProjectileDef = {

@@ -14,6 +14,8 @@ export type EffectName = typeof effectNames[number]
 export type AdvanceCondition = typeof advanceConditions[number]
 export type PvzGameStatus = typeof pvzGameStatus[number]
 
+export type ZombieStateSlug = `${ZombieName}:${number}`
+
 export type PvzNewEvent = {
   type: 'new'
   levelId: number
@@ -88,6 +90,7 @@ export type Zombie = {
   waveIndex: number
 
   currState?: number // state machine - 0/undefined = initial
+  stateData?: number // generic per-state data, eg vault landing x
 }
 
 export type Plant = {
@@ -101,6 +104,7 @@ export type Plant = {
   nextAction: number // time next sun or next projectile is ready
 
   currState?: number // state machine - 0/undefined = initial
+  biteTarget?: number // zombie id, used by chomper
 }
 
 export type Mower = {

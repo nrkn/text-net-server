@@ -1,5 +1,6 @@
 export const plantNames = [
-  'sunflower', 'peashooter', 'cherryBomb', 'wallnut', 'potatoMine', 'snowPea'
+  'sunflower', 'peashooter', 'cherryBomb', 'wallnut', 'potatoMine', 'snowPea',
+  'chomper'
 ] as const
 
 export const zombieNames = [
@@ -76,9 +77,20 @@ export type PvzLogLevel = typeof pvzLogLevels[number]
 
 export const PVZ_DEFAULT_LOG_LEVEL: PvzLogLevel = 'minimal'
 
-export const PLANT_ARMED = 1
-export const ZOMBIE_VAULTED = 1
-
 // plants whose buyCd is <= this should be available to buy immediately at 
 // start of level
 export const INSTANT_BUY_THRESHOLD = 10
+
+// states, used by currState
+
+export const PLANT_ARMED = 1
+
+export const ZOMBIE_VAULTING = 1
+export const ZOMBIE_VAULTED = 2
+
+export const CH_IDLE = 0
+export const CH_BITING = 1
+export const CH_EATING = 2
+export const CH_BITE_DELAY = 0.7
+export const CH_EAT_DURATION = 42
+export const CH_TOUGH_DAMAGE = 40
