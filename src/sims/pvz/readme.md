@@ -7,6 +7,24 @@ maintain cadence
 
 # todo
 
+it's getting tedious defining the waves - and for good reason, the real game
+doesn't hard code the waves it has:
+
+LevelDef.waveCount
+LevelDef.zombieWhitelist
+LevelDef.heroZombie 
+
+Every 10th wave is flag wave with 2.5x points, 
+plus min(budget,8) + 1 normal zombies
+
+Each wave's pool is the whiteList, filtered on ZombieDef.earliestWave
+
+heroZombie is forced on the midpoint wave (math.floor), and the final wave
+
+Every allowed zombie that hasn't appeared yet is forced to the final wave
+
+---
+
 we have a lot of places where instead of using a random range for a number, we
 simplified by just picking a midpoint number - it would be nice for replays
 to play out slightly differently so look into adding ranges to more things
@@ -14,16 +32,6 @@ to play out slightly differently so look into adding ranges to more things
 ---
 
 armour - we currently just roll it into hp - we will need this later though
-
----
-
-view 
-
-- treats pea/ice as separate, they should collapse on basis of both being proj
-- key should read O:projectile, not O:pea
-- use the same trick as :1: multi tiles to mark plant waiting state, but ,M,
-  - ,M, - sleeping potato mine (not armed yet)
-  - ,H, - chomper, digesting
 
 ---
 
@@ -312,3 +320,15 @@ of 0.7, at which time it moves to CH_BITING
 state 2 is actually "got one", "chewing", "swallow", but those are only for anim
 purposes - we currently have no graphics/anim, so we'll just add 2 seconds to 
 CH_EATING to allow for those (rough estimate), 42 seconds total
+
+---
+
+view 
+
+- treats pea/ice as separate, they should collapse on basis of both being proj
+- key should read O:projectile, not O:pea
+- use the same trick as :1: multi tiles to mark plant waiting state, but ,M,
+  - ,M, - sleeping potato mine (not armed yet)
+  - ,H, - chomper, digesting
+
+---
