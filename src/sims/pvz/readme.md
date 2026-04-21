@@ -10,18 +10,52 @@ maintain cadence
 it's getting tedious defining the waves - and for good reason, the real game
 doesn't hard code the waves it has:
 
-LevelDef.waveCount
-LevelDef.zombieWhitelist
-LevelDef.heroZombie 
+level waveCount
+level zombieWhitelist 
+level heroZombie 
 
 Every 10th wave is flag wave with 2.5x points, 
-plus min(budget,8) + 1 normal zombies
+plus min(budget,8) + 1 normal zombies (the +1 simulates flag zombies which we
+don't bother with)
 
 Each wave's pool is the whiteList, filtered on ZombieDef.earliestWave
 
 heroZombie is forced on the midpoint wave (math.floor), and the final wave
 
-Every allowed zombie that hasn't appeared yet is forced to the final wave
+there are a few exceptions:
+
+Most intro zombies: midpoint wave and final wave
+Digger and Balloon: wave 7 and final wave
+Yeti: midpoint only, and only if not already seen
+Ducky Tube is excluded from this intro rule
+
+When the final wave is computed, it checks if every allowed zombie appears in 
+the final wave, and if not, adds one of each that's missing - this is after
+budget has been spent, so it means the final wave can go "over" budget
+
+if you look at our hard coded waves, they essentially just replicate this
+
+HOWEVER we don't want to go down the route of just auto generating waves, we'd
+like the ability to do more declarative wave defining
+
+we could replace the waves array with waveCount/zombieWhitelist/heroZombie, and
+have a new data structure that can modify waves, like:
+
+waveMods: {
+  1: { // rules for modifying wave 1 },
+  7: { // rules for modifying wave 7 },
+  // etc
+}
+
+WaveMod could be something like: 
+
+{
+  // eg for level 1-2, first wave comes at 50 seconds instead of 18; delay: 32
+  delay?: number 
+  fixed? / pool? - as per existing, overrides auto wave
+  pointsExtra?: number // added to budget
+  pointsMultiplier?: number // overrides eg flag mult but can be used on any wave
+}
 
 ---
 
