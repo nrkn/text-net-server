@@ -154,6 +154,8 @@ swallow iac etc
 
 ## output pacing
 
+nb - not implemented yet
+
 not part of the level 0 contract, but keep in mind for slow clients (eg 
 WiModem232 bridging TCP to serial at low baud rates) - TCP backpressure 
 should handle most cases, and screens are small enough to fit typical buffers,

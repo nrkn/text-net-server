@@ -8,7 +8,7 @@ maintain cadence
 # todo
 
 it's getting tedious defining the waves - and for good reason, the real game
-doesn't hard code the waves it has:
+doesn't hard code the waves like we currently do, it has:
 
 level waveCount
 level zombieWhitelist 
@@ -33,10 +33,14 @@ When the final wave is computed, it checks if every allowed zombie appears in
 the final wave, and if not, adds one of each that's missing - this is after
 budget has been spent, so it means the final wave can go "over" budget
 
-if you look at our hard coded waves, they essentially just replicate this
+if you look at our hard coded waves, they just replicate this - they match the
+algorithmic approach 1:1
 
 HOWEVER we don't want to go down the route of just auto generating waves, we'd
-like the ability to do more declarative wave defining
+like the ability to do be able to do more declarative wave defining, and we 
+don't want tight coupling between the campaign concerns (what level does a 
+zombie first appear on etc) and level concerns like the real game has, we want
+to be able to play levels on their own, insert levels, user defined levels etc
 
 we could replace the waves array with waveCount/zombieWhitelist/heroZombie, and
 have a new data structure that can modify waves, like:
@@ -65,44 +69,12 @@ to play out slightly differently so look into adding ranges to more things
 
 ---
 
-armour - we currently just roll it into hp - we will need this later though
+armour - we currently just roll it into hp - we will need this later though so
+that eg magnetshroom can remove bucket etc
 
 ---
 
 chomper *can* target vaulter, pogostick if they are frozen or buttered
-
----
-
-Seed bank! Now we have enough plants that the player has to choose
-
-We need a new player action event - PvzChoosePlantsEvent
-
-{
-  type: 'choosePlants',
-  seedBank: PlantName[]
-}
-
-We need State.maxPlants - set to 6 initially in pvz-new 
-We need State.seedBank: PlantName[]
-
-We shouldn't hard code 6 anywhere, as later you can unlock 8/9 slots
-
-If a level has no whitelist, then that level requires choosing plants (actually
-how do we handle no whitelist at present, do we fall back to plantNames or...?)
-
-If a level has a whitelist, it requires choosing plants if > 6 in whitelist
-
-The event fails if the plants aren't in the whitelist, if exactly maxPlants is 
-not chosen, if the seedBank contains dupes etc
-
-If pvz-sim detects that plants should have been chosen but they weren't, error
-and set unplayable
-
-Places that currently use the whitelist (UI etc) should use seedBank instead
-
-Player should only be able to place from the seedBank
-
-test-app needs a select plants step/menu when needed, go straight to play if not
 
 ## done
 
@@ -365,4 +337,36 @@ view
   - ,M, - sleeping potato mine (not armed yet)
   - ,H, - chomper, digesting
 
+
 ---
+
+Seed bank! Now we have enough plants that the player has to choose
+
+We need a new player action event - PvzChoosePlantsEvent
+
+{
+  type: 'choosePlants',
+  seedBank: PlantName[]
+}
+
+We need State.maxPlants - set to 6 initially in pvz-new 
+We need State.seedBank: PlantName[]
+
+We shouldn't hard code 6 anywhere, as later you can unlock 8/9 slots
+
+If a level has no whitelist, then that level requires choosing plants (actually
+how do we handle no whitelist at present, do we fall back to plantNames or...?)
+
+If a level has a whitelist, it requires choosing plants if > 6 in whitelist
+
+The event fails if the plants aren't in the whitelist, if exactly maxPlants is 
+not chosen, if the seedBank contains dupes etc
+
+If pvz-sim detects that plants should have been chosen but they weren't, error
+and set unplayable
+
+Places that currently use the whitelist (UI etc) should use seedBank instead
+
+Player should only be able to place from the seedBank
+
+test-app needs a select plants step/menu when needed, go straight to play if not

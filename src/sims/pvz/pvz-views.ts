@@ -124,8 +124,8 @@ export const pvzBoardView = (state: PvzState) => {
       if (isMulti) {
         const pos = formatPos(row, col)
 
-        // we can only fit 0..9 in the cell, in the unlikely event we exceed 9
-        // multiKeys (eg a very crowded board) we will just replace it with ?
+        // we can only fit 0..9 in the cell, in the event we exceed 9
+        // multiKeys (eg a very crowded board) we just replace it with ?
         const key = nextMultiKey < 10 ? nextMultiKey : '?'
 
         line += key

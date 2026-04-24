@@ -84,12 +84,7 @@ export type Zombie = {
   // remaining hp, whereas ZombieDef.hp is initial hp
   hp: number
 
-  // not sure that we need this to be a plant id, it could just be a boolean
-  // because the zombie is always in the adjacent cell to whatever plant it's 
-  // biting and we do seem to be leaning towards keeping minimal state where
-  // state can be derived
   biteTarget?: number // the plant id
-
   nextBite?: number // time can next bite, if biteTargetId set
 
   waveIndex: number
@@ -109,7 +104,10 @@ export type Plant = {
   nextAction: number // time next sun or next projectile is ready
 
   currState?: number // state machine - 0/undefined = initial
-  biteTarget?: number // zombie id, used by chomper
+  
+  // zombie id, used by chomper; nb this could be stateData? to mirror zombies,
+  // defer thinking about it for now
+  biteTarget?: number 
 }
 
 export type Mower = {

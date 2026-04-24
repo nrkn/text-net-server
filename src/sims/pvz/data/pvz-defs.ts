@@ -9,6 +9,7 @@ import { level4 } from './levels/pvz-1-4.js'
 import { level5 } from './levels/pvz-1-6.js'
 import { level6 } from './levels/pvz-1-7.js'
 import { level7 } from './levels/pvz-1-8.js'
+import { level8 } from './levels/pvz-1-9.js'
 
 import {
   EffectDef, LevelDef, PlantDef, ProjectileDef, ZombieDef
@@ -166,5 +167,7 @@ export const levels: LevelDef[] = [
   // 1-7: adds snowPea
   level6,
   // 1-8: adds chomper, seedBank
-  level7
+  level7,
+  // 1-9: final level world 1
+  //level8
 ]
